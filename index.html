@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PAST TRADING</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ============================================================ -->
+  <!-- MENU SCREEN                                                    -->
+  <!-- ============================================================ -->
+  <div id="menu-screen">
+    <div class="menu-header">
+      <h1>PAST TRADING</h1>
+      <div class="subtitle">Travel back in time. Trade with foresight. Try not to get arrested.</div>
+    </div>
+
+    <div class="menu-stats">
+      <div class="menu-stat">
+        <div class="value" id="menu-pp">0</div>
+        <div class="label">Prestige Points</div>
+      </div>
+      <div class="menu-stat">
+        <div class="value" id="menu-run-count">0</div>
+        <div class="label">Runs Completed</div>
+      </div>
+    </div>
+
+    <!-- Trading Modes -->
+    <div class="menu-section">
+      <h2>Select Mode</h2>
+      <div id="mode-selector" class="mode-grid"></div>
+    </div>
+
+    <!-- Unlock Shop -->
+    <div class="menu-section">
+      <h2>Unlock Shop</h2>
+      <div id="unlock-shop"></div>
+    </div>
+
+    <!-- Titles -->
+    <div class="menu-section">
+      <h2>Titles</h2>
+      <div id="title-selector"></div>
+    </div>
+
+    <!-- Achievements -->
+    <div class="menu-section">
+      <h2>Achievements</h2>
+      <div id="menu-achievements"></div>
+    </div>
+
+    <!-- Leaderboards -->
+    <div class="menu-section">
+      <h2>Leaderboards</h2>
+      <div id="menu-leaderboards"></div>
+    </div>
+
+    <!-- Reset -->
+    <div class="menu-section" style="text-align: center; padding: 20px 0;">
+      <button class="btn btn-danger" onclick="if(confirm('Reset ALL progress?')) { game.progression.resetProgress(); game.showMenu(); }">
+        Reset Progress
+      </button>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- GAME SCREEN                                                    -->
+  <!-- ============================================================ -->
+  <div id="game-screen" class="hidden">
+
+    <!-- Header -->
+    <div class="game-header">
+      <span class="title">PAST TRADING</span>
+      <span id="day-counter">Day 0 / 365</span>
+      <div class="header-controls">
+        <button class="speed-btn" data-speed="0.5">0.5x</button>
+        <button class="speed-btn active" data-speed="1">1x</button>
+        <button class="speed-btn" data-speed="2">2x</button>
+        <button class="speed-btn" data-speed="5">5x</button>
+        <button class="speed-btn" data-speed="10">10x</button>
+        <button class="btn btn-small" id="pause-btn">⏸ PAUSE</button>
+      </div>
+    </div>
+
+    <!-- Left: Trading Panel -->
+    <div class="trading-panel">
+      <!-- Asset Selector -->
+      <div class="panel-section">
+        <h3>Assets</h3>
+        <div id="asset-selector"></div>
+      </div>
+
+      <!-- Price & Trade -->
+      <div class="panel-section">
+        <h3>Trade</h3>
+        <div class="price-display">
+          <span class="current-price" id="asset-price">--</span>
+          <span class="change" id="asset-change">--</span>
+        </div>
+        <div class="trade-controls">
+          <label>Qty:</label>
+          <input type="number" id="trade-quantity" value="10" min="1" max="99999">
+          <button class="btn btn-primary" id="buy-btn">BUY</button>
+          <button class="btn btn-sell" id="sell-all-btn">SELL</button>
+          <button class="btn btn-danger" id="short-btn">SHORT</button>
+        </div>
+        <div class="trade-result" id="trade-result"></div>
+      </div>
+
+      <!-- Portfolio -->
+      <div class="panel-section" style="flex: 1;">
+        <h3>Positions</h3>
+        <div id="portfolio-list"></div>
+      </div>
+    </div>
+
+    <!-- Right: Graph + Meters -->
+    <div class="right-panel">
+      <!-- Net Worth Graph -->
+      <div class="graph-area">
+        <canvas id="net-worth-graph"></canvas>
+      </div>
+
+      <!-- Meters -->
+      <div class="info-row">
+        <div class="meter-section">
+          <h3>Internal Risk</h3>
+          <div class="meter-bar">
+            <div class="meter-fill meter-green" id="risk-fill" style="width: 0%"></div>
+          </div>
+          <div class="meter-value" id="risk-value">0%</div>
+        </div>
+        <div class="meter-section">
+          <h3>SEC Attention</h3>
+          <div class="meter-bar">
+            <div class="meter-fill meter-green" id="sec-fill" style="width: 0%"></div>
+          </div>
+          <div class="meter-value">
+            <span id="sec-value">0%</span>
+            <span class="sec-label" id="sec-label">Off the radar</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- News & Actions -->
+    <div class="news-section">
+      <div class="news-panel">
+        <h3>News Feed</h3>
+        <div id="news-feed"></div>
+      </div>
+      <div class="actions-wrapper">
+        <h3>Actions</h3>
+        <div id="actions-panel"></div>
+      </div>
+    </div>
+
+    <!-- Bottom Bar -->
+    <div class="bottom-bar">
+      <div>
+        Cash: <span id="cash-display">$10,000</span>
+      </div>
+      <div class="net-worth-label">
+        Net Worth: <span id="net-worth-display">$10,000</span>
+      </div>
+    </div>
+
+    <!-- Pause Overlay -->
+    <div id="pause-overlay" class="hidden">
+      <div class="pause-text">PAUSED</div>
+    </div>
+
+    <!-- Achievement Popup -->
+    <div id="achievement-popup" class="hidden"></div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- RUN END SCREEN                                                 -->
+  <!-- ============================================================ -->
+  <div id="run-end-screen" class="hidden">
+    <h1 id="run-end-title" class="run-end-title">RUN OVER</h1>
+
+    <div id="run-end-stats"></div>
+
+    <h3 style="margin-top: 20px; color: var(--blue);">NEW ACHIEVEMENTS</h3>
+    <div id="run-end-achievements"></div>
+
+    <button class="btn btn-primary" id="back-to-menu">BACK TO MENU</button>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SCRIPTS (order matters)                                        -->
+  <!-- ============================================================ -->
+  <script src="js/config.js"></script>
+  <script src="js/market.js"></script>
+  <script src="js/trading.js"></script>
+  <script src="js/sec.js"></script>
+  <script src="js/news.js"></script>
+  <script src="js/progression.js"></script>
+  <script src="js/achievements.js"></script>
+  <script src="js/leaderboard.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+
+</body>
+</html>
