@@ -9,6 +9,7 @@ class GameUI {
     this.graphCtx = null;
     this.achievementQueue = [];
     this.tradeResultTimeout = null;
+    this.chartManager = null;
   }
 
   init() {
@@ -17,24 +18,26 @@ class GameUI {
       menuScreen: document.getElementById('menu-screen'),
       gameScreen: document.getElementById('game-screen'),
       runEndScreen: document.getElementById('run-end-screen'),
+      loadingOverlay: document.getElementById('loading-overlay'),
 
       // Header
       dayCounter: document.getElementById('day-counter'),
-      speedDisplay: document.getElementById('speed-display'),
       pauseBtn: document.getElementById('pause-btn'),
+      muteBtn: document.getElementById('mute-btn'),
+      volumeSlider: document.getElementById('volume-slider'),
 
       // Trading panel
       assetSelector: document.getElementById('asset-selector'),
-      assetPrice: document.getElementById('asset-price'),
-      assetChange: document.getElementById('asset-change'),
       tradeQuantity: document.getElementById('trade-quantity'),
       buyBtn: document.getElementById('buy-btn'),
-      sellAllBtn: document.getElementById('sell-all-btn'),
       shortBtn: document.getElementById('short-btn'),
       tradeResult: document.getElementById('trade-result'),
 
-      // Graph
+      // Graphs
       graphCanvas: document.getElementById('net-worth-graph'),
+      chartContainer: document.getElementById('chart-container'),
+      chartTabsBar: document.getElementById('chart-tabs-bar'),
+      addChartBtn: document.getElementById('add-chart-btn'),
 
       // Meters
       riskFill: document.getElementById('risk-fill'),
@@ -47,6 +50,8 @@ class GameUI {
       portfolioList: document.getElementById('portfolio-list'),
       cashDisplay: document.getElementById('cash-display'),
       netWorthDisplay: document.getElementById('net-worth-display'),
+      pnlDisplay: document.getElementById('pnl-display'),
+      modeDisplay: document.getElementById('mode-display'),
 
       // News
       newsFeed: document.getElementById('news-feed'),
@@ -97,20 +102,42 @@ class GameUI {
       this.el.pauseBtn.addEventListener('click', () => this.game.togglePause());
     }
 
+    // Unpause button in overlay
+    const unpauseBtn = document.getElementById('unpause-btn');
+    if (unpauseBtn) {
+      unpauseBtn.addEventListener('click', () => this.game.togglePause());
+    }
+
+    // Audio controls
+    if (this.el.muteBtn) {
+      this.el.muteBtn.addEventListener('click', () => {
+        const muted = this.game.audio.toggleMute();
+        this.el.muteBtn.textContent = muted ? '🔇' : '🔊';
+      });
+    }
+
+    if (this.el.volumeSlider) {
+      this.el.volumeSlider.addEventListener('input', (e) => {
+        this.game.audio.setVolume(e.target.value / 100);
+      });
+    }
+
+    // Add chart button
+    if (this.el.addChartBtn) {
+      this.el.addChartBtn.addEventListener('click', () => {
+        if (this.game.selectedAsset && this.chartManager) {
+          if (!this.chartManager.hasTab(this.game.selectedAsset)) {
+            this.chartManager.addTab(this.game.selectedAsset, 'line');
+          }
+        }
+      });
+    }
+
     // Buy
     if (this.el.buyBtn) {
       this.el.buyBtn.addEventListener('click', () => {
         const qty = parseInt(this.el.tradeQuantity.value) || 1;
         this.game.buyAsset(qty);
-      });
-    }
-
-    // Sell
-    if (this.el.sellAllBtn) {
-      this.el.sellAllBtn.addEventListener('click', () => {
-        // Sell first position of selected asset
-        const idx = this.game.trading.positions.findIndex(p => p.ticker === this.game.selectedAsset);
-        if (idx >= 0) this.game.sellPosition(idx);
       });
     }
 
@@ -145,13 +172,47 @@ class GameUI {
     this.el.menuScreen.classList.remove('hidden');
     this.el.gameScreen.classList.add('hidden');
     this.el.runEndScreen.classList.add('hidden');
+    if (this.el.loadingOverlay) {
+      this.el.loadingOverlay.classList.add('hidden');
+    }
     this.renderMenu();
+
+    // Clear chart manager
+    if (this.chartManager) {
+      this.chartManager.clear();
+      this.chartManager = null;
+    }
+  }
+
+  showLoading() {
+    this.el.menuScreen.classList.add('hidden');
+    this.el.gameScreen.classList.add('hidden');
+    this.el.runEndScreen.classList.add('hidden');
+    if (this.el.loadingOverlay) {
+      this.el.loadingOverlay.classList.remove('hidden');
+    }
   }
 
   showGame() {
     this.el.menuScreen.classList.add('hidden');
     this.el.gameScreen.classList.remove('hidden');
     this.el.runEndScreen.classList.add('hidden');
+    if (this.el.loadingOverlay) {
+      this.el.loadingOverlay.classList.add('hidden');
+    }
+
+    // Initialize chart manager
+    if (!this.chartManager && this.el.chartContainer && this.el.chartTabsBar) {
+      this.chartManager = new ChartManager(
+        this.el.chartContainer,
+        this.el.chartTabsBar
+      );
+
+      // Add default tab for first asset
+      if (this.game.selectedAsset) {
+        this.chartManager.addTab(this.game.selectedAsset, 'line');
+      }
+    }
   }
 
   showPauseOverlay(show) {
@@ -323,29 +384,20 @@ class GameUI {
     // Asset selector
     this.renderAssetSelector(game);
 
-    // Selected asset info
-    if (game.selectedAsset) {
-      const asset = game.market.getAsset(game.selectedAsset);
-      if (asset) {
-        this.el.assetPrice.textContent = formatPrice(asset.price);
-        const change = game.market.getPriceChange(asset.ticker);
-        const changeStr = (change >= 0 ? '+' : '') + (change * 100).toFixed(2) + '%';
-        this.el.assetChange.textContent = changeStr;
-        this.el.assetChange.className = change >= 0 ? 'positive' : 'negative';
-      }
-    }
-
     // Net worth graph
     this.renderGraph(game);
+
+    // Chart manager
+    if (this.chartManager) {
+      this.chartManager.renderActiveChart(game.market, game.currentDay, game.selectedMode);
+    }
 
     // Meters
     const risk = game.trading.getRiskLevel(game.market);
     this.el.riskFill.style.width = risk + '%';
-    this.el.riskFill.className = 'meter-fill ' + this.getRiskColor(risk);
     this.el.riskValue.textContent = Math.round(risk) + '%';
 
     this.el.secFill.style.width = game.sec.attention + '%';
-    this.el.secFill.className = 'meter-fill ' + this.getSecColor(game.sec.attention);
     this.el.secValue.textContent = Math.round(game.sec.attention) + '%';
     this.el.secLabel.textContent = game.sec.getLabel();
 
@@ -361,6 +413,17 @@ class GameUI {
     // Bottom bar
     this.el.cashDisplay.textContent = formatMoney(game.trading.cash);
     this.el.netWorthDisplay.textContent = formatMoney(game.trading.netWorth);
+
+    if (this.el.pnlDisplay) {
+      const pnl = game.trading.netWorth - CONFIG.STARTING_CASH;
+      const pnlClass = pnl >= 0 ? 'positive' : 'negative';
+      this.el.pnlDisplay.innerHTML = `<span class="${pnlClass}">${formatMoney(pnl)}</span>`;
+    }
+
+    if (this.el.modeDisplay) {
+      const modeName = TRADING_MODES[game.selectedMode]?.name || game.selectedMode;
+      this.el.modeDisplay.textContent = modeName;
+    }
   }
 
   renderAssetSelector(game) {
@@ -368,7 +431,7 @@ class GameUI {
     const modeConfig = TRADING_MODES[game.selectedMode];
 
     if (modeConfig && (modeConfig.isPassive || modeConfig.isAlgo)) {
-      this.el.assetSelector.innerHTML = `<span class="muted">${modeConfig.name} - Passive Mode</span>`;
+      this.el.assetSelector.innerHTML = `<div style="padding: 16px; color: var(--rh-text-secondary);">${modeConfig.name} - Passive Mode</div>`;
       return;
     }
 
@@ -377,11 +440,20 @@ class GameUI {
       const change = game.market.getPriceChange(asset.ticker);
       const changeClass = change >= 0 ? 'positive' : 'negative';
       const selected = asset.ticker === game.selectedAsset ? 'selected' : '';
+      const impacted = game.news.isTickerImpacted(asset.ticker);
+      const impactClass = impacted ? 'asset-impacted' : '';
+
       html += `
-        <button class="asset-btn ${selected} ${changeClass}" data-ticker="${asset.ticker}">
-          <span class="ticker">${asset.ticker}</span>
-          <span class="price">${formatPrice(asset.price)}</span>
-          <span class="change ${changeClass}">${(change >= 0 ? '+' : '')}${(change * 100).toFixed(1)}%</span>
+        <button class="asset-btn ${selected} ${impactClass}" data-ticker="${asset.ticker}">
+          <div class="asset-btn-left">
+            ${impacted ? '<span class="impact-indicator">📰</span>' : ''}
+            <span class="asset-ticker">${asset.ticker}</span>
+            <span class="asset-name">${asset.name}</span>
+          </div>
+          <div class="asset-btn-right">
+            <span class="asset-price">${formatPrice(asset.price)}</span>
+            <span class="asset-change ${changeClass}">${(change >= 0 ? '+' : '')}${(change * 100).toFixed(1)}%</span>
+          </div>
         </button>
       `;
     }
@@ -477,7 +549,7 @@ class GameUI {
   renderPortfolio(game) {
     const positions = game.trading.positions;
     if (positions.length === 0) {
-      this.el.portfolioList.innerHTML = '<div class="muted">No open positions</div>';
+      this.el.portfolioList.innerHTML = '<div style="padding: 16px; color: var(--rh-text-secondary); text-align: center;">No open positions</div>';
       return;
     }
 
@@ -486,22 +558,35 @@ class GameUI {
       const pos = positions[i];
       const { pnl, pnlPercent, currentPrice } = game.trading.getPositionPnL(pos, game.market);
       const pnlClass = pnl >= 0 ? 'positive' : 'negative';
-      const typeLabel = pos.type === 'short' ? 'SHORT' : 'LONG';
+      const typeLabel = pos.type === 'short' ? 'Short' : 'Long';
       const typeClass = pos.type === 'short' ? 'short' : 'long';
 
       html += `
-        <div class="position-row">
-          <div class="position-info">
+        <div class="position-card">
+          <div class="position-header">
+            <span class="position-ticker">${pos.ticker}</span>
             <span class="position-type ${typeClass}">${typeLabel}</span>
-            <strong>${pos.ticker}</strong>
-            <span class="muted">x${pos.quantity} @ ${formatPrice(pos.entryPrice)}</span>
-            ${pos.leverage > 1 ? `<span class="leverage-badge">${pos.leverage}x</span>` : ''}
           </div>
-          <div class="position-pnl ${pnlClass}">
-            ${pnl >= 0 ? '+' : ''}${formatMoney(pnl)}
-            <span>(${(pnlPercent * 100).toFixed(1)}%)</span>
+          <div class="position-details">
+            <div class="position-detail-item">
+              <span class="position-detail-label">Quantity</span>
+              <span class="position-detail-value">${pos.quantity}</span>
+            </div>
+            <div class="position-detail-item">
+              <span class="position-detail-label">Entry</span>
+              <span class="position-detail-value">${formatPrice(pos.entryPrice)}</span>
+            </div>
+            <div class="position-detail-item">
+              <span class="position-detail-label">Current</span>
+              <span class="position-detail-value">${formatPrice(currentPrice)}</span>
+            </div>
+            <div class="position-detail-item">
+              <span class="position-detail-label">P&L</span>
+              <span class="position-detail-value ${pnlClass}">${pnl >= 0 ? '+' : ''}${formatMoney(pnl)}</span>
+            </div>
           </div>
-          <button class="btn btn-small btn-sell" data-pos-index="${i}">SELL</button>
+          ${pos.leverage > 1 ? `<div style="font-size: 11px; color: var(--rh-yellow); margin-bottom: 8px;">${pos.leverage}x Leverage</div>` : ''}
+          <button class="btn btn-sell btn-small" style="width: 100%;" data-pos-index="${i}">Close Position</button>
         </div>
       `;
     }
@@ -517,12 +602,11 @@ class GameUI {
   }
 
   renderNews(game) {
-    const news = game.news.getRecentNews(8);
+    const news = game.news.getRecentNews(12);
     let html = '';
     for (const item of news) {
-      const color = game.news.getNewsColor(item.type);
-      html += `<div class="news-item" style="border-left-color: ${color}">
-        <span class="news-day">D${item.day}</span>
+      html += `<div class="news-item ${item.type}">
+        <span class="news-timestamp">Day ${item.day}</span>
         ${item.text}
       </div>`;
     }

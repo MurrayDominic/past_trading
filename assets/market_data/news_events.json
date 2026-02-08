@@ -1,0 +1,142 @@
+{
+  "market_events": [
+    {
+      "day": 59,
+      "date": "2020-02-29",
+      "type": "macro",
+      "severity": "high",
+      "headline": "Fed signals potential rate cuts amid virus concerns",
+      "tickers_affected": [
+        "SPY",
+        "QQQ",
+        "DIA",
+        "IWM"
+      ],
+      "impact_range": [
+        -0.02,
+        0.05
+      ]
+    },
+    {
+      "day": 67,
+      "date": "2020-03-08",
+      "type": "macro",
+      "severity": "critical",
+      "headline": "Fed announces emergency rate cut to near zero",
+      "tickers_affected": [
+        "SPY",
+        "QQQ",
+        "DIA",
+        "IWM",
+        "GOLD"
+      ],
+      "impact_range": [
+        -0.08,
+        0.02
+      ]
+    },
+    {
+      "day": 74,
+      "date": "2020-03-15",
+      "type": "macro",
+      "severity": "critical",
+      "headline": "Markets plunge on pandemic fears, circuit breakers triggered",
+      "tickers_affected": [
+        "SPY",
+        "QQQ",
+        "DIA",
+        "IWM",
+        "AAPL",
+        "TSLA",
+        "AMZN"
+      ],
+      "impact_range": [
+        -0.12,
+        -0.05
+      ]
+    },
+    {
+      "day": 91,
+      "date": "2020-04-01",
+      "type": "macro",
+      "severity": "high",
+      "headline": "Congress passes $2 trillion stimulus package",
+      "tickers_affected": [
+        "SPY",
+        "QQQ",
+        "DIA",
+        "IWM"
+      ],
+      "impact_range": [
+        0.03,
+        0.08
+      ]
+    },
+    {
+      "day": 150,
+      "date": "2020-05-30",
+      "type": "tech",
+      "severity": "medium",
+      "headline": "Tech stocks rally on work-from-home demand",
+      "tickers_affected": [
+        "QQQ",
+        "AAPL",
+        "AMZN",
+        "GOOG",
+        "NFLX"
+      ],
+      "impact_range": [
+        0.02,
+        0.06
+      ]
+    },
+    {
+      "day": 245,
+      "date": "2020-09-02",
+      "type": "tech",
+      "severity": "medium",
+      "headline": "Apple announces 4-for-1 stock split",
+      "tickers_affected": [
+        "AAPL"
+      ],
+      "impact_range": [
+        0.03,
+        0.07
+      ]
+    },
+    {
+      "day": 305,
+      "date": "2020-11-01",
+      "type": "politics",
+      "severity": "high",
+      "headline": "Election week volatility hits markets",
+      "tickers_affected": [
+        "SPY",
+        "QQQ",
+        "DIA",
+        "IWM"
+      ],
+      "impact_range": [
+        -0.04,
+        0.04
+      ]
+    },
+    {
+      "day": 350,
+      "date": "2020-12-16",
+      "type": "macro",
+      "severity": "medium",
+      "headline": "Vaccine approval sends markets to record highs",
+      "tickers_affected": [
+        "SPY",
+        "QQQ",
+        "DIA",
+        "IWM"
+      ],
+      "impact_range": [
+        0.04,
+        0.08
+      ]
+    }
+  ]
+}

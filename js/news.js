@@ -7,16 +7,33 @@ class NewsSystem {
     this.feed = [];          // { text, type, day }
     this.maxEntries = 50;
     this.satiricalCooldown = 0;
+    this.dataLoader = null;
+    this.impactedTickers = [];
   }
 
-  init() {
+  init(dataLoader) {
     this.feed = [];
     this.satiricalCooldown = 0;
+    this.dataLoader = dataLoader;
+    this.impactedTickers = [];
     this.addNews('Welcome to the market. You know the future. Use it wisely.', 'system', 0);
   }
 
   tick(day, market, secSystem) {
-    // Add market event news
+    // Load historical events for this day
+    if (this.dataLoader) {
+      const events = this.dataLoader.getEventsForDay(day);
+      events.forEach(event => {
+        this.addNews(event.headline, 'market', day);
+        if (event.tickers_affected) {
+          this.impactedTickers = event.tickers_affected;
+          // Clear impact indicator after a few seconds
+          setTimeout(() => { this.impactedTickers = []; }, 5000);
+        }
+      });
+    }
+
+    // Add market event news (synthetic events)
     if (market.activeEvent) {
       this.addNews(market.activeEvent.text, 'market', day);
     }
@@ -75,6 +92,10 @@ class NewsSystem {
 
   getRecentNews(count = 5) {
     return this.feed.slice(0, count);
+  }
+
+  isTickerImpacted(ticker) {
+    return this.impactedTickers.includes(ticker);
   }
 
   getNewsColor(type) {
