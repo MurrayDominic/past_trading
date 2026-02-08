@@ -39,6 +39,12 @@
         <div id="unlock-shop"></div>
       </div>
 
+      <!-- Equipable Tools -->
+      <div class="menu-section">
+        <h2>Equipable Tools</h2>
+        <div id="tool-selector"></div>
+      </div>
+
       <!-- Titles -->
       <div class="menu-section">
         <h2>Titles</h2>
@@ -75,6 +81,7 @@
     <div class="game-header">
       <div class="header-left">
         <span class="day-counter" id="day-counter">Day 0 / 365</span>
+        <span class="countdown-timer" id="countdown-timer">T-365 days</span>
         <div class="speed-controls">
           <button class="speed-btn" data-speed="0.5">0.5x</button>
           <button class="speed-btn active" data-speed="1">1x</button>
@@ -87,6 +94,7 @@
         <button id="mute-btn" class="icon-btn" title="Mute">🔊</button>
         <input type="range" id="volume-slider" min="0" max="100" value="70" class="volume-slider">
         <button class="btn btn-small" id="pause-btn">Pause</button>
+        <button class="btn btn-small btn-danger" id="exit-btn">Exit</button>
       </div>
     </div>
 
@@ -102,12 +110,17 @@
       <div class="trade-controls">
         <div class="quantity-input-group">
           <label>Quantity</label>
-          <input type="number" id="trade-quantity" value="10" min="1" max="99999">
+          <div class="quantity-input-wrapper">
+            <input type="number" id="trade-quantity" value="10" min="1" max="99999">
+            <button class="btn btn-small btn-max" id="max-qty-btn">Max</button>
+          </div>
         </div>
-        <div class="trade-buttons">
+        <div class="trade-button-column">
           <button class="btn btn-primary" id="buy-btn">Buy</button>
+          <button class="btn btn-accent" id="sell-btn">Sell</button>
           <button class="btn btn-danger" id="short-btn">Short</button>
         </div>
+        <div class="cooldown-indicator" id="cooldown-indicator">Ready</div>
         <div id="trade-result"></div>
       </div>
 
@@ -184,6 +197,12 @@
       </div>
       <div class="bottom-stat">
         <div class="bottom-stat-item">
+          <span class="bottom-stat-label">Tool:</span>
+          <span class="bottom-stat-value" id="tool-display">None</span>
+        </div>
+      </div>
+      <div class="bottom-stat">
+        <div class="bottom-stat-item">
           <span class="bottom-stat-label">P&L:</span>
           <span class="bottom-stat-value" id="pnl-display">$0</span>
         </div>
@@ -195,6 +214,19 @@
       <div class="pause-content">
         <h2>⏸ PAUSED</h2>
         <button class="btn btn-primary" id="unpause-btn">Resume</button>
+      </div>
+    </div>
+
+    <!-- Insider Trading Modal -->
+    <div id="insider-modal" class="insider-modal hidden">
+      <div class="insider-content">
+        <h2>🤫 Insider Tip Available</h2>
+        <p class="insider-tip-text" id="insider-tip-text"></p>
+        <p class="insider-warning">Warning: +12 SEC Attention</p>
+        <div class="insider-buttons">
+          <button class="btn btn-danger" id="insider-accept">Accept Tip</button>
+          <button class="btn" id="insider-ignore">Ignore</button>
+        </div>
       </div>
     </div>
 

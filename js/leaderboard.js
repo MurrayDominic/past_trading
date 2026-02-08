@@ -107,4 +107,23 @@ class LeaderboardSystem {
       speedrun: 'Speedrun to $1M',
     };
   }
+
+  getRankForScore(score, boardName) {
+    const board = this.boards[boardName] || [];
+    if (board.length === 0) return { rank: null, isRanked: false };
+
+    // Find position in sorted board
+    let rank = 1;
+    for (const entry of board) {
+      if (score > entry.score) break;
+      rank++;
+    }
+
+    const isRanked = rank <= CONFIG.MAX_LEADERBOARD_ENTRIES;
+    const minScore = board.length >= CONFIG.MAX_LEADERBOARD_ENTRIES
+      ? board[CONFIG.MAX_LEADERBOARD_ENTRIES - 1].score
+      : null;
+
+    return { rank, isRanked, minScore, total: board.length };
+  }
 }

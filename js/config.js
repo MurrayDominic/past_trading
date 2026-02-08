@@ -7,6 +7,7 @@ const CONFIG = {
   TICK_MS: 1000,            // 1 second per game day
   DEFAULT_RUN_DAYS: 365,    // 1 year per run
   SPEED_OPTIONS: [0.5, 1, 2, 5, 10],
+  GAME_START_DATE: new Date('2000-01-01'),  // Fixed start date
 
   // --- Starting Values ---
   STARTING_CASH: 10000,
@@ -16,7 +17,7 @@ const CONFIG = {
   // --- Trading ---
   BASE_FEE_PERCENT: 0.1,     // 0.1% per trade
   BASE_COOLDOWN_MS: 2000,    // 2 second cooldown between trades
-  MAX_POSITIONS: 5,          // how many simultaneous positions
+  MAX_POSITIONS: 999,        // effectively unlimited positions
 
   // --- SEC ---
   SEC_DECAY_PER_DAY: 0.15,   // passive SEC attention decay per day
@@ -165,49 +166,6 @@ const TRADING_MODES = {
       { ticker: 'PEPE', name: 'PepeCoin', basePrice: 0.000001 },
       { ticker: 'MOON', name: 'MoonRug Token', basePrice: 0.50 },
     ]
-  },
-  scalping: {
-    name: 'Scalping',
-    description: 'Passive micro-profits. Death by a thousand cuts (to the market).',
-    unlockRun: 6,
-    volatilityMod: 0.3,
-    feeMod: 2.0,
-    secHeatMod: 0.4,
-    isPassive: true,
-    passiveIncomePerDay: 50,
-    assets: []
-  },
-  arbitrage: {
-    name: 'Arbitrage',
-    description: 'Spot price differences. Free money (theoretically).',
-    unlockRun: 8,
-    volatilityMod: 0.1,
-    feeMod: 0.2,
-    secHeatMod: 0.6,
-    isPassive: true,
-    passiveIncomePerDay: 200,
-    assets: []
-  },
-  marketMaking: {
-    name: 'Market Making',
-    description: 'Provide liquidity, earn the spread. Boring but profitable.',
-    unlockRun: 10,
-    volatilityMod: 0.5,
-    feeMod: 0.0,
-    secHeatMod: 0.3,
-    isPassive: true,
-    passiveIncomePerDay: 500,
-    assets: []
-  },
-  algoTrading: {
-    name: 'Algo Trading',
-    description: 'Set rules, let the machine trade. What could go wrong?',
-    unlockRun: 12,
-    volatilityMod: 1.0,
-    feeMod: 0.1,
-    secHeatMod: 0.5,
-    isAlgo: true,
-    assets: []
   }
 };
 
@@ -235,6 +193,41 @@ const UNLOCKS = {
   morePositions: { name: 'Portfolio Expansion', cost: 4, description: 'Hold up to 10 positions', category: 'trading', maxPositions: 10 },
   startingCash2x:{ name: 'Trust Fund Kid', cost: 6, description: 'Start with $20,000', category: 'starting', cashMultiplier: 2 },
   startingCash5x:{ name: 'Rich Parents', cost: 15, description: 'Start with $50,000', category: 'starting', cashMultiplier: 5, requires: 'startingCash2x' },
+};
+
+// ============================================================================
+// EQUIPABLE TOOLS
+// ============================================================================
+
+const EQUIPABLE_TOOLS = {
+  scalping: {
+    name: 'Scalping Bot',
+    description: 'Passive micro-profits while you trade. Stacks with active trading.',
+    cost: 10,
+    passiveIncomePerDay: 50,
+    requires: 'algoEngine'
+  },
+  arbitrage: {
+    name: 'Arbitrage Scanner',
+    description: 'Automatically exploit price differences. Stacks with active trading.',
+    cost: 15,
+    passiveIncomePerDay: 200,
+    requires: 'algoEngine'
+  },
+  marketMaking: {
+    name: 'Market Making Bot',
+    description: 'Earn the spread passively. Stacks with active trading.',
+    cost: 20,
+    passiveIncomePerDay: 500,
+    requires: 'algoEngine'
+  },
+  algoTrading: {
+    name: 'Algo Trading Suite',
+    description: 'Automated strategy execution. Stacks with active trading.',
+    cost: 25,
+    passiveIncomePerDay: 1000,
+    requires: 'algoEngine'
+  }
 };
 
 // ============================================================================

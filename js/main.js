@@ -24,6 +24,7 @@ class Game {
 
     this.pendingInsiderTips = [];
     this.activeInsiderTip = null;
+    this.pendingInsiderDecision = null;
 
     this.runEndReason = '';
     this.lastNetWorth = 0;
@@ -213,7 +214,10 @@ class Game {
       this.progression.data.runCount
     );
 
-    this.ui.showRunEnd(this, result);
+    // Get ranking
+    const ranking = this.leaderboard.getRankForScore(this.trading.netWorth, 'longestSurvival');
+
+    this.ui.showRunEnd(this, result, ranking);
   }
 
   // --- Player Actions ---
@@ -298,13 +302,61 @@ class Game {
       return;
     }
 
-    this.audio.playIllegalAction();
-    const tip = this.sec.doInsiderTrade(this.market, this.trading);
-    if (tip) {
-      this.activeInsiderTip = tip;
-      this.news.addSecNews(`INSIDER TIP: ${tip.text}`, this.currentDay);
+    // Generate tip without applying SEC hit yet
+    const assets = this.market.getAllAssets();
+    if (assets.length === 0) return;
+
+    const asset = assets[Math.floor(Math.random() * assets.length)];
+    const direction = Math.random() > 0.5 ? 'up' : 'down';
+    const magnitude = 10 + Math.random() * 15; // 10-25%
+    const daysUntil = 3 + Math.floor(Math.random() * 5); // 3-7 days
+
+    const tip = {
+      ticker: asset.ticker,
+      direction,
+      magnitude,
+      daysUntil,
+      dayReceived: this.currentDay,
+      text: `${asset.ticker} will move ${direction} ${magnitude.toFixed(0)}% in ${daysUntil} days`
+    };
+
+    // Pause game and show modal
+    if (this.state === 'playing') {
+      this.togglePause();
     }
+
+    this.ui.showInsiderModal(tip);
+  }
+
+  acceptInsiderTip(tip) {
+    this.audio.playIllegalAction();
+
+    // Apply SEC hit
+    this.sec.addAttention(CONFIG.INSIDER_TRADE_SEC_HIT, 'Insider trading');
+    this.trading.stats.illegalActions++;
+
+    // Add tip to pending
+    this.pendingInsiderTips.push(tip);
+    this.activeInsiderTip = tip;
+
+    this.news.addSecNews(`INSIDER TIP: ${tip.text}`, this.currentDay);
+
+    // Resume game
+    if (this.state === 'paused') {
+      this.togglePause();
+    }
+
+    this.ui.hideInsiderModal();
     this.ui.update(this);
+  }
+
+  ignoreInsiderTip() {
+    // Just resume game
+    if (this.state === 'paused') {
+      this.togglePause();
+    }
+
+    this.ui.hideInsiderModal();
   }
 
   doLiborRig() {
@@ -365,6 +417,12 @@ class Game {
     this.ui.update(this);
   }
 
+  getCurrentDate() {
+    const startDate = new Date(CONFIG.GAME_START_DATE);
+    const currentDate = new Date(startDate.getTime() + this.currentDay * 24 * 60 * 60 * 1000);
+    return currentDate;
+  }
+
   selectAsset(ticker) {
     this.selectedAsset = ticker;
 
@@ -392,6 +450,16 @@ class Game {
 
   equipTitle(titleId) {
     return this.progression.equipTitle(titleId);
+  }
+
+  exitToMenu() {
+    if (this.state !== 'playing' && this.state !== 'paused') return;
+
+    if (confirm('Exit to menu? Current progress will be lost.')) {
+      this.stopTicker();
+      this.audio.stopMusic();
+      this.showMenu();
+    }
   }
 }
 

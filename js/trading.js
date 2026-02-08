@@ -105,11 +105,6 @@ class TradingEngine {
     const asset = market.getAsset(ticker);
     if (!asset) return { success: false, message: 'Asset not found' };
 
-    const maxPos = this.getMaxPositions(metaProgression);
-    if (this.positions.length >= maxPos) {
-      return { success: false, message: `Max ${maxPos} positions reached` };
-    }
-
     if (!this.canTrade(metaProgression)) {
       return { success: false, message: 'Trade on cooldown' };
     }
@@ -128,17 +123,39 @@ class TradingEngine {
     }
 
     this.cash -= cashNeeded;
-    this.positions.push({
-      ticker,
-      name: asset.name,
-      quantity,
-      entryPrice: asset.price,
-      entryDay: currentDay,
-      type: 'long',
-      leverage,
-      lowestPriceSinceEntry: asset.price,
-      daysInLoss: 0,
-    });
+
+    // Check if position with same ticker and type already exists
+    const existingPos = this.positions.find(p => p.ticker === ticker && p.type === 'long');
+
+    if (existingPos) {
+      // Consolidate: calculate weighted average entry price
+      const totalQuantity = existingPos.quantity + quantity;
+      const weightedEntry = (existingPos.quantity * existingPos.entryPrice + quantity * asset.price) / totalQuantity;
+
+      existingPos.quantity = totalQuantity;
+      existingPos.entryPrice = weightedEntry;
+      // Keep earliest entryDay
+      existingPos.entryDay = Math.min(existingPos.entryDay, currentDay);
+    } else {
+      // Check position limit only when creating new position
+      const maxPos = this.getMaxPositions(metaProgression);
+      if (this.positions.length >= maxPos) {
+        this.cash += cashNeeded; // refund
+        return { success: false, message: `Max ${maxPos} positions reached` };
+      }
+
+      this.positions.push({
+        ticker,
+        name: asset.name,
+        quantity,
+        entryPrice: asset.price,
+        entryDay: currentDay,
+        type: 'long',
+        leverage,
+        lowestPriceSinceEntry: asset.price,
+        daysInLoss: 0,
+      });
+    }
 
     this.lastTradeTime = Date.now();
     this.stats.totalTrades++;
@@ -238,11 +255,6 @@ class TradingEngine {
     const asset = market.getAsset(ticker);
     if (!asset) return { success: false, message: 'Asset not found' };
 
-    const maxPos = this.getMaxPositions(metaProgression);
-    if (this.positions.length >= maxPos) {
-      return { success: false, message: `Max ${maxPos} positions reached` };
-    }
-
     if (!this.canTrade(metaProgression)) {
       return { success: false, message: 'Trade on cooldown' };
     }
@@ -261,17 +273,39 @@ class TradingEngine {
     }
 
     this.cash -= collateral;
-    this.positions.push({
-      ticker,
-      name: asset.name,
-      quantity,
-      entryPrice: asset.price,
-      entryDay: currentDay,
-      type: 'short',
-      leverage,
-      lowestPriceSinceEntry: asset.price,
-      daysInLoss: 0,
-    });
+
+    // Check if position with same ticker and type already exists
+    const existingPos = this.positions.find(p => p.ticker === ticker && p.type === 'short');
+
+    if (existingPos) {
+      // Consolidate: calculate weighted average entry price
+      const totalQuantity = existingPos.quantity + quantity;
+      const weightedEntry = (existingPos.quantity * existingPos.entryPrice + quantity * asset.price) / totalQuantity;
+
+      existingPos.quantity = totalQuantity;
+      existingPos.entryPrice = weightedEntry;
+      // Keep earliest entryDay
+      existingPos.entryDay = Math.min(existingPos.entryDay, currentDay);
+    } else {
+      // Check position limit only when creating new position
+      const maxPos = this.getMaxPositions(metaProgression);
+      if (this.positions.length >= maxPos) {
+        this.cash += collateral; // refund
+        return { success: false, message: `Max ${maxPos} positions reached` };
+      }
+
+      this.positions.push({
+        ticker,
+        name: asset.name,
+        quantity,
+        entryPrice: asset.price,
+        entryDay: currentDay,
+        type: 'short',
+        leverage,
+        lowestPriceSinceEntry: asset.price,
+        daysInLoss: 0,
+      });
+    }
 
     this.lastTradeTime = Date.now();
     this.stats.totalTrades++;
@@ -362,18 +396,32 @@ class TradingEngine {
     return { pnl, pnlPercent, currentPrice: asset.price };
   }
 
-  // Passive income from scalping/arbitrage/market-making
+  // Passive income from modes and equipable tools
   processPassiveIncome(mode, metaProgression) {
+    let income = 0;
+
+    // Mode-based passive income (if mode is passive)
     const modeConfig = TRADING_MODES[mode];
-    if (!modeConfig || !modeConfig.isPassive) return 0;
+    if (modeConfig && modeConfig.isPassive) {
+      income += modeConfig.passiveIncomePerDay;
+    }
 
-    let income = modeConfig.passiveIncomePerDay;
+    // Tool-based passive income (stacks with mode)
+    if (metaProgression && metaProgression.equippedTool) {
+      const tool = EQUIPABLE_TOOLS[metaProgression.equippedTool];
+      if (tool) {
+        income += tool.passiveIncomePerDay;
+      }
+    }
 
-    // Leverage applies to passive income too
-    const leverage = this.getLeverage(metaProgression);
-    income *= Math.sqrt(leverage); // diminishing returns on passive leverage
+    if (income > 0) {
+      // Leverage applies to passive income too
+      const leverage = this.getLeverage(metaProgression);
+      income *= Math.sqrt(leverage); // diminishing returns on passive leverage
 
-    this.cash += income;
+      this.cash += income;
+    }
+
     return income;
   }
 }

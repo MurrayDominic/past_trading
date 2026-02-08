@@ -87,7 +87,7 @@ class ChartManager {
     });
   }
 
-  renderActiveChart(market, currentDay, mode) {
+  renderActiveChart(market, currentDay, mode, positions = []) {
     const activeTab = this.tabs.find(t => t.active);
     if (!activeTab) return;
 
@@ -102,13 +102,13 @@ class ChartManager {
     activeTab.canvas.height = rect.height;
 
     if (mode === 'dayTrading' && asset.ohlcHistory && asset.ohlcHistory.length > 1) {
-      this.renderCandlestickChart(activeTab, asset);
+      this.renderCandlestickChart(activeTab, asset, positions);
     } else if (asset.history && asset.history.length > 1) {
-      this.renderLineChart(activeTab, asset);
+      this.renderLineChart(activeTab, asset, positions);
     }
   }
 
-  renderCandlestickChart(tab, asset) {
+  renderCandlestickChart(tab, asset, positions = []) {
     const ctx = tab.ctx;
     const canvas = tab.canvas;
     const w = canvas.width;
@@ -127,6 +127,14 @@ class ChartManager {
       min = Math.min(min, bar.low);
       max = Math.max(max, bar.high);
     });
+
+    // Check for position entry price to include in range
+    const position = positions.find(p => p.ticker === asset.ticker);
+    if (position) {
+      min = Math.min(min, position.entryPrice);
+      max = Math.max(max, position.entryPrice);
+    }
+
     const range = max - min;
     if (range === 0) return;
 
@@ -179,6 +187,25 @@ class ChartManager {
       ctx.fillRect(x - candleWidth / 2, bodyTop, candleWidth, bodyHeight);
     });
 
+    // Draw entry price line if position exists
+    if (position) {
+      const entryY = toY(position.entryPrice);
+      ctx.setLineDash([5, 5]);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(padding, entryY);
+      ctx.lineTo(w - 20, entryY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Entry price label
+      ctx.font = '11px var(--font-mono)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.textAlign = 'left';
+      ctx.fillText(`Entry: ${this.formatPrice(position.entryPrice)}`, padding + 10, entryY - 6);
+    }
+
     // Current price label
     const lastBar = data[data.length - 1];
     const isGreen = lastBar.close >= lastBar.open;
@@ -193,7 +220,7 @@ class ChartManager {
     ctx.fillText(asset.ticker, 20, 50);
   }
 
-  renderLineChart(tab, asset) {
+  renderLineChart(tab, asset, positions = []) {
     const ctx = tab.ctx;
     const canvas = tab.canvas;
     const w = canvas.width;
@@ -207,8 +234,16 @@ class ChartManager {
     if (data.length < 2) return;
 
     // Find min/max
-    const min = Math.min(...data);
-    const max = Math.max(...data);
+    let min = Math.min(...data);
+    let max = Math.max(...data);
+
+    // Check for position entry price to include in range
+    const position = positions.find(p => p.ticker === asset.ticker);
+    if (position) {
+      min = Math.min(min, position.entryPrice);
+      max = Math.max(max, position.entryPrice);
+    }
+
     const range = max - min;
     if (range === 0) return;
 
@@ -251,6 +286,25 @@ class ChartManager {
     ctx.closePath();
     ctx.fillStyle = 'rgba(90, 200, 250, 0.1)';
     ctx.fill();
+
+    // Draw entry price line if position exists
+    if (position) {
+      const entryY = toY(position.entryPrice);
+      ctx.setLineDash([5, 5]);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(padding, entryY);
+      ctx.lineTo(w - 20, entryY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Entry price label
+      ctx.font = '11px var(--font-mono)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.textAlign = 'left';
+      ctx.fillText(`Entry: ${this.formatPrice(position.entryPrice)}`, padding + 10, entryY - 6);
+    }
 
     // Current price label
     const lastPrice = data[data.length - 1];

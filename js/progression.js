@@ -14,6 +14,8 @@ class ProgressionSystem {
       runCount: 0,
       totalArrests: 0,
       unlocks: {},
+      ownedTools: [],
+      equippedTool: null,
       equippedTitle: null,
       earnedAchievements: {},
       runHistory: [],
@@ -237,6 +239,44 @@ class ProgressionSystem {
     if (!this.data.equippedTitle) return null;
     const achievement = ACHIEVEMENTS[this.data.equippedTitle];
     return achievement ? achievement.titleBonus : null;
+  }
+
+  purchaseTool(toolId) {
+    const tool = EQUIPABLE_TOOLS[toolId];
+    if (!tool) return { success: false, message: 'Unknown tool' };
+
+    if (this.data.ownedTools.includes(toolId)) {
+      return { success: false, message: 'Already owned' };
+    }
+
+    if (tool.requires && !this.data.unlocks[tool.requires]) {
+      return { success: false, message: `Requires: ${UNLOCKS[tool.requires].name}` };
+    }
+
+    if (this.data.prestigePoints < tool.cost) {
+      return { success: false, message: `Need ${tool.cost} PP, have ${this.data.prestigePoints.toFixed(1)}` };
+    }
+
+    this.data.prestigePoints -= tool.cost;
+    this.data.ownedTools.push(toolId);
+    this.save();
+
+    return { success: true, message: `Purchased: ${tool.name}!` };
+  }
+
+  equipTool(toolId) {
+    if (!this.data.ownedTools.includes(toolId)) {
+      return { success: false, message: 'Tool not owned' };
+    }
+
+    this.data.equippedTool = toolId;
+    this.save();
+    return { success: true, message: `Equipped tool: ${EQUIPABLE_TOOLS[toolId].name}` };
+  }
+
+  unequipTool() {
+    this.data.equippedTool = null;
+    this.save();
   }
 
   resetProgress() {
