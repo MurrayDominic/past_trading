@@ -1064,10 +1064,40 @@ input[type="range"].year-slider {
   flex-direction: column;
 }
 
-.asset-search-input {
-  width: 100%;
+.asset-filter-controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: var(--spacing-md);
+}
+
+.category-dropdown {
+  flex: 0 0 auto;
+  min-width: 150px;
   padding: 8px 12px;
-  margin: 0 0 var(--spacing-md) 0;
+  background: var(--rh-darker);
+  border: 1px solid var(--rh-border);
+  border-radius: 8px;
+  color: var(--rh-text);
+  font-size: 14px;
+  font-family: var(--font-primary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.category-dropdown:hover {
+  background: var(--rh-panel);
+  border-color: var(--rh-border-strong);
+}
+
+.category-dropdown:focus {
+  outline: none;
+  border-color: var(--rh-accent);
+}
+
+.asset-search-input {
+  flex: 1;
+  padding: 8px 12px;
+  margin: 0;
   background: var(--rh-panel);
   border: 1px solid var(--rh-border);
   border-radius: 6px;
@@ -1697,6 +1727,7 @@ canvas {
   background: var(--rh-darker);
   padding: var(--spacing-md);
   border-radius: 8px;
+  text-align: center;
 }
 
 .run-end-stat-label {
@@ -1705,12 +1736,64 @@ canvas {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: var(--spacing-sm);
+  display: block;
+  text-align: center;
 }
 
 .run-end-stat-value {
   font-size: 24px;
   font-weight: 700;
   font-family: var(--font-mono);
+  display: block;
+  text-align: center;
+}
+
+/* Additional centering for dynamically generated stat elements */
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-md);
+  margin: var(--spacing-xl) 0;
+}
+
+.stat-item {
+  background: var(--rh-darker);
+  padding: var(--spacing-md);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--rh-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--spacing-sm);
+  display: block;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  display: block;
+  text-align: center;
+}
+
+.ranking-display {
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.ranking-display h3 {
+  font-size: 24px;
+  margin-bottom: var(--spacing-sm);
+}
+
+.achievement-card {
+  text-align: center;
+  margin-bottom: var(--spacing-sm);
 }
 
 /* Scrollbar Styling */
@@ -1901,6 +1984,64 @@ canvas {
 .impact-indicator {
   font-size: 12px;
   margin-right: var(--spacing-xs);
+}
+
+/* Floating P&L Animations */
+.floating-pnl {
+  position: absolute;
+  top: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 24px;
+  font-weight: bold;
+  pointer-events: none;
+  z-index: 9999;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+}
+
+.floating-pnl-up {
+  color: var(--rh-green);
+  animation: float-up 2s ease-out forwards;
+}
+
+@keyframes float-up {
+  0% {
+    transform: translate(-50%, 100px);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -200px);
+    opacity: 0;
+  }
+}
+
+.floating-pnl-down {
+  color: var(--rh-red);
+  animation: float-down 2s ease-out forwards;
+}
+
+@keyframes float-down {
+  0% {
+    transform: translate(-50%, 100px);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, 400px);
+    opacity: 0;
+  }
 }
 
 /* Utility Classes */

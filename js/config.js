@@ -82,6 +82,69 @@ const CONFIG = {
 };
 
 // ============================================================================
+// STOCK CATEGORIES
+// ============================================================================
+
+const STOCK_CATEGORIES = {
+  utilities: {
+    name: 'Utilities',
+    description: 'Boring but stable. Electric, water, gas companies.',
+    icon: '⚡',
+    unlocked: true,  // Default unlocked
+    sortOrder: 1
+  },
+  consumer: {
+    name: 'Consumer Staples',
+    description: 'Food, household goods. Everyone needs toilet paper.',
+    icon: '🛒',
+    unlocked: true,  // Default unlocked
+    sortOrder: 2
+  },
+  finance: {
+    name: 'Finance',
+    description: 'Banks and financial services.',
+    icon: '🏦',
+    unlocked: false,
+    sortOrder: 3
+  },
+  healthcare: {
+    name: 'Healthcare',
+    description: 'Pharma and medical devices.',
+    icon: '💊',
+    unlocked: false,
+    sortOrder: 4
+  },
+  industrials: {
+    name: 'Industrials',
+    description: 'Manufacturing and heavy industry.',
+    icon: '🏭',
+    unlocked: false,
+    sortOrder: 5
+  },
+  energy: {
+    name: 'Energy',
+    description: 'Oil, gas, renewables.',
+    icon: '🛢️',
+    unlocked: false,
+    sortOrder: 6
+  },
+  tech: {
+    name: 'Technology',
+    description: 'Growth stocks. High risk, high reward.',
+    icon: '💻',
+    unlocked: false,
+    sortOrder: 7
+  },
+  meme: {
+    name: 'Meme Stocks',
+    description: 'WSB favorites. 🚀',
+    icon: '🚀',
+    unlocked: false,
+    sortOrder: 8
+  }
+};
+
+// ============================================================================
 // TRADING MODES
 // ============================================================================
 
@@ -203,6 +266,51 @@ const UNLOCKS = {
   morePositions: { name: 'Portfolio Expansion', cost: 4, description: 'Hold up to 10 positions', category: 'trading', maxPositions: 10 },
   startingCash2x:{ name: 'Trust Fund Kid', cost: 6, description: 'Start with $20,000', category: 'starting', cashMultiplier: 2 },
   startingCash5x:{ name: 'Rich Parents', cost: 15, description: 'Start with $50,000', category: 'starting', cashMultiplier: 5, requires: 'startingCash2x' },
+
+  // Stock sector unlocks
+  financeStocks: {
+    name: 'Finance Sector',
+    cost: 3,
+    description: 'Unlock banks and financial services stocks',
+    category: 'sectors',
+    unlocksCategory: 'finance'
+  },
+  healthcareStocks: {
+    name: 'Healthcare Sector',
+    cost: 4,
+    description: 'Unlock pharmaceutical and medical stocks',
+    category: 'sectors',
+    unlocksCategory: 'healthcare'
+  },
+  industrialsStocks: {
+    name: 'Industrials Sector',
+    cost: 5,
+    description: 'Unlock manufacturing and industrial stocks',
+    category: 'sectors',
+    unlocksCategory: 'industrials'
+  },
+  energyStocks: {
+    name: 'Energy Sector',
+    cost: 6,
+    description: 'Unlock oil, gas, and energy stocks',
+    category: 'sectors',
+    unlocksCategory: 'energy'
+  },
+  techStocks: {
+    name: 'Tech Sector',
+    cost: 8,
+    description: 'Unlock high-growth technology stocks',
+    category: 'sectors',
+    unlocksCategory: 'tech'
+  },
+  memeStocks: {
+    name: 'Meme Stocks',
+    cost: 10,
+    description: 'Unlock WSB favorites. YOLO.',
+    category: 'sectors',
+    unlocksCategory: 'meme',
+    requires: 'techStocks'  // Requires tech first
+  }
 };
 
 // ============================================================================

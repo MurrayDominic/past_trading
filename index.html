@@ -140,6 +140,7 @@
       <div class="header-left">
         <span class="day-counter" id="day-counter">Day 0 / 365</span>
         <span class="countdown-timer" id="countdown-timer">T-365 days</span>
+        <button class="btn btn-small" id="pause-btn-alt" style="margin-left: 10px; margin-right: 10px;">Pause</button>
         <div class="speed-controls">
           <button class="speed-btn" data-speed="0.5">0.5x</button>
           <button class="speed-btn active" data-speed="1">1x</button>
@@ -163,10 +164,16 @@
       <!-- Asset Selector -->
       <div class="panel-section">
         <div class="section-title">Assets</div>
-        <input type="text"
-               id="asset-search"
-               class="asset-search-input"
-               placeholder="Search ticker or name...">
+        <div class="asset-filter-controls">
+          <select id="category-filter" class="category-dropdown">
+            <option value="all">All Categories</option>
+            <!-- Options populated dynamically -->
+          </select>
+          <input type="text"
+                 id="asset-search"
+                 class="asset-search-input"
+                 placeholder="Search ticker or name...">
+        </div>
         <div id="asset-selector" class="asset-list"></div>
       </div>
 

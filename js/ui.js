@@ -11,6 +11,8 @@ class GameUI {
     this.tradeResultTimeout = null;
     this.chartManager = null;
     this.netWorthTimeRange = 'max';  // Time range filter for net worth graph
+    this.currentSearchTerm = '';  // Store search term across ticks
+    this.currentCategoryFilter = 'all';  // Store category filter across ticks
   }
 
   init() {
@@ -30,6 +32,7 @@ class GameUI {
       volumeSlider: document.getElementById('volume-slider'),
 
       // Trading panel
+      categoryFilter: document.getElementById('category-filter'),
       assetSearch: document.getElementById('asset-search'),
       assetSelector: document.getElementById('asset-selector'),
       tradeQuantity: document.getElementById('trade-quantity'),
@@ -175,6 +178,12 @@ class GameUI {
       this.el.pauseBtn.addEventListener('click', () => this.game.togglePause());
     }
 
+    // Pause (alternate button near timer)
+    const pauseBtnAlt = document.getElementById('pause-btn-alt');
+    if (pauseBtnAlt) {
+      pauseBtnAlt.addEventListener('click', () => this.game.togglePause());
+    }
+
     // Exit
     const exitBtn = document.getElementById('exit-btn');
     if (exitBtn) {
@@ -201,9 +210,18 @@ class GameUI {
       });
     }
 
+    // Category filter dropdown
+    if (this.el.categoryFilter) {
+      this.el.categoryFilter.addEventListener('change', (e) => {
+        this.currentCategoryFilter = e.target.value;
+        this.filterAssets(this.currentSearchTerm);
+      });
+    }
+
     // Asset search
     if (this.el.assetSearch) {
       this.el.assetSearch.addEventListener('input', (e) => {
+        this.currentSearchTerm = e.target.value;  // Store term
         this.filterAssets(e.target.value);
       });
     }
@@ -212,6 +230,15 @@ class GameUI {
     if (this.el.addChartBtn) {
       this.el.addChartBtn.addEventListener('click', () => {
         if (this.game.selectedAsset && this.chartManager) {
+          // Prevent at high speeds
+          if (this.game.speed > 5) {
+            this.showTradeResult({
+              success: false,
+              message: 'Charts disabled above 5x speed'
+            });
+            return;
+          }
+
           if (!this.chartManager.hasTab(this.game.selectedAsset)) {
             this.chartManager.addTab(this.game.selectedAsset, 'line');
           }
@@ -422,6 +449,16 @@ class GameUI {
       this.el.loadingOverlay.classList.add('hidden');
     }
 
+    // Reset filters on new run
+    this.currentSearchTerm = '';
+    this.currentCategoryFilter = 'all';
+    if (this.el.assetSearch) {
+      this.el.assetSearch.value = '';
+    }
+
+    // Populate category dropdown
+    this.renderCategoryDropdown();
+
     // Initialize chart manager
     if (!this.chartManager && this.el.chartContainer && this.el.chartTabsBar) {
       this.chartManager = new ChartManager(
@@ -434,6 +471,27 @@ class GameUI {
         this.chartManager.addTab(this.game.selectedAsset, 'line');
       }
     }
+  }
+
+  renderCategoryDropdown() {
+    if (!this.el.categoryFilter) return;
+
+    const unlockedCategories = this.game.progression.getUnlockedCategories();
+
+    let html = '<option value="all">All Categories</option>';
+
+    // Sort by sortOrder
+    const sortedCategories = Object.entries(STOCK_CATEGORIES)
+      .filter(([key]) => unlockedCategories.includes(key))
+      .sort((a, b) => a[1].sortOrder - b[1].sortOrder);
+
+    for (const [key, config] of sortedCategories) {
+      const stockCount = SP500_ASSETS.filter(a => (a.category || 'consumer') === key).length;
+      html += `<option value="${key}">${config.icon} ${config.name} (${stockCount})</option>`;
+    }
+
+    this.el.categoryFilter.innerHTML = html;
+    this.el.categoryFilter.value = this.currentCategoryFilter;
   }
 
   showPauseOverlay(show) {
@@ -749,46 +807,58 @@ class GameUI {
     // Now reading costs and requirements from UNLOCKS config
     this.treeStructure = [
       {
-        category: '💪 Trading Power',
-        icon: '💪',
+        category: 'Trading Power',
+        icon: '',
         nodes: [
-          { id: 'leverage2x', name: '2x Leverage', icon: '📈', cost: UNLOCKS.leverage2x.cost },
-          { id: 'leverage5x', name: '5x Leverage', icon: '🚀', cost: UNLOCKS.leverage5x.cost, requires: [UNLOCKS.leverage5x.requires] },
-          { id: 'leverage10x', name: '10x Leverage', icon: '💥', cost: UNLOCKS.leverage10x.cost, requires: [UNLOCKS.leverage10x.requires] },
+          { id: 'leverage2x', name: '2x Leverage', icon: '', cost: UNLOCKS.leverage2x.cost },
+          { id: 'leverage5x', name: '5x Leverage', icon: '', cost: UNLOCKS.leverage5x.cost, requires: [UNLOCKS.leverage5x.requires] },
+          { id: 'leverage10x', name: '10x Leverage', icon: '', cost: UNLOCKS.leverage10x.cost, requires: [UNLOCKS.leverage10x.requires] },
         ]
       },
       {
-        category: '💰 Fee Reduction',
-        icon: '💰',
+        category: 'Fee Reduction',
+        icon: '',
         nodes: [
-          { id: 'reducedFees1', name: 'Fees -25%', icon: '💵', cost: UNLOCKS.reducedFees1.cost },
-          { id: 'reducedFees2', name: 'Fees -50%', icon: '💴', cost: UNLOCKS.reducedFees2.cost, requires: [UNLOCKS.reducedFees2.requires] },
-          { id: 'reducedFees3', name: 'Fees -75%', icon: '💶', cost: UNLOCKS.reducedFees3.cost, requires: [UNLOCKS.reducedFees3.requires] },
+          { id: 'reducedFees1', name: 'Fees -25%', icon: '', cost: UNLOCKS.reducedFees1.cost },
+          { id: 'reducedFees2', name: 'Fees -50%', icon: '', cost: UNLOCKS.reducedFees2.cost, requires: [UNLOCKS.reducedFees2.requires] },
+          { id: 'reducedFees3', name: 'Fees -75%', icon: '', cost: UNLOCKS.reducedFees3.cost, requires: [UNLOCKS.reducedFees3.requires] },
         ]
       },
       {
-        category: '💼 Career Path',
-        icon: '💼',
+        category: 'Career Path',
+        icon: '',
         nodes: [
-          { id: 'morePositions', name: 'Portfolio+', icon: '📊', cost: UNLOCKS.morePositions.cost },
-          { id: 'startingCash2x', name: 'Trust Fund', icon: '💵', cost: UNLOCKS.startingCash2x.cost },
-          { id: 'startingCash5x', name: 'Rich Parents', icon: '💰', cost: UNLOCKS.startingCash5x.cost, requires: [UNLOCKS.startingCash5x.requires] },
+          { id: 'morePositions', name: 'Portfolio+', icon: '', cost: UNLOCKS.morePositions.cost },
+          { id: 'startingCash2x', name: 'Trust Fund', icon: '', cost: UNLOCKS.startingCash2x.cost },
+          { id: 'startingCash5x', name: 'Rich Parents', icon: '', cost: UNLOCKS.startingCash5x.cost, requires: [UNLOCKS.startingCash5x.requires] },
         ]
       },
       {
-        category: '🕵️ Stealth',
-        icon: '🕵️',
+        category: 'Stealth',
+        icon: '',
         nodes: [
-          { id: 'lowerSurv1', name: 'Low Profile I', icon: '👤', cost: UNLOCKS.lowerSurv1.cost },
-          { id: 'lowerSurv2', name: 'Low Profile II', icon: '👥', cost: UNLOCKS.lowerSurv2.cost, requires: [UNLOCKS.lowerSurv2.requires] },
+          { id: 'lowerSurv1', name: 'Low Profile I', icon: '', cost: UNLOCKS.lowerSurv1.cost },
+          { id: 'lowerSurv2', name: 'Low Profile II', icon: '', cost: UNLOCKS.lowerSurv2.cost, requires: [UNLOCKS.lowerSurv2.requires] },
         ]
       },
       {
-        category: '⚠️ Illegal Activities',
-        icon: '⚠️',
+        category: 'Naughty Activities',
+        icon: '',
         nodes: [
-          { id: 'politicalDonations', name: 'PAC Access', icon: '🏛️', cost: UNLOCKS.politicalDonations.cost },
-          { id: 'insiderNetwork', name: 'Insider Network', icon: '🕵️', cost: UNLOCKS.insiderNetwork.cost },
+          { id: 'politicalDonations', name: 'PAC Access', icon: '', cost: UNLOCKS.politicalDonations.cost },
+          { id: 'insiderNetwork', name: 'Insider Network', icon: '', cost: UNLOCKS.insiderNetwork.cost },
+        ]
+      },
+      {
+        category: 'Stock Sectors',
+        icon: '📊',
+        nodes: [
+          { id: 'financeStocks', name: 'Finance', icon: '🏦', cost: UNLOCKS.financeStocks.cost },
+          { id: 'healthcareStocks', name: 'Healthcare', icon: '💊', cost: UNLOCKS.healthcareStocks.cost },
+          { id: 'industrialsStocks', name: 'Industrials', icon: '🏭', cost: UNLOCKS.industrialsStocks.cost },
+          { id: 'energyStocks', name: 'Energy', icon: '🛢️', cost: UNLOCKS.energyStocks.cost },
+          { id: 'techStocks', name: 'Tech', icon: '💻', cost: UNLOCKS.techStocks.cost },
+          { id: 'memeStocks', name: 'Meme', icon: '🚀', cost: UNLOCKS.memeStocks.cost, requires: [UNLOCKS.memeStocks.requires] },
         ]
       },
     ];
@@ -797,7 +867,7 @@ class GameUI {
     let treeHtml = '';
     for (const category of this.treeStructure) {
       treeHtml += `<div class="tree-category">`;
-      treeHtml += `<div class="tree-category-title">${category.icon} ${category.category}</div>`;
+      treeHtml += `<div class="tree-category-title">${category.category}</div>`;
       treeHtml += `<div class="tree-nodes">`;
 
       for (let i = 0; i < category.nodes.length; i++) {
@@ -824,7 +894,6 @@ class GameUI {
 
         treeHtml += `
           <div class="tree-node ${statusClass}" data-node-id="${node.id}">
-            <div class="node-icon">${node.icon}</div>
             <div class="node-name">${node.name}</div>
             <div class="node-cost">${node.cost} PP</div>
             <div class="node-status ${statusClass}">${statusText}</div>
@@ -1037,8 +1106,12 @@ class GameUI {
       }
     }
 
-    // Asset selector
-    this.renderAssetSelector(game);
+    // Asset selector - preserve search filter across ticks
+    if (this.currentSearchTerm) {
+      this.filterAssets(this.currentSearchTerm);
+    } else {
+      this.renderAssetSelector(game);
+    }
 
     // Net worth graph
     this.renderGraph(game);
@@ -1150,8 +1223,20 @@ class GameUI {
     const searchLower = searchTerm.toLowerCase().trim();
 
     let filtered = assets;
+
+    // Apply category filter first
+    if (this.currentCategoryFilter !== 'all') {
+      filtered = filtered.filter(asset => {
+        // Get category from SP500_ASSETS by ticker
+        const assetDef = SP500_ASSETS.find(a => a.ticker === asset.ticker);
+        const category = assetDef ? (assetDef.category || 'consumer') : 'consumer';
+        return category === this.currentCategoryFilter;
+      });
+    }
+
+    // Then apply search filter
     if (searchTerm) {
-      filtered = assets.filter(asset => {
+      filtered = filtered.filter(asset => {
         const ticker = asset.ticker.toLowerCase();
         const name = asset.name.toLowerCase();
 
@@ -1350,17 +1435,23 @@ class GameUI {
             </div>
           </div>
           ${pos.leverage > 1 ? `<div style="font-size: 11px; color: var(--rh-yellow); margin-bottom: 8px;">${pos.leverage}x Leverage</div>` : ''}
-          <button class="btn btn-sell btn-small" style="width: 100%;" data-pos-index="${i}">Close Position</button>
+          <button class="btn btn-sell btn-small" style="width: 100%;"
+                  data-ticker="${pos.ticker}"
+                  data-type="${pos.type}"
+                  data-entry-day="${pos.entryDay}">Close Position</button>
         </div>
       `;
     }
 
     this.el.portfolioList.innerHTML = html;
 
-    // Bind sell buttons
+    // Bind sell buttons using stable identifiers
     document.querySelectorAll('.btn-sell').forEach(btn => {
       btn.addEventListener('click', () => {
-        game.sellPosition(parseInt(btn.dataset.posIndex));
+        const ticker = btn.dataset.ticker;
+        const type = btn.dataset.type;
+        const entryDay = parseInt(btn.dataset.entryDay);
+        game.sellPositionByIdentifier(ticker, type, entryDay);
       });
     });
   }
@@ -1444,6 +1535,30 @@ class GameUI {
       this.el.tradeResult.textContent = '';
       this.el.tradeResult.className = 'trade-result';
     }, 3000);
+  }
+
+  spawnFloatingPnL(amount) {
+    // Create floating text element
+    const floatingText = document.createElement('div');
+    floatingText.className = amount > 0 ? 'floating-pnl floating-pnl-up' : 'floating-pnl floating-pnl-down';
+
+    // Format text: +$1,234 or -$1,234
+    const sign = amount > 0 ? '+' : '';
+    floatingText.textContent = `${sign}${formatMoney(amount)}`;
+
+    // Position near center with slight random offset to avoid overlapping
+    const randomOffset = Math.random() * 50 - 25; // -25px to +25px
+    floatingText.style.left = `calc(50% + ${randomOffset}px)`;
+
+    // Append to game screen
+    this.el.gameScreen.appendChild(floatingText);
+
+    // Remove after animation completes (2 seconds)
+    setTimeout(() => {
+      if (floatingText.parentNode) {
+        floatingText.parentNode.removeChild(floatingText);
+      }
+    }, 2000);
   }
 
   // ---- Run End Screen ----

@@ -52,6 +52,15 @@ class ProgressionSystem {
           console.log('Migrated old save data - unlocked modes:', this.data.unlockedModes);
           this.save();
         }
+
+        // MIGRATION: Give existing players some category unlocks
+        if (!this.data.unlocks.hasOwnProperty('financeStocks') && this.data.runCount >= 3) {
+          // Auto-unlock first few categories for veteran players
+          this.data.unlocks.financeStocks = true;
+          this.data.unlocks.healthcareStocks = true;
+          console.log('Migrated save: unlocked finance and healthcare sectors');
+          this.save();
+        }
       }
     } catch (e) {
       console.warn('Failed to load progression:', e);
@@ -363,5 +372,25 @@ class ProgressionSystem {
   resetProgress() {
     this.data = this.getDefaultData();
     this.save();
+  }
+
+  // Check if a stock category is unlocked
+  isCategoryUnlocked(category) {
+    const categoryConfig = STOCK_CATEGORIES[category];
+    if (!categoryConfig) return false;
+    if (categoryConfig.unlocked) return true;  // Default unlocked
+
+    // Find unlock that unlocks this category
+    const unlockKey = Object.keys(UNLOCKS).find(key =>
+      UNLOCKS[key].unlocksCategory === category
+    );
+    return unlockKey && this.data.unlocks[unlockKey];
+  }
+
+  // Get all unlocked categories
+  getUnlockedCategories() {
+    return Object.keys(STOCK_CATEGORIES).filter(cat =>
+      this.isCategoryUnlocked(cat)
+    );
   }
 }

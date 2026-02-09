@@ -98,7 +98,7 @@ class Game {
 
       // Init subsystems (market.init is now async)
       // Pass selected year range from year selection UI
-      await this.market.init(mode, this.dataLoader, this.selectedYears.start, this.selectedYears.end);
+      await this.market.init(mode, this.dataLoader, this.progression, this.selectedYears.start, this.selectedYears.end);
       this.trading.init(CONFIG.STARTING_CASH, this.progression.data);
       this.sec.init();
       this.news.init(this.dataLoader);
@@ -192,6 +192,11 @@ class Game {
     const netWorthChange = currentNetWorth - this.lastNetWorth;
     const percentChange = this.lastNetWorth > 0 ? netWorthChange / this.lastNetWorth : 0;
 
+    // Floating text for significant P&L changes
+    if (Math.abs(netWorthChange) >= 1000) {
+      this.ui.spawnFloatingPnL(netWorthChange);
+    }
+
     if (percentChange >= 0.05 && percentChange < 0.10) {
       this.audio.playSmallGain();
     }
@@ -266,6 +271,11 @@ class Game {
     const currentNetWorth = this.trading.netWorth;
     const netWorthChange = currentNetWorth - this.lastNetWorth;
     const percentChange = this.lastNetWorth > 0 ? netWorthChange / this.lastNetWorth : 0;
+
+    // Floating text for significant P&L changes
+    if (Math.abs(netWorthChange) >= 1000) {
+      this.ui.spawnFloatingPnL(netWorthChange);
+    }
 
     if (percentChange >= 0.05 && percentChange < 0.10) {
       this.audio.playSmallGain();
@@ -384,6 +394,47 @@ class Game {
 
     const result = this.trading.sell(
       this.selectedAsset, index, this.market,
+      this.progression.data, this.currentDay
+    );
+
+    if (result.success) {
+      this.audio.playTradeClick();
+      this.news.addTradeNews(result.message, this.currentDay);
+
+      // Suspicious timing with events
+      if (this.market.activeEvent && result.profit > 0) {
+        this.sec.addAttention(2, 'Suspiciously timed trade');
+      }
+    }
+
+    this.ui.showTradeResult(result);
+    this.ui.update(this);
+  }
+
+  sellPositionByIdentifier(ticker, type, entryDay) {
+    if (this.state !== 'playing') return;
+    if (this.sec.tradeRestricted) {
+      this.news.addSecNews('Trade blocked: Under investigation', this.currentDay);
+      return;
+    }
+
+    // Find position by stable identifier
+    const index = this.trading.positions.findIndex(p =>
+      p.ticker === ticker &&
+      p.type === type &&
+      p.entryDay === entryDay
+    );
+
+    if (index === -1) {
+      this.ui.showTradeResult({
+        success: false,
+        message: 'Position no longer exists'
+      });
+      return;
+    }
+
+    const result = this.trading.sell(
+      ticker, index, this.market,
       this.progression.data, this.currentDay
     );
 
@@ -554,6 +605,13 @@ class Game {
 
     // Auto-manage chart tabs when asset is selected
     if (this.ui.chartManager && this.state === 'playing') {
+      // Prevent chart creation at high speeds
+      if (this.speed > 5) {
+        // Don't show error, just silently skip chart tab creation
+        this.ui.update(this);
+        return;
+      }
+
       // Check if chart tab already exists for this ticker
       const existingTab = this.ui.chartManager.tabs.find(t => t.ticker === ticker);
 

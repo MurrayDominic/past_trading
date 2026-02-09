@@ -12,7 +12,7 @@ class Market {
     this.dataLoader = null;   // Historical data loader
   }
 
-  async init(mode, dataLoader, startYear = null, endYear = null) {
+  async init(mode, dataLoader, progression, startYear = null, endYear = null) {
     this.currentMode = mode;
     this.assets = {};
     this.dayCount = 0;
@@ -28,9 +28,19 @@ class Market {
     const modeConfig = TRADING_MODES[mode];
     if (!modeConfig) return;
 
+    // Filter assets by unlocked categories for stocks mode
+    let availableAssets = modeConfig.assets;
+    if (mode === 'stocks' && progression) {
+      availableAssets = modeConfig.assets.filter(asset => {
+        const category = asset.category || 'consumer';  // Default fallback
+        return this.isCategoryUnlocked(category, progression);
+      });
+      console.log(`Filtered to ${availableAssets.length} unlocked stocks`);
+    }
+
     // Load historical data for all assets
     const category = this.getCategoryForMode(mode);
-    const loadPromises = modeConfig.assets.map(async (assetDef) => {
+    const loadPromises = availableAssets.map(async (assetDef) => {
       let historicalData = null;
       let hasHistoricalData = false;
 
@@ -353,5 +363,16 @@ class Market {
     const baseDayOffset = Math.floor(elapsedMs / (1000 * 60 * 60 * 24));
 
     return baseDayOffset + this.dayCount;
+  }
+
+  isCategoryUnlocked(category, progression) {
+    const categoryConfig = STOCK_CATEGORIES[category];
+    if (!categoryConfig) return false;
+    if (categoryConfig.unlocked) return true;
+
+    const unlockKey = Object.keys(UNLOCKS).find(key =>
+      UNLOCKS[key].unlocksCategory === category
+    );
+    return unlockKey && progression.data.unlocks[unlockKey];
   }
 }
