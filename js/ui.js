@@ -381,6 +381,7 @@ class GameUI {
     this.el.menuScreen.classList.remove('hidden');
     this.el.gameScreen.classList.add('hidden');
     this.el.runEndScreen.classList.add('hidden');
+    this.el.shopScreen.classList.add('hidden');
     if (this.el.loadingOverlay) {
       this.el.loadingOverlay.classList.add('hidden');
     }
@@ -445,6 +446,9 @@ class GameUI {
 
   renderMenu() {
     const prog = this.game.progression;
+    console.log('[Mode Unlock] renderMenu called - unlockedModes:', prog.data.unlockedModes);
+    console.log('[Mode Unlock] prog === this.game.progression?', prog === this.game.progression);
+    console.log('[Mode Unlock] prog object ID:', prog);
 
     // Stats
     this.el.menuPP.textContent = prog.data.prestigePoints.toFixed(1);
@@ -452,6 +456,7 @@ class GameUI {
 
     // Mode selector
     const modes = prog.getAvailableModes();
+    console.log('[Mode Unlock] getAvailableModes returned:', modes.map(m => ({id: m.id, unlocked: m.unlocked})));
 
     let modeHtml = '';
     for (const mode of modes) {
@@ -496,15 +501,17 @@ class GameUI {
         e.stopPropagation(); // Prevent card click event
         const modeId = btn.dataset.unlockMode;
         const result = prog.unlockMode(modeId);
+        console.log('[Mode Unlock] Unlock result:', result);
+        console.log('[Mode Unlock] After unlock - unlockedModes:', prog.data.unlockedModes);
 
         if (result.success) {
-          // Show success notification
-          this.showToast(`Unlocked ${result.mode.name}!`, 'success');
-          // Refresh menu to show newly unlocked mode
+          // Refresh menu to show newly unlocked mode - same pattern as shop
+          console.log('[Mode Unlock] Calling renderMenu to refresh...');
           this.renderMenu();
+          console.log('[Mode Unlock] renderMenu completed');
         } else {
           // Show error notification
-          this.showToast(result.message, 'error');
+          alert(result.message);
         }
       });
     });
@@ -731,71 +738,64 @@ class GameUI {
     this.renderShop();
   }
 
-  showMenu() {
-    this.el.shopScreen.classList.add('hidden');
-    this.el.menuScreen.classList.remove('hidden');
-    this.renderMenu();
-  }
-
   renderShop() {
     const prog = this.game.progression;
+    console.log('renderShop called - Current unlocks:', prog.data.unlocks);
 
     // Update PP display
     this.el.shopPP.textContent = prog.data.prestigePoints.toFixed(1);
 
-    // Define progression tree structure
-    const treeStructure = [
+    // Define progression tree structure (store as instance property)
+    // Now reading costs and requirements from UNLOCKS config
+    this.treeStructure = [
       {
         category: '💪 Trading Power',
         icon: '💪',
         nodes: [
-          { id: 'leverage2x', name: '2x Leverage', icon: '📈', cost: 10 },
-          { id: 'leverage5x', name: '5x Leverage', icon: '🚀', cost: 50, requires: ['leverage2x'] },
-          { id: 'leverage10x', name: '10x Leverage', icon: '💥', cost: 100, requires: ['leverage5x'] },
+          { id: 'leverage2x', name: '2x Leverage', icon: '📈', cost: UNLOCKS.leverage2x.cost },
+          { id: 'leverage5x', name: '5x Leverage', icon: '🚀', cost: UNLOCKS.leverage5x.cost, requires: [UNLOCKS.leverage5x.requires] },
+          { id: 'leverage10x', name: '10x Leverage', icon: '💥', cost: UNLOCKS.leverage10x.cost, requires: [UNLOCKS.leverage10x.requires] },
         ]
       },
       {
         category: '💰 Fee Reduction',
         icon: '💰',
         nodes: [
-          { id: 'reducedFees1', name: 'Fees -10%', icon: '💵', cost: 15 },
-          { id: 'reducedFees2', name: 'Fees -20%', icon: '💴', cost: 40, requires: ['reducedFees1'] },
-          { id: 'reducedFees3', name: 'Fees -30%', icon: '💶', cost: 80, requires: ['reducedFees2'] },
+          { id: 'reducedFees1', name: 'Fees -25%', icon: '💵', cost: UNLOCKS.reducedFees1.cost },
+          { id: 'reducedFees2', name: 'Fees -50%', icon: '💴', cost: UNLOCKS.reducedFees2.cost, requires: [UNLOCKS.reducedFees2.requires] },
+          { id: 'reducedFees3', name: 'Fees -75%', icon: '💶', cost: UNLOCKS.reducedFees3.cost, requires: [UNLOCKS.reducedFees3.requires] },
         ]
       },
       {
-        category: '🛡️ Risk Management',
-        icon: '🛡️',
+        category: '💼 Career Path',
+        icon: '💼',
         nodes: [
-          { id: 'shortSelling', name: 'Short Selling', icon: '📉', cost: 20 },
-          { id: 'riskManagement', name: 'Risk Control', icon: '🎯', cost: 30 },
+          { id: 'morePositions', name: 'Portfolio+', icon: '📊', cost: UNLOCKS.morePositions.cost },
+          { id: 'startingCash2x', name: 'Trust Fund', icon: '💵', cost: UNLOCKS.startingCash2x.cost },
+          { id: 'startingCash5x', name: 'Rich Parents', icon: '💰', cost: UNLOCKS.startingCash5x.cost, requires: [UNLOCKS.startingCash5x.requires] },
         ]
       },
       {
-        category: '📊 Information Tools',
-        icon: '📊',
+        category: '🕵️ Stealth',
+        icon: '🕵️',
         nodes: [
-          { id: 'sentiment', name: 'Sentiment', icon: '😊', cost: 25 },
-          { id: 'news', name: 'News Feed', icon: '📰', cost: 25 },
-          { id: 'marketDepth', name: 'Market Depth', icon: '📊', cost: 35, requires: ['sentiment'] },
-          { id: 'heatmap', name: 'Heatmap', icon: '🔥', cost: 45, requires: ['marketDepth'] },
-          { id: 'correlation', name: 'Correlation', icon: '🔗', cost: 55, requires: ['heatmap'] },
+          { id: 'lowerSurv1', name: 'Low Profile I', icon: '👤', cost: UNLOCKS.lowerSurv1.cost },
+          { id: 'lowerSurv2', name: 'Low Profile II', icon: '👥', cost: UNLOCKS.lowerSurv2.cost, requires: [UNLOCKS.lowerSurv2.requires] },
         ]
       },
       {
         category: '⚠️ Illegal Activities',
         icon: '⚠️',
         nodes: [
-          { id: 'insiderNetwork', name: 'Insider Network', icon: '🕵️', cost: 40 },
-          { id: 'hedgeFund', name: 'Hedge Fund', icon: '🏦', cost: 75, requires: ['insiderNetwork'] },
-          { id: 'marketManipulation', name: 'Market Control', icon: '🎭', cost: 120, requires: ['hedgeFund'] },
+          { id: 'politicalDonations', name: 'PAC Access', icon: '🏛️', cost: UNLOCKS.politicalDonations.cost },
+          { id: 'insiderNetwork', name: 'Insider Network', icon: '🕵️', cost: UNLOCKS.insiderNetwork.cost },
         ]
       },
     ];
 
     // Render tree
     let treeHtml = '';
-    for (const category of treeStructure) {
+    for (const category of this.treeStructure) {
       treeHtml += `<div class="tree-category">`;
       treeHtml += `<div class="tree-category-title">${category.icon} ${category.category}</div>`;
       treeHtml += `<div class="tree-nodes">`;
@@ -817,6 +817,11 @@ class GameUI {
         let statusClass = unlocked ? 'unlocked' : (available ? 'available' : 'locked');
         let statusText = unlocked ? 'Unlocked' : (prereqsMet ? (canAfford ? 'Available' : 'Too Expensive') : 'Locked');
 
+        // Debug logging for each node
+        if (prog.data.unlocks[node.id]) {
+          console.log(`Node ${node.id}: unlocked=${unlocked}, statusClass=${statusClass}, statusText=${statusText}`);
+        }
+
         treeHtml += `
           <div class="tree-node ${statusClass}" data-node-id="${node.id}">
             <div class="node-icon">${node.icon}</div>
@@ -836,22 +841,25 @@ class GameUI {
     }
 
     this.el.progressionTree.innerHTML = treeHtml;
+    console.log('Tree HTML updated. Unlocked nodes in DOM:',
+      document.querySelectorAll('.tree-node.unlocked').length);
 
     // Bind node click events
     document.querySelectorAll('.tree-node').forEach(node => {
       node.addEventListener('click', () => {
         const nodeId = node.dataset.nodeId;
-        this.showNodeDetail(nodeId, treeStructure);
+        this.showNodeDetail(nodeId);
       });
     });
   }
 
-  showNodeDetail(nodeId, treeStructure) {
+  showNodeDetail(nodeId) {
     const prog = this.game.progression;
+    console.log('showNodeDetail called for:', nodeId, 'Current unlocks:', prog.data.unlocks);
 
     // Find the node in tree structure
     let nodeData = null;
-    for (const category of treeStructure) {
+    for (const category of this.treeStructure) {
       const found = category.nodes.find(n => n.id === nodeId);
       if (found) {
         nodeData = found;
@@ -859,13 +867,20 @@ class GameUI {
       }
     }
 
-    if (!nodeData) return;
+    if (!nodeData) {
+      console.log('Node data not found for:', nodeId);
+      return;
+    }
 
     // Get unlock details from config
     const unlock = UNLOCKS[nodeId] || EQUIPABLE_TOOLS[nodeId];
-    if (!unlock) return;
+    if (!unlock) {
+      console.log('Unlock config not found for:', nodeId);
+      return;
+    }
 
     const unlocked = prog.data.unlocks[nodeId] || false;
+    console.log('Unlock status for', nodeId, ':', unlocked);
     const canAfford = prog.data.prestigePoints >= nodeData.cost;
 
     let prereqsMet = true;
@@ -875,7 +890,7 @@ class GameUI {
       if (!prereqsMet) {
         const missing = nodeData.requires.filter(req => !prog.data.unlocks[req]);
         prereqText = `Requires: ${missing.map(r => {
-          for (const cat of treeStructure) {
+          for (const cat of this.treeStructure) {
             const n = cat.nodes.find(node => node.id === r);
             if (n) return n.name;
           }
@@ -928,10 +943,16 @@ class GameUI {
     const unlockBtn = this.el.shopItemDetail.querySelector('[data-unlock]');
     if (unlockBtn) {
       unlockBtn.addEventListener('click', () => {
+        console.log('Unlock button clicked for:', nodeId);
+        console.log('Before purchase - unlocks:', prog.data.unlocks);
         const result = prog.purchaseUnlock(nodeId);
+        console.log('Purchase result:', result);
         if (result.success) {
+          console.log('After purchase - unlocks:', prog.data.unlocks);
           this.renderShop(); // Refresh shop display
-          this.showNodeDetail(nodeId, treeStructure); // Refresh detail view
+          console.log('After renderShop - tree structure exists:', !!this.treeStructure);
+          this.showNodeDetail(nodeId); // Refresh detail view
+          console.log('After showNodeDetail - should be updated');
         } else {
           alert(result.message);
         }

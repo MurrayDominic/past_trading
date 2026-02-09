@@ -544,7 +544,7 @@ class Game {
   }
 
   getCurrentDate() {
-    const startDate = new Date(CONFIG.GAME_START_DATE);
+    const startDate = new Date(this.market.startDate);
     const currentDate = new Date(startDate.getTime() + this.currentDay * 24 * 60 * 60 * 1000);
     return currentDate;
   }
