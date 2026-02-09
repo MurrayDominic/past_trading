@@ -150,8 +150,8 @@ const STOCK_CATEGORIES = {
 
 const TRADING_MODES = {
   stocks: {
-    name: 'S&P 500 Stocks',
-    description: 'Trade the S&P 500. Choose from 50 stocks with real historical data.',
+    name: 'Stocks',
+    description: 'Trade stocks across multiple sectors. Unlock more categories as you progress.',
     unlockRun: 0,
     unlockCost: 0,      // Free starter mode
     volatilityMod: 1.0,
@@ -601,4 +601,12 @@ function formatPrice(price) {
   if (price >= 1) return price.toFixed(2);
   if (price >= 0.01) return price.toFixed(4);
   return price.toFixed(8);
+}
+
+// Bug Fix #33: Format days with Infinity handling
+function formatDays(days) {
+  if (!isFinite(days) || days === Infinity) {
+    return 'Not achieved';
+  }
+  return days + ' days';
 }

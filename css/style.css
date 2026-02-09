@@ -1688,6 +1688,7 @@ canvas {
   background: var(--rh-darker);
   border-top: 1px solid var(--rh-border);
   flex-wrap: wrap;
+  margin-top: var(--spacing-sm);
 }
 
 /* ======== RUN END SCREEN ======== */

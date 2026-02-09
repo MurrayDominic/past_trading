@@ -44,7 +44,8 @@ const AchievementUI = {
       titles.push({
         id,
         name: ach.name,
-        description: ach.titleDescription,
+        // Bug Fix #32: Fallback for missing titleDescription
+        description: ach.titleDescription || ach.description || 'No description',
         bonus: ach.titleBonus,
         earned: !!progression.data.earnedAchievements[id],
         equipped: progression.data.equippedTitle === id,

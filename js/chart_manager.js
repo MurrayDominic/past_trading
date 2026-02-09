@@ -110,6 +110,19 @@ class ChartManager {
       this.renderCandlestickChart(activeTab, asset, positions, market.startDate, currentDay);
     } else if (asset.history && asset.history.length > 1) {
       this.renderLineChart(activeTab, asset, positions, market.startDate, currentDay);
+    } else {
+      // Show "Loading..." message when data is insufficient
+      const ctx = activeTab.canvas.getContext('2d');
+      const w = activeTab.canvas.width;
+      const h = activeTab.canvas.height;
+
+      ctx.fillStyle = '#0a0a0a';
+      ctx.fillRect(0, 0, w, h);
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+      ctx.font = '14px var(--font-mono)';
+      ctx.textAlign = 'center';
+      ctx.fillText('Loading chart data...', w / 2, h / 2);
     }
   }
 
@@ -179,13 +192,15 @@ class ChartManager {
     const candleWidth = Math.max(1, (w - padding - 20) / data.length * 0.7);
     const candleSpacing = (w - padding - 20) / data.length;
 
+    // Define toY function BEFORE the forEach loop so it's in scope for entry price line
+    const toY = (price) => h - padding - ((price - min) / range) * (h - padding * 2);
+
     data.forEach((bar, i) => {
       const x = padding + (i + 0.5) * candleSpacing;
       const isGreen = bar.close >= bar.open;
       const color = isGreen ? '#00C805' : '#FF5000';
 
       // Map prices to Y coordinates
-      const toY = (price) => h - padding - ((price - min) / range) * (h - padding * 2);
       const openY = toY(bar.open);
       const closeY = toY(bar.close);
       const highY = toY(bar.high);
@@ -250,7 +265,7 @@ class ChartManager {
       for (let i = 0; i < 5; i++) {
         const dataIdx = i * xStep;
         if (dataIdx < visibleData.length) {
-          const x = padding + dataIdx * barWidth + barWidth / 2;
+          const x = padding + dataIdx * candleSpacing + candleSpacing / 2;
           const y = h - padding + 20;
 
           // Calculate date - for intraday, use minutes; otherwise use days
@@ -292,6 +307,22 @@ class ChartManager {
       return;
     }
 
+    // Guard against empty arrays
+    if (asset.history.length === 0) {
+      const ctx = tab.canvas.getContext('2d');
+      const w = tab.canvas.width;
+      const h = tab.canvas.height;
+
+      ctx.fillStyle = '#0a0a0a';
+      ctx.fillRect(0, 0, w, h);
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+      ctx.font = '14px var(--font-mono)';
+      ctx.textAlign = 'center';
+      ctx.fillText('No price data available', w / 2, h / 2);
+      return;
+    }
+
     // Find min/max from FULL history, not just visible data
     let min = Math.min(...asset.history);
     let max = Math.max(...asset.history);
@@ -304,7 +335,7 @@ class ChartManager {
     }
 
     const range = max - min;
-    if (range === 0) return;
+    if (range === 0 || !isFinite(range)) return;
 
     // Draw gridlines and Y-axis labels
     ctx.font = '12px var(--font-mono)';

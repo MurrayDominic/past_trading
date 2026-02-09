@@ -1032,7 +1032,10 @@ class GameUI {
   // ---- Game Rendering ----
 
   update(game) {
-    if (game.state !== 'playing' && game.state !== 'paused') return;
+    // Bug Fix #40: Null check for game object
+    if (!game) return;
+    // Bug Fix #37: Use centralized state check
+    if (!game.isPlayingOrPaused()) return;
 
     // Header - Time display
     if (game.isIntraday && game.currentTime) {
@@ -1272,9 +1275,21 @@ class GameUI {
     const ctx = this.graphCtx;
     if (!canvas || !ctx) return;
 
+    // Bug Fix #42: Validate parent element exists and is visible
+    if (!canvas.parentElement) return;
+
     const rect = canvas.parentElement.getBoundingClientRect();
-    canvas.width = rect.width;
-    canvas.height = rect.height;
+
+    // Bug Fix #9: Canvas sizing race condition - validate dimensions before rendering
+    if (rect.width === 0 || rect.height === 0) {
+      return; // Skip render if not ready
+    }
+
+    // Only resize if dimensions changed
+    if (canvas.width !== rect.width || canvas.height !== rect.height) {
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+    }
 
     // Apply time range filter
     let data;
@@ -1713,5 +1728,8 @@ class GameUI {
   hideInsiderModal() {
     if (!this.el.insiderModal) return;
     this.el.insiderModal.classList.add('hidden');
+
+    // Bug Fix #23: Clear pending insider decision when modal closes
+    this.game.pendingInsiderDecision = null;
   }
 }

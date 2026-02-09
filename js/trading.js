@@ -101,6 +101,13 @@ class TradingEngine {
     return cd;
   }
 
+  // Bug Fix #5: Defensive helper to prevent division by zero with leverage
+  getCollateral(pos) {
+    // Safety: ensure leverage is valid positive number
+    const leverage = Math.max(1, pos.leverage || 1);
+    return (pos.entryPrice * pos.quantity) / leverage;
+  }
+
   canTrade(metaProgression) {
     return true;  // Always allow trading (cooldown removed)
   }
@@ -115,7 +122,14 @@ class TradingEngine {
 
     const leverage = this.getLeverage(metaProgression);
     const feeReduction = this.getFeeReduction(metaProgression);
+
+    // Bug Fix #21: Guard against missing mode config
     const modeConfig = TRADING_MODES[market.currentMode];
+    if (!modeConfig) {
+      console.error('Missing mode config for:', market.currentMode);
+      return { success: false, message: 'Invalid trading mode' };
+    }
+
     const feePercent = CONFIG.BASE_FEE_PERCENT * modeConfig.feeMod * (1 - feeReduction);
 
     // Calculate shares from dollar amount
@@ -201,16 +215,17 @@ class TradingEngine {
     const saleValue = asset.price * pos.quantity;
     const fee = saleValue * feePercent / 100;
 
+    // Bug Fix #2: Leverage P&L Calculation - P&L is already in quantity, don't multiply by leverage
     let profit;
     if (pos.type === 'long') {
-      profit = (asset.price - pos.entryPrice) * pos.quantity * pos.leverage - fee;
+      profit = (asset.price - pos.entryPrice) * pos.quantity - fee;
       // Return the collateral + profit
-      const collateral = pos.entryPrice * pos.quantity / pos.leverage;
+      const collateral = this.getCollateral(pos);
       this.cash += collateral + profit;
     } else {
       // Short
-      profit = (pos.entryPrice - asset.price) * pos.quantity * pos.leverage - fee;
-      const collateral = pos.entryPrice * pos.quantity / pos.leverage;
+      profit = (pos.entryPrice - asset.price) * pos.quantity - fee;
+      const collateral = this.getCollateral(pos);
       this.cash += collateral + profit;
     }
 
@@ -337,21 +352,44 @@ class TradingEngine {
     // Update P&L, check margin calls, track stats
     let totalPositionValue = 0;
 
+    // Bug Fix #43: Track liquidations for user feedback
+    this.recentLiquidations = [];
+
     for (let i = this.positions.length - 1; i >= 0; i--) {
       const pos = this.positions[i];
       const asset = market.getAsset(pos.ticker);
       if (!asset) continue;
 
+      // Bug Fix #4: Position Value Calculation - Don't multiply by leverage, allow negative values for liquidation
       let posValue;
       if (pos.type === 'long') {
-        posValue = (asset.price - pos.entryPrice) * pos.quantity * pos.leverage;
-        posValue += pos.entryPrice * pos.quantity / pos.leverage; // + collateral
+        const pnl = (asset.price - pos.entryPrice) * pos.quantity;
+        const collateral = this.getCollateral(pos);
+        posValue = collateral + pnl;
       } else {
-        posValue = (pos.entryPrice - asset.price) * pos.quantity * pos.leverage;
-        posValue += pos.entryPrice * pos.quantity / pos.leverage; // + collateral
+        const pnl = (pos.entryPrice - asset.price) * pos.quantity;
+        const collateral = this.getCollateral(pos);
+        posValue = collateral + pnl;
       }
 
-      totalPositionValue += Math.max(0, posValue);
+      // Check for liquidation (loss > 90% of collateral)
+      const collateral = this.getCollateral(pos);
+      if (posValue < collateral * 0.1) {
+        // Auto-liquidate position
+        // Bug Fix #43: Store liquidation info for user notification
+        this.recentLiquidations.push({
+          ticker: pos.ticker,
+          type: pos.type,
+          quantity: pos.quantity,
+          loss: collateral - posValue
+        });
+        this.positions.splice(i, 1);
+        this.stats.hadMarginCall = true;
+        console.log(`Position liquidated: ${pos.ticker} (${pos.type})`);
+        continue;
+      }
+
+      totalPositionValue += posValue; // Allow negative values to show true insolvency
 
       // Track if position is in loss
       const pnl = pos.type === 'long'
@@ -366,7 +404,23 @@ class TradingEngine {
     }
 
     this.netWorth = this.cash + totalPositionValue;
+
+    // Bug Fix #24: Validate net worth before adding to history (prevent NaN)
+    if (isNaN(this.netWorth) || !isFinite(this.netWorth)) {
+      console.error('Net worth calculation resulted in NaN or Infinity:', {
+        cash: this.cash,
+        totalPositionValue,
+        positionCount: this.positions.length
+      });
+      this.netWorth = this.cash; // Fallback to cash only
+    }
+
+    // Bug Fix #10: Cap net worth history to prevent unbounded growth
     this.netWorthHistory.push(this.netWorth);
+    if (this.netWorthHistory.length > 500) {
+      this.netWorthHistory.shift();
+    }
+
     this.stats.maxNetWorth = Math.max(this.stats.maxNetWorth, this.netWorth);
 
     if (this.netWorth <= 0) {
@@ -384,7 +438,9 @@ class TradingEngine {
       totalExposure += asset.price * pos.quantity * pos.leverage;
     }
 
-    const riskPercent = (totalExposure / Math.max(1, this.netWorth)) * CONFIG.RISK_PER_POSITION_PERCENT;
+    // Bug Fix #16: Risk calculation now scales with position count
+    const positionScaling = Math.sqrt(this.positions.length); // Diversification reduces risk
+    const riskPercent = (totalExposure / Math.max(1, this.netWorth)) * CONFIG.RISK_PER_POSITION_PERCENT * positionScaling;
     return Math.min(100, riskPercent);
   }
 
@@ -397,15 +453,17 @@ class TradingEngine {
     const asset = market.getAsset(pos.ticker);
     if (!asset) return { pnl: 0, pnlPercent: 0, currentPrice: 0 };
 
+    // Bug Fix #3: P&L Percentage - Calculate based on collateral, not full position value
     let pnl;
     if (pos.type === 'long') {
-      pnl = (asset.price - pos.entryPrice) * pos.quantity * pos.leverage;
+      pnl = (asset.price - pos.entryPrice) * pos.quantity; // No leverage multiplier
     } else {
-      pnl = (pos.entryPrice - asset.price) * pos.quantity * pos.leverage;
+      pnl = (pos.entryPrice - asset.price) * pos.quantity;
     }
 
-    const invested = pos.entryPrice * pos.quantity;
-    const pnlPercent = invested > 0 ? pnl / invested : 0;
+    // Calculate percentage based on collateral invested
+    const collateral = this.getCollateral(pos);
+    const pnlPercent = collateral > 0 ? pnl / collateral : 0;
 
     return { pnl, pnlPercent, currentPrice: asset.price };
   }
@@ -434,7 +492,7 @@ class TradingEngine {
   }
 
   // Passive income from modes and equipable tools
-  processPassiveIncome(mode, metaProgression) {
+  processPassiveIncome(mode, metaProgression, isIntraday = false) {
     let income = 0;
 
     // Mode-based passive income (if mode is passive)
@@ -452,6 +510,12 @@ class TradingEngine {
     }
 
     if (income > 0) {
+      // Bug Fix #15: Scale passive income for intraday mode
+      // Intraday runs have ~390 minutes, so scale down to prevent massive income
+      if (isIntraday) {
+        income = income / CONFIG.INTRADAY_TOTAL_TICKS;
+      }
+
       // Leverage applies to passive income too
       const leverage = this.getLeverage(metaProgression);
       income *= Math.sqrt(leverage); // diminishing returns on passive leverage

@@ -233,7 +233,8 @@ class AudioEngine {
         osc.stop();
         if (lfo) lfo.stop();
       } catch (e) {
-        // Oscillator already stopped
+        // Bug Fix #18: Log audio errors for debugging (non-critical)
+        console.debug('Audio oscillator stop error (non-critical):', e.message);
       }
     });
     this.musicOscillators = [];

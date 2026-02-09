@@ -112,10 +112,20 @@ class LeaderboardSystem {
     const board = this.boards[boardName] || [];
     if (board.length === 0) return { rank: null, isRanked: false };
 
+    // Bug Fix #13: Detect sort order based on board type
+    // Speedrun board sorts ascending (lower is better), others sort descending (higher is better)
+    const isAscending = (boardName === 'speedrun');
+
     // Find position in sorted board
     let rank = 1;
     for (const entry of board) {
-      if (score > entry.score) break;
+      if (isAscending) {
+        // For ascending boards (speedrun), break if our score is lower
+        if (score < entry.score) break;
+      } else {
+        // For descending boards, break if our score is higher
+        if (score > entry.score) break;
+      }
       rank++;
     }
 

@@ -54,17 +54,64 @@ class Market {
         }
       }
 
-      // Determine starting price
+      // Determine starting price and pre-populate history for charts
       let startPrice = assetDef.basePrice * (0.9 + Math.random() * 0.2);
-      if (hasHistoricalData && historicalData.ohlc && historicalData.ohlc.length > 0) {
-        // Calculate offset based on start year
-        const baseDate = new Date(2000, 0, 1);
-        const elapsedMs = this.startDate - baseDate;
-        const dayOffset = Math.floor(elapsedMs / (1000 * 60 * 60 * 24));
+      let initialHistory = [startPrice];
+      let initialOhlcHistory = [];
+      let highestPrice = startPrice;
+      let lowestPrice = startPrice;
 
-        // Use data from the calculated offset, or fallback to synthetic
-        if (dayOffset >= 0 && dayOffset < historicalData.ohlc.length) {
+      // Store actual data start date for late-IPO stocks
+      let actualDataStartDate = null;
+
+      if (hasHistoricalData && historicalData.ohlc && historicalData.ohlc.length > 0) {
+        // Parse actual start date from historical data
+        actualDataStartDate = new Date(historicalData.period.start);
+
+        // Calculate offset from actual data start, not from 2000-01-01
+        const elapsedMs = this.startDate - actualDataStartDate;
+        const calendarDays = Math.floor(elapsedMs / (1000 * 60 * 60 * 24));
+
+        // If start date is BEFORE data availability, use index 0
+        // If start date is AFTER data start, calculate correct offset
+        let requestedOffset = 0;
+        if (calendarDays > 0) {
+          requestedOffset = Math.floor(calendarDays * (252 / 365)); // Scale to trading days
+        }
+
+        // Clamp to available data range
+        const dayOffset = Math.min(requestedOffset, historicalData.ohlc.length - 1);
+
+        if (dayOffset >= 0) {
           startPrice = historicalData.ohlc[dayOffset].close;
+
+          // Pre-populate history with last 90 days (or all available data)
+          const historyStartIdx = Math.max(0, dayOffset - 90);
+          initialHistory = [];
+          initialOhlcHistory = [];
+
+          for (let i = historyStartIdx; i <= dayOffset; i++) {
+            const ohlc = historicalData.ohlc[i];
+            initialHistory.push(ohlc.close);
+            initialOhlcHistory.push({
+              open: ohlc.open,
+              high: ohlc.high,
+              low: ohlc.low,
+              close: ohlc.close
+            });
+            highestPrice = Math.max(highestPrice, ohlc.high);
+            lowestPrice = Math.min(lowestPrice, ohlc.low);
+          }
+        } else {
+          // Game starts BEFORE stock IPO - use first available data point
+          startPrice = historicalData.ohlc[0].close;
+          initialHistory = [startPrice];  // At least one data point
+          initialOhlcHistory = [{
+            open: historicalData.ohlc[0].open,
+            high: historicalData.ohlc[0].high,
+            low: historicalData.ohlc[0].low,
+            close: historicalData.ohlc[0].close
+          }];
         }
       }
 
@@ -74,10 +121,10 @@ class Market {
         price: startPrice,
         previousPrice: startPrice,
         basePrice: assetDef.basePrice,
-        highestPrice: startPrice,
-        lowestPrice: startPrice,
-        history: [startPrice],
-        ohlcHistory: [],  // For candlestick charts
+        highestPrice: highestPrice,
+        lowestPrice: lowestPrice,
+        history: initialHistory,
+        ohlcHistory: initialOhlcHistory,
         daysSinceChange: 0,
         trend: 0,       // -1 to 1, momentum
         isOption: assetDef.isOption || false,
@@ -86,7 +133,8 @@ class Market {
         expiryDays: assetDef.expiry || 0,
         daysToExpiry: assetDef.expiry || 0,
         hasHistoricalData,
-        historicalData
+        historicalData,
+        actualDataStartDate  // Store for calculateDataDay()
       };
     });
 
@@ -116,41 +164,24 @@ class Market {
 
     const volatility = CONFIG.BASE_VOLATILITY * modeConfig.volatilityMod;
 
-    // Check for market event
-    let eventEffect = 0;
-    if (this.eventCooldown <= 0 && Math.random() < CONFIG.EVENT_CHANCE_PER_DAY) {
-      const event = this.generateEvent();
-      if (event) {
-        this.activeEvent = event;
-        eventEffect = event.effect;
-        this.eventCooldown = 3 + Math.floor(Math.random() * 5); // 3-7 day cooldown
-      }
-    } else {
-      this.eventCooldown--;
-      this.activeEvent = null;
-    }
+    // ============================================================================
+    // DISABLED: Random market event shocks
+    // Historical prices already reflect real market events - no artificial shocks
+    // ============================================================================
+    // Real events will come from news_events.json with actual dates
+    this.activeEvent = null;
 
     // Update each asset price
     for (const ticker in this.assets) {
       const asset = this.assets[ticker];
-      asset.previousPrice = asset.price;
 
       if (asset.isOption) {
-        this.updateOptionPrice(asset, volatility, eventEffect);
+        this.updateOptionPrice(asset, volatility, 0);
       } else {
-        this.updateAssetPrice(asset, volatility, eventEffect);
+        // updateAssetPrice handles history updates internally now
+        this.updateAssetPrice(asset, volatility, 0);
       }
 
-      asset.history.push(asset.price);
-      if (asset.history.length > 400) asset.history.shift(); // keep last 400 days
-
-      // Limit OHLC history as well
-      if (asset.ohlcHistory && asset.ohlcHistory.length > 400) {
-        asset.ohlcHistory.shift();
-      }
-
-      asset.highestPrice = Math.max(asset.highestPrice, asset.price);
-      asset.lowestPrice = Math.min(asset.lowestPrice, asset.price);
       asset.daysSinceChange++;
     }
   }
@@ -200,16 +231,22 @@ class Market {
   }
 
   updateAssetPrice(asset, volatility, eventEffect) {
+    // ============================================================================
+    // CRITICAL: Use ONLY real historical prices - ZERO artificial modifications
+    // ============================================================================
     // Calculate which day in historical data to use
-    const dataDay = this.calculateDataDay();
+    const dataDay = this.calculateDataDay(asset);
 
-    // Try to use historical data first
+    // Use historical data EXACTLY as provided - NO modifications
     if (asset.hasHistoricalData && asset.historicalData.ohlc &&
         dataDay >= 0 && dataDay < asset.historicalData.ohlc.length) {
       const ohlc = asset.historicalData.ohlc[dataDay];
+
+      // Use REAL historical prices - NO randomness, NO adjustments
+      asset.previousPrice = asset.price;
       asset.price = ohlc.close;
 
-      // Store OHLC for candlestick charts
+      // Store OHLC for candlestick charts (real data)
       asset.ohlcHistory.push({
         open: ohlc.open,
         high: ohlc.high,
@@ -217,50 +254,42 @@ class Market {
         close: ohlc.close
       });
 
-      // Calculate trend from historical data
-      const actualReturn = (asset.price - asset.previousPrice) / asset.previousPrice;
-      asset.trend = asset.trend * 0.95 + actualReturn * 5;
-      asset.trend = Math.max(-1, Math.min(1, asset.trend));
+      // Update history array for line charts
+      asset.history.push(ohlc.close);
+
+      // Update highs/lows from historical data
+      asset.highestPrice = Math.max(asset.highestPrice, ohlc.high);
+      asset.lowestPrice = Math.min(asset.lowestPrice, ohlc.low);
+
+      // Limit history size
+      if (asset.history.length > 400) asset.history.shift();
+      if (asset.ohlcHistory.length > 400) asset.ohlcHistory.shift();
 
       return;
     }
 
-    // Warn once if historical data exhausted
-    if (asset.hasHistoricalData && !asset._historicalDataWarned &&
-        dataDay >= asset.historicalData.ohlc.length) {
-      console.warn(`Historical data exhausted for ${asset.ticker} at day ${dataDay}. Using synthetic prices.`);
+    // Data missing - some stocks IPO'd after 2000, so data may be incomplete
+    if (asset.hasHistoricalData && !asset._historicalDataWarned) {
+      console.warn(`Historical data not available for ${asset.ticker} at day ${dataDay} (has ${asset.historicalData.ohlc.length} days)`);
+      console.warn(`This stock may have IPO'd after your start date. Price will be held constant.`);
       asset._historicalDataWarned = true;
     }
 
-    // Fallback to synthetic generation (existing GBM code)
-    const randomShock = (Math.random() - 0.5) * 2 * volatility;
-    const meanReversion = (asset.basePrice - asset.price) / asset.basePrice * 0.005;
-    const momentum = asset.trend * 0.002;
-    const drift = CONFIG.BULL_DRIFT;
-
-    const dailyReturn = drift + randomShock + meanReversion + momentum + eventEffect;
-    const newPrice = Math.max(0.01, asset.price * (1 + dailyReturn));
-
-    // Generate synthetic OHLC for day trading mode
-    const open = asset.price;
-    const close = newPrice;
-    const wickSize = Math.abs(dailyReturn) * 0.5 * (0.5 + Math.random());
-    const high = Math.max(open, close) * (1 + wickSize);
-    const low = Math.min(open, close) * (1 - wickSize);
-
+    // Freeze at last price if data exhausted
+    // Keep updating arrays so charts continue to render
     asset.ohlcHistory.push({
-      open: parseFloat(open.toFixed(2)),
-      high: parseFloat(high.toFixed(2)),
-      low: parseFloat(low.toFixed(2)),
-      close: parseFloat(close.toFixed(2))
+      open: asset.price,
+      high: asset.price,
+      low: asset.price,
+      close: asset.price
     });
 
-    asset.price = newPrice;
+    // CRITICAL: Also update regular history array for line charts!
+    asset.history.push(asset.price);
 
-    // Update trend (momentum factor)
-    const actualReturn = (asset.price - asset.previousPrice) / asset.previousPrice;
-    asset.trend = asset.trend * 0.95 + actualReturn * 5; // exponential decay + new signal
-    asset.trend = Math.max(-1, Math.min(1, asset.trend));
+    // Limit history size
+    if (asset.history.length > 400) asset.history.shift();
+    if (asset.ohlcHistory.length > 400) asset.ohlcHistory.shift();
   }
 
   updateOptionPrice(asset, volatility, eventEffect) {
@@ -290,6 +319,8 @@ class Market {
     // Add some randomness
     const noise = (Math.random() - 0.5) * volatility * asset.basePrice;
 
+    // Bug Fix #39: Price floor of 0.01 is intentional to prevent negative prices
+    // For very low-value options, this may create a floor effect, which is acceptable
     asset.price = Math.max(0.01, intrinsic + timeValue + noise + eventEffect * asset.basePrice);
 
     // Reset option if expired
@@ -355,14 +386,35 @@ class Market {
     asset.price = Math.max(0.01, asset.price * (1 + effect));
   }
 
-  calculateDataDay() {
-    // Convert market start date + current day to absolute day in dataset
-    // Historical data starts at 2000-01-01
-    const baseDate = new Date(2000, 0, 1);
-    const elapsedMs = this.startDate - baseDate;
-    const baseDayOffset = Math.floor(elapsedMs / (1000 * 60 * 60 * 24));
+  calculateDataDay(asset) {
+    // If no historical data, return 0
+    if (!asset.hasHistoricalData || !asset.actualDataStartDate) {
+      return 0;
+    }
 
-    return baseDayOffset + this.dayCount;
+    // Calculate days elapsed since THIS asset's data start date
+    const elapsedMs = this.startDate - asset.actualDataStartDate;
+    const calendarDaysSinceAssetStart = Math.floor(elapsedMs / (1000 * 60 * 60 * 24));
+
+    // Scale to trading days
+    const TRADING_DAYS_PER_YEAR = 252;
+    const GAME_DAYS_PER_YEAR = 365;
+    const scale = TRADING_DAYS_PER_YEAR / GAME_DAYS_PER_YEAR;
+
+    // Calculate base offset (may be negative if game starts before asset IPO)
+    const baseTradingDay = Math.floor(calendarDaysSinceAssetStart * scale);
+    const currentTradingDay = Math.floor(this.dayCount * scale);
+
+    const dataDay = baseTradingDay + currentTradingDay;
+
+    // Bug Fix #17: Validate array is not empty before accessing
+    if (!asset.historicalData || !asset.historicalData.ohlc || asset.historicalData.ohlc.length === 0) {
+      console.error('Empty or invalid historical data for asset:', asset.ticker);
+      return 0; // Safe fallback
+    }
+
+    // Clamp to valid range [0, data.length - 1]
+    return Math.max(0, Math.min(dataDay, asset.historicalData.ohlc.length - 1));
   }
 
   isCategoryUnlocked(category, progression) {

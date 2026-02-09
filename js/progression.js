@@ -34,7 +34,22 @@ class ProgressionSystem {
     try {
       const saved = localStorage.getItem('pastTrading_progression');
       if (saved) {
-        this.data = { ...this.getDefaultData(), ...JSON.parse(saved) };
+        // Bug Fix #34: Deep merge instead of shallow copy for nested objects
+        const defaultData = this.getDefaultData();
+        const savedData = JSON.parse(saved);
+
+        // Merge top-level properties
+        this.data = { ...defaultData, ...savedData };
+
+        // Deep merge nested objects (unlocks, bestScores, etc.)
+        if (savedData.unlocks) {
+          this.data.unlocks = { ...defaultData.unlocks, ...savedData.unlocks };
+        }
+        if (savedData.bestScores) {
+          this.data.bestScores = { ...defaultData.bestScores, ...savedData.bestScores };
+        }
+
+        // Bug Fix #12: bestScores migration already handled by deep merge above
 
         // MIGRATION: Convert old runCount-based unlocks to new PP-based system
         if (!this.data.unlockedModes) {
@@ -68,10 +83,26 @@ class ProgressionSystem {
   }
 
   save() {
+    // Bug Fix #14: LocalStorage quota handling with compression fallback
     try {
       localStorage.setItem('pastTrading_progression', JSON.stringify(this.data));
     } catch (e) {
-      console.warn('Failed to save progression:', e);
+      if (e.name === 'QuotaExceededError') {
+        console.warn('LocalStorage quota exceeded, attempting compression...');
+        try {
+          // Trim run history to last 20 entries
+          if (this.data.runHistory && this.data.runHistory.length > 20) {
+            this.data.runHistory = this.data.runHistory.slice(-20);
+          }
+          localStorage.setItem('pastTrading_progression', JSON.stringify(this.data));
+          console.log('Successfully saved with compressed data');
+        } catch (e2) {
+          console.error('Failed to save even with compression:', e2);
+          alert('Save failed: Storage quota exceeded. Some progress may be lost.');
+        }
+      } else {
+        console.warn('Failed to save progression:', e);
+      }
     }
   }
 
@@ -108,9 +139,12 @@ class ProgressionSystem {
       pp *= CONFIG.DRAWDOWN_BONUS_MULTIPLIER;
     }
 
-    // Title bonus (Clean Hands)
-    if (this.data.equippedTitle === 'cleanHands') {
-      pp *= (1 + ACHIEVEMENTS.cleanHands.titleBonus.prestigeBonus);
+    // Bug Fix #31: Generic title bonus (not hard-coded to cleanHands)
+    if (this.data.equippedTitle) {
+      const achievement = ACHIEVEMENTS[this.data.equippedTitle];
+      if (achievement && achievement.titleBonus && achievement.titleBonus.prestigeBonus) {
+        pp *= (1 + achievement.titleBonus.prestigeBonus);
+      }
     }
 
     // Round to 1 decimal
@@ -171,7 +205,8 @@ class ProgressionSystem {
           newlyEarned.push({ id, ...achievement });
         }
       } catch (e) {
-        // Achievement check failed, skip
+        // Bug Fix #20: Log achievement check failures for debugging
+        console.warn(`Achievement check failed for ${id}:`, e.message);
       }
     }
 
@@ -216,11 +251,12 @@ class ProgressionSystem {
       this.data.bestScores.brazenProfit = Math.max(this.data.bestScores.brazenProfit, profit);
     }
 
+    // Bug Fix #1: Undefined variable - use tradingEngine.netWorthHistory
     // Speedrun to $1M
     if (tradingEngine.stats.maxNetWorth >= 1000000) {
       // Find the day they first hit $1M
-      for (let i = 0; i < hist.length; i++) {
-        if (hist[i] >= 1000000) {
+      for (let i = 0; i < tradingEngine.netWorthHistory.length; i++) {
+        if (tradingEngine.netWorthHistory[i] >= 1000000) {
           this.data.bestScores.speedrunTo1M = Math.min(this.data.bestScores.speedrunTo1M, i);
           break;
         }
@@ -355,13 +391,19 @@ class ProgressionSystem {
   }
 
   equipTool(toolId) {
+    // Bug Fix #30/#35: Validate tool exists and is owned
+    const tool = EQUIPABLE_TOOLS[toolId];
+    if (!tool) {
+      return { success: false, message: 'Unknown tool' };
+    }
+
     if (!this.data.ownedTools.includes(toolId)) {
       return { success: false, message: 'Tool not owned' };
     }
 
     this.data.equippedTool = toolId;
     this.save();
-    return { success: true, message: `Equipped tool: ${EQUIPABLE_TOOLS[toolId].name}` };
+    return { success: true, message: `Equipped tool: ${tool.name}` };
   }
 
   unequipTool() {

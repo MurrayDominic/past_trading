@@ -4,9 +4,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Running the Game
 
-**To play:** Simply open `index.html` in any modern browser. No build step, no server, no dependencies.
+**IMPORTANT:** The game must be run from a local web server, not by opening `index.html` directly.
 
-The game runs entirely client-side with no backend. All state persists via browser LocalStorage.
+**Easiest Method:**
+```bash
+python -m http.server 8000
+```
+Then visit http://localhost:8000
+
+**Or simply double-click `start_game.bat`** which will start the server and open your browser automatically.
+
+**Why?** The game loads JSON data files using `fetch()`, which browsers block from the `file://` protocol for security reasons (CORS policy). The game needs to be served over HTTP.
+
+**See HOW_TO_RUN.md for detailed instructions and troubleshooting.**
+
+The game runs entirely client-side with no backend beyond the static file server. All state persists via browser LocalStorage.
 
 ## Architecture Overview
 

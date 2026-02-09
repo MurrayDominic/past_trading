@@ -36,6 +36,19 @@ class Game {
     this.lastNetWorth = 0;
   }
 
+  // Bug Fix #37: Centralized state checking helpers to reduce duplication
+  isPlaying() {
+    return this.state === 'playing';
+  }
+
+  isPlayingOrPaused() {
+    return this.state === 'playing' || this.state === 'paused';
+  }
+
+  canTrade() {
+    return this.state === 'playing' && !this.sec.tradeRestricted;
+  }
+
   init() {
     this.progression.load();
     this.leaderboard.load();
@@ -55,6 +68,15 @@ class Game {
   }
 
   async startRun(mode) {
+    // Bug Fix #6: Race condition - prevent concurrent startRun calls
+    if (this.state === 'loading') {
+      console.warn('Already loading, ignoring duplicate startRun');
+      return;
+    }
+
+    // Stop any existing ticker first
+    this.stopTicker();
+
     this.selectedMode = mode;
     this.currentDay = 0;
     this.speed = 1;
@@ -92,20 +114,34 @@ class Game {
     this.state = 'loading';
     this.ui.showLoading();
 
-    try {
-      // Load news events
-      await this.dataLoader.loadNewsEvents();
+    // Bug Fix #26: Add timeout wrapper for async initialization
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Loading timeout after 30 seconds')), 30000)
+    );
 
-      // Init subsystems (market.init is now async)
+    try {
+      // Load news events with timeout
+      await Promise.race([
+        this.dataLoader.loadNewsEvents(),
+        timeoutPromise
+      ]);
+
+      // Init subsystems (market.init is now async) with timeout
       // Pass selected year range from year selection UI
-      await this.market.init(mode, this.dataLoader, this.progression, this.selectedYears.start, this.selectedYears.end);
+      await Promise.race([
+        this.market.init(mode, this.dataLoader, this.progression, this.selectedYears.start, this.selectedYears.end),
+        timeoutPromise
+      ]);
       this.trading.init(CONFIG.STARTING_CASH, this.progression.data);
       this.sec.init();
       this.news.init(this.dataLoader);
 
-      // Select first asset
+      // Bug Fix #25: Validate assets loaded before selecting
       const assets = this.market.getAllAssets();
-      this.selectedAsset = assets.length > 0 ? assets[0].ticker : null;
+      if (assets.length === 0) {
+        throw new Error('No assets loaded for mode: ' + mode);
+      }
+      this.selectedAsset = assets[0].ticker;
 
       // Start audio
       this.audio.resume();
@@ -123,7 +159,15 @@ class Game {
   }
 
   startTicker() {
+    // Bug Fix #7: Memory leak - always stop existing ticker first
     this.stopTicker();
+
+    // Don't start if not in playing state
+    if (this.state !== 'playing') {
+      console.warn('startTicker called in non-playing state:', this.state);
+      return;
+    }
+
     // Use intraday tick rate for day trading
     const baseTickMs = this.isIntraday ? CONFIG.INTRADAY_TICK_MS : CONFIG.TICK_MS;
     const ms = baseTickMs / this.speed;
@@ -139,25 +183,34 @@ class Game {
 
   setSpeed(speed) {
     this.speed = speed;
-    if (this.state === 'playing') {
+    // Bug Fix #7 & #29: Explicitly stop ticker before restarting to prevent memory leak
+    if (this.isPlaying()) {
+      this.stopTicker();
       this.startTicker();
     }
   }
 
   togglePause() {
-    if (this.state === 'playing') {
+    // Bug Fix #8: Pause logic - only allow pause/unpause during active run
+    if (this.isPlaying()) {
       this.state = 'paused';
       this.stopTicker();
       this.ui.showPauseOverlay(true);
+      return true;
     } else if (this.state === 'paused') {
       this.state = 'playing';
       this.startTicker();
       this.ui.showPauseOverlay(false);
+      return true;
     }
+
+    // Invalid state for pause
+    console.warn('togglePause called in invalid state:', this.state);
+    return false;
   }
 
   tick() {
-    if (this.state !== 'playing') return;
+    if (!this.isPlaying()) return;  // Bug Fix #37
 
     if (this.isIntraday) {
       this.tickIntraday();
@@ -173,13 +226,21 @@ class Game {
     this.market.tick();
 
     // Passive income for scalping/arb/market-making modes
-    const passiveIncome = this.trading.processPassiveIncome(this.selectedMode, this.progression.data);
+    // Bug Fix #15: Pass isIntraday flag to scale passive income correctly
+    const passiveIncome = this.trading.processPassiveIncome(this.selectedMode, this.progression.data, false);
     if (passiveIncome > 0) {
       this.news.addTradeNews(`Passive income: +${formatMoney(passiveIncome)}`, this.currentDay);
     }
 
     // Update positions
     this.trading.updatePositions(this.market, this.currentDay);
+
+    // Bug Fix #43: Show liquidation notifications
+    if (this.trading.recentLiquidations && this.trading.recentLiquidations.length > 0) {
+      for (const liq of this.trading.recentLiquidations) {
+        this.news.addSecNews(`MARGIN CALL: ${liq.ticker} ${liq.type} position liquidated (-${formatMoney(liq.loss)})`, this.currentDay);
+      }
+    }
 
     // Check risk limit
     if (this.trading.isOverRiskLimit(this.market)) {
@@ -253,13 +314,21 @@ class Game {
     }
 
     // Passive income (scaled for intraday)
-    const passiveIncome = this.trading.processPassiveIncome(this.selectedMode, this.progression.data);
+    // Bug Fix #15: Pass isIntraday=true to scale passive income correctly
+    const passiveIncome = this.trading.processPassiveIncome(this.selectedMode, this.progression.data, true);
     if (passiveIncome > 0) {
       this.news.addTradeNews(`Passive: +${formatMoney(passiveIncome)}`, this.currentMinute);
     }
 
     // Update positions
     this.trading.updatePositions(this.market, this.currentMinute);
+
+    // Bug Fix #43: Show liquidation notifications (intraday)
+    if (this.trading.recentLiquidations && this.trading.recentLiquidations.length > 0) {
+      for (const liq of this.trading.recentLiquidations) {
+        this.news.addSecNews(`MARGIN CALL: ${liq.ticker} ${liq.type} position liquidated (-${formatMoney(liq.loss)})`, this.currentMinute);
+      }
+    }
 
     // Check risk limit
     if (this.trading.isOverRiskLimit(this.market)) {
@@ -311,7 +380,7 @@ class Game {
       return;
     }
 
-    // Market close
+    // Bug Fix #28: Intraday boundary edge case - ensure we don't exceed max ticks
     if (this.currentMinute >= CONFIG.INTRADAY_TOTAL_TICKS) {
       this.endRun('timeUp');
       return;
@@ -326,6 +395,9 @@ class Game {
     this.audio.stopMusic();
     this.state = 'runEnd';
     this.runEndReason = reason;
+
+    // Bug Fix #36: Reset selected asset so it doesn't carry over to next run
+    this.selectedAsset = null;
 
     // Add news for fired condition
     if (reason === 'fired') {
@@ -360,7 +432,7 @@ class Game {
   // --- Player Actions ---
 
   buyAsset(dollarAmount) {
-    if (this.state !== 'playing' || !this.selectedAsset) return;
+    if (!this.isPlaying() || !this.selectedAsset) return;  // Bug Fix #37
     if (this.sec.tradeRestricted) {
       this.news.addSecNews('Trade blocked: Under investigation', this.currentDay);
       return;
@@ -386,7 +458,7 @@ class Game {
   }
 
   sellPosition(index) {
-    if (this.state !== 'playing') return;
+    if (!this.isPlaying()) return;  // Bug Fix #37
     if (this.sec.tradeRestricted) {
       this.news.addSecNews('Trade blocked: Under investigation', this.currentDay);
       return;
@@ -412,7 +484,7 @@ class Game {
   }
 
   sellPositionByIdentifier(ticker, type, entryDay) {
-    if (this.state !== 'playing') return;
+    if (!this.isPlaying()) return;  // Bug Fix #37
     if (this.sec.tradeRestricted) {
       this.news.addSecNews('Trade blocked: Under investigation', this.currentDay);
       return;
@@ -453,7 +525,7 @@ class Game {
   }
 
   shortAsset(dollarAmount) {
-    if (this.state !== 'playing' || !this.selectedAsset) return;
+    if (!this.isPlaying() || !this.selectedAsset) return;  // Bug Fix #37
     if (this.sec.tradeRestricted) {
       this.news.addSecNews('Trade blocked: Under investigation', this.currentDay);
       return;
@@ -474,7 +546,7 @@ class Game {
   }
 
   doInsiderTrade() {
-    if (this.state !== 'playing') return;
+    if (!this.isPlaying()) return;  // Bug Fix #37
     if (!this.sec.canDoIllegalAction('insiderTrading', this.progression.data, this.progression.data.runCount)) {
       return;
     }
@@ -498,7 +570,7 @@ class Game {
     };
 
     // Pause game and show modal
-    if (this.state === 'playing') {
+    if (this.isPlaying()) {
       this.togglePause();
     }
 
@@ -537,7 +609,7 @@ class Game {
   }
 
   doLiborRig() {
-    if (this.state !== 'playing') return;
+    if (!this.isPlaying()) return;  // Bug Fix #37
     if (!this.sec.canDoIllegalAction('liborRigging', this.progression.data, this.progression.data.runCount)) return;
 
     this.audio.playIllegalAction();
@@ -547,7 +619,7 @@ class Game {
   }
 
   doPumpAndDump() {
-    if (this.state !== 'playing' || !this.selectedAsset) return;
+    if (!this.isPlaying() || !this.selectedAsset) return;  // Bug Fix #37
     if (!this.sec.canDoIllegalAction('pumpAndDump', this.progression.data, this.progression.data.runCount)) return;
 
     this.audio.playIllegalAction();
@@ -559,7 +631,7 @@ class Game {
   }
 
   doWashTrade() {
-    if (this.state !== 'playing') return;
+    if (!this.isPlaying()) return;  // Bug Fix #37
     if (!this.sec.canDoIllegalAction('washTrading', this.progression.data, this.progression.data.runCount)) return;
 
     this.audio.playIllegalAction();
@@ -569,7 +641,7 @@ class Game {
   }
 
   doFrontRun() {
-    if (this.state !== 'playing') return;
+    if (!this.isPlaying()) return;  // Bug Fix #37
     if (!this.sec.canDoIllegalAction('frontRunning', this.progression.data, this.progression.data.runCount)) return;
 
     this.audio.playIllegalAction();
@@ -579,7 +651,7 @@ class Game {
   }
 
   makeDonation() {
-    if (this.state !== 'playing') return;
+    if (!this.isPlaying()) return;  // Bug Fix #37
     if (!this.progression.data.unlocks.politicalDonations) return;
 
     const result = this.sec.makeDonation(this.trading, this.progression.data);
@@ -603,8 +675,14 @@ class Game {
   selectAsset(ticker) {
     this.selectedAsset = ticker;
 
+    // Bug Fix #27: Check chartManager existence early
+    if (!this.ui.chartManager) {
+      this.ui.update(this);
+      return;
+    }
+
     // Auto-manage chart tabs when asset is selected
-    if (this.ui.chartManager && this.state === 'playing') {
+    if (this.isPlaying()) {
       // Prevent chart creation at high speeds
       if (this.speed > 5) {
         // Don't show error, just silently skip chart tab creation
@@ -637,7 +715,7 @@ class Game {
   }
 
   exitToMenu() {
-    if (this.state !== 'playing' && this.state !== 'paused') return;
+    if (!this.isPlayingOrPaused()) return;  // Bug Fix #37
 
     if (confirm('Exit to menu? Current progress will be lost.')) {
       this.stopTicker();
