@@ -162,6 +162,7 @@ const TRADING_MODES = {
   dayTrading: {
     name: 'Day Trading',
     description: 'Fast trades, pattern rules apply. Male astrology.',
+    comingSoon: true,
     unlockRun: 0,
     unlockCost: 5,      // 5 PP to unlock
     volatilityMod: 1.3,
@@ -177,6 +178,7 @@ const TRADING_MODES = {
   options: {
     name: 'Options',
     description: 'Calls, puts, and the greeks. Leveraged chaos.',
+    comingSoon: true,
     unlockRun: 2,
     unlockCost: 15,     // 15 PP to unlock
     volatilityMod: 2.0,
@@ -194,6 +196,7 @@ const TRADING_MODES = {
   forex: {
     name: 'Forex',
     description: 'Currency pairs. The market that never sleeps.',
+    comingSoon: true,
     unlockRun: 3,
     unlockCost: 20,     // 20 PP to unlock
     volatilityMod: 0.6,
@@ -210,6 +213,7 @@ const TRADING_MODES = {
   commodities: {
     name: 'Commodities',
     description: 'Oil, gold, wheat. Geopolitics is your friend.',
+    comingSoon: true,
     unlockRun: 4,
     unlockCost: 25,     // 25 PP to unlock
     volatilityMod: 1.2,
@@ -226,6 +230,7 @@ const TRADING_MODES = {
   crypto: {
     name: 'Crypto',
     description: 'Wild west. No regulation, max degen.',
+    comingSoon: true,
     unlockRun: 5,
     unlockCost: 30,     // 30 PP to unlock
     volatilityMod: 3.0,
@@ -247,41 +252,28 @@ const TRADING_MODES = {
 // ============================================================================
 
 const UNLOCKS = {
-  leverage2x:    { name: 'Leverage 2x', cost: 1, description: 'Double your position sizes', category: 'trading', leverageLevel: 2 },
-  leverage5x:    { name: 'Leverage 5x', cost: 3, description: '5x position sizes', category: 'trading', leverageLevel: 5, requires: 'leverage2x' },
-  leverage10x:   { name: 'Leverage 10x', cost: 8, description: '10x position sizes', category: 'trading', leverageLevel: 10, requires: 'leverage5x' },
-  leverage50x:   { name: 'Leverage 50x', cost: 20, description: 'Degenerate leverage', category: 'trading', leverageLevel: 50, requires: 'leverage10x' },
-  reducedFees1:  { name: 'Reduced Fees I', cost: 2, description: 'Fees reduced by 25%', category: 'trading', feeReduction: 0.25 },
-  reducedFees2:  { name: 'Reduced Fees II', cost: 5, description: 'Fees reduced by 50%', category: 'trading', feeReduction: 0.50, requires: 'reducedFees1' },
-  reducedFees3:  { name: 'Reduced Fees III', cost: 10, description: 'Fees reduced by 75%', category: 'trading', feeReduction: 0.75, requires: 'reducedFees2' },
-  betterRep1:    { name: 'Analyst', cost: 3, description: 'Start as an analyst. Slightly better info.', category: 'career', repLevel: 1 },
-  betterRep2:    { name: 'Trader', cost: 7, description: 'Start as a trader. Access to better tools.', category: 'career', repLevel: 2, requires: 'betterRep1' },
-  hedgeFund:     { name: 'Hedge Fund Access', cost: 15, description: 'Trade with firm capital. Higher stakes.', category: 'career', repLevel: 3, requires: 'betterRep2' },
-  fundManager:   { name: 'Fund Manager', cost: 20, description: 'Manage OPM. AUM bonuses.', category: 'career', repLevel: 4, requires: 'hedgeFund' },
-  lowerSurv1:    { name: 'Low Profile I', cost: 5, description: 'SEC attention grows 20% slower', category: 'stealth', survReduction: 0.20 },
-  lowerSurv2:    { name: 'Low Profile II', cost: 10, description: 'SEC attention grows 40% slower', category: 'stealth', survReduction: 0.40, requires: 'lowerSurv1' },
-  insiderNetwork:{ name: 'Insider Network', cost: 8, description: 'Access to insider tips (risky)', category: 'illegal' },
-  politicalDonations: { name: 'PAC Access', cost: 6, description: 'Donate to reduce SEC heat', category: 'illegal' },
-  algoEngine:    { name: 'Algo Engine', cost: 12, description: 'Unlock algo trading mode', category: 'trading' },
-  morePositions: { name: 'Portfolio Expansion', cost: 4, description: 'Hold up to 10 positions', category: 'trading', maxPositions: 10 },
-  startingCash2x:{ name: 'Trust Fund Kid', cost: 6, description: 'Start with $20,000', category: 'starting', cashMultiplier: 2 },
-  startingCash5x:{ name: 'Rich Parents', cost: 15, description: 'Start with $50,000', category: 'starting', cashMultiplier: 5, requires: 'startingCash2x' },
+  // Early game unlocks (0.5-2 PP) - accessible after first 1-2 runs
+  leverage2x:    { name: 'Leverage 2x', cost: 0.5, description: 'Double your position sizes', category: 'trading', leverageLevel: 2 },
+  reducedFees1:  { name: 'Reduced Fees I', cost: 1, description: 'Fees reduced by 25%', category: 'trading', feeReduction: 0.25 },
 
-  // Stock sector unlocks
+  // Basic unlocks (2-5 PP) - mid-early game
   financeStocks: {
     name: 'Finance Sector',
-    cost: 3,
+    cost: 2,
     description: 'Unlock banks and financial services stocks',
     category: 'sectors',
     unlocksCategory: 'finance'
   },
   healthcareStocks: {
     name: 'Healthcare Sector',
-    cost: 4,
+    cost: 3,
     description: 'Unlock pharmaceutical and medical stocks',
     category: 'sectors',
     unlocksCategory: 'healthcare'
   },
+  leverage5x:    { name: 'Leverage 5x', cost: 3, description: '5x position sizes', category: 'trading', leverageLevel: 5, requires: 'leverage2x' },
+  betterRep1:    { name: 'Analyst', cost: 4, description: 'Start as an analyst. Slightly better info.', category: 'career', repLevel: 1 },
+  morePositions: { name: 'Portfolio Expansion', cost: 4, description: 'Hold up to 10 positions', category: 'trading', maxPositions: 10 },
   industrialsStocks: {
     name: 'Industrials Sector',
     cost: 5,
@@ -289,6 +281,8 @@ const UNLOCKS = {
     category: 'sectors',
     unlocksCategory: 'industrials'
   },
+
+  // Mid-game unlocks (6-12 PP)
   energyStocks: {
     name: 'Energy Sector',
     cost: 6,
@@ -296,6 +290,10 @@ const UNLOCKS = {
     category: 'sectors',
     unlocksCategory: 'energy'
   },
+  politicalDonations: { name: 'PAC Access', cost: 6, description: 'Donate to reduce SEC heat', category: 'illegal' },
+  startingCash2x:{ name: 'Trust Fund Kid', cost: 6, description: 'Start with $20,000', category: 'starting', cashMultiplier: 2 },
+  reducedFees2:  { name: 'Reduced Fees II', cost: 8, description: 'Fees reduced by 50%', category: 'trading', feeReduction: 0.50, requires: 'reducedFees1' },
+  insiderNetwork:{ name: 'Insider Network', cost: 8, description: 'Access to insider tips (risky)', category: 'illegal' },
   techStocks: {
     name: 'Tech Sector',
     cost: 8,
@@ -303,14 +301,28 @@ const UNLOCKS = {
     category: 'sectors',
     unlocksCategory: 'tech'
   },
+  lowerSurv1:    { name: 'Low Profile I', cost: 10, description: 'SEC attention grows 20% slower', category: 'stealth', survReduction: 0.20 },
+  betterRep2:    { name: 'Trader', cost: 10, description: 'Start as a trader. Access to better tools.', category: 'career', repLevel: 2, requires: 'betterRep1' },
+  algoEngine:    { name: 'Algo Engine', cost: 12, description: 'Unlock algo trading mode', category: 'trading' },
+
+  // Late game unlocks (15-25 PP)
+  leverage10x:   { name: 'Leverage 10x', cost: 15, description: '10x position sizes', category: 'trading', leverageLevel: 10, requires: 'leverage5x' },
+  hedgeFund:     { name: 'Hedge Fund Access', cost: 15, description: 'Trade with firm capital. Higher stakes.', category: 'career', repLevel: 3, requires: 'betterRep2' },
+  reducedFees3:  { name: 'Reduced Fees III', cost: 18, description: 'Fees reduced by 75%', category: 'trading', feeReduction: 0.75, requires: 'reducedFees2' },
   memeStocks: {
     name: 'Meme Stocks',
-    cost: 10,
+    cost: 20,
     description: 'Unlock WSB favorites. YOLO.',
     category: 'sectors',
     unlocksCategory: 'meme',
     requires: 'techStocks'  // Requires tech first
-  }
+  },
+  lowerSurv2:    { name: 'Low Profile II', cost: 20, description: 'SEC attention grows 40% slower', category: 'stealth', survReduction: 0.40, requires: 'lowerSurv1' },
+  fundManager:   { name: 'Fund Manager', cost: 25, description: 'Manage OPM. AUM bonuses.', category: 'career', repLevel: 4, requires: 'hedgeFund' },
+  startingCash5x:{ name: 'Rich Parents', cost: 25, description: 'Start with $50,000', category: 'starting', cashMultiplier: 5, requires: 'startingCash2x' },
+
+  // Endgame unlocks (40+ PP)
+  leverage50x:   { name: 'Leverage 50x', cost: 40, description: 'Degenerate leverage', category: 'trading', leverageLevel: 50, requires: 'leverage10x' }
 };
 
 // ============================================================================

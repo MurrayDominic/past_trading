@@ -451,7 +451,6 @@ class GameUI {
 
     // Reset filters on new run
     this.currentSearchTerm = '';
-    this.currentCategoryFilter = 'all';
     if (this.el.assetSearch) {
       this.el.assetSearch.value = '';
     }
@@ -491,7 +490,14 @@ class GameUI {
     }
 
     this.el.categoryFilter.innerHTML = html;
-    this.el.categoryFilter.value = this.currentCategoryFilter;
+
+    // Preserve category selection - only reset if current category is no longer available
+    if (Array.from(this.el.categoryFilter.options).some(opt => opt.value === this.currentCategoryFilter)) {
+      this.el.categoryFilter.value = this.currentCategoryFilter;
+    } else {
+      this.currentCategoryFilter = 'all';
+      this.el.categoryFilter.value = 'all';
+    }
   }
 
   showPauseOverlay(show) {
@@ -518,7 +524,20 @@ class GameUI {
 
     let modeHtml = '';
     for (const mode of modes) {
-      if (mode.unlocked) {
+      if (mode.comingSoon) {
+        // Coming soon mode - grayed out
+        modeHtml += `
+          <div class="mode-card coming-soon" data-mode="${mode.id}">
+            <div class="mode-card-content">
+              <h3>${mode.name}</h3>
+              <p>${mode.description}</p>
+              <div class="coming-soon-badge">
+                <span>🚧 Coming Soon</span>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (mode.unlocked) {
         // Unlocked mode - show play button
         modeHtml += `
           <div class="mode-card unlocked" data-mode="${mode.id}">
@@ -807,6 +826,18 @@ class GameUI {
     // Now reading costs and requirements from UNLOCKS config
     this.treeStructure = [
       {
+        category: 'Stock Sectors',
+        icon: '📊',
+        nodes: [
+          { id: 'financeStocks', name: 'Finance', icon: '🏦', cost: UNLOCKS.financeStocks.cost },
+          { id: 'healthcareStocks', name: 'Healthcare', icon: '💊', cost: UNLOCKS.healthcareStocks.cost },
+          { id: 'industrialsStocks', name: 'Industrials', icon: '🏭', cost: UNLOCKS.industrialsStocks.cost },
+          { id: 'energyStocks', name: 'Energy', icon: '🛢️', cost: UNLOCKS.energyStocks.cost },
+          { id: 'techStocks', name: 'Tech', icon: '💻', cost: UNLOCKS.techStocks.cost },
+          { id: 'memeStocks', name: 'Meme', icon: '🚀', cost: UNLOCKS.memeStocks.cost, requires: [UNLOCKS.memeStocks.requires] },
+        ]
+      },
+      {
         category: 'Trading Power',
         icon: '',
         nodes: [
@@ -849,18 +880,6 @@ class GameUI {
           { id: 'insiderNetwork', name: 'Insider Network', icon: '', cost: UNLOCKS.insiderNetwork.cost },
         ]
       },
-      {
-        category: 'Stock Sectors',
-        icon: '📊',
-        nodes: [
-          { id: 'financeStocks', name: 'Finance', icon: '🏦', cost: UNLOCKS.financeStocks.cost },
-          { id: 'healthcareStocks', name: 'Healthcare', icon: '💊', cost: UNLOCKS.healthcareStocks.cost },
-          { id: 'industrialsStocks', name: 'Industrials', icon: '🏭', cost: UNLOCKS.industrialsStocks.cost },
-          { id: 'energyStocks', name: 'Energy', icon: '🛢️', cost: UNLOCKS.energyStocks.cost },
-          { id: 'techStocks', name: 'Tech', icon: '💻', cost: UNLOCKS.techStocks.cost },
-          { id: 'memeStocks', name: 'Meme', icon: '🚀', cost: UNLOCKS.memeStocks.cost, requires: [UNLOCKS.memeStocks.requires] },
-        ]
-      },
     ];
 
     // Render tree
@@ -877,15 +896,31 @@ class GameUI {
 
         // Check if prerequisites are met
         let prereqsMet = true;
+        let missingPrereq = null;
         if (node.requires) {
           prereqsMet = node.requires.every(req => prog.data.unlocks[req]);
+          if (!prereqsMet) {
+            // Find the first missing prerequisite
+            missingPrereq = node.requires.find(req => !prog.data.unlocks[req]);
+          }
         }
 
-        const available = !unlocked && prereqsMet && canAfford;
-        const locked = !unlocked && (!prereqsMet || !canAfford);
-
-        let statusClass = unlocked ? 'unlocked' : (available ? 'available' : 'locked');
-        let statusText = unlocked ? 'Unlocked' : (prereqsMet ? (canAfford ? 'Available' : 'Too Expensive') : 'Locked');
+        // Determine node state: unlocked, available, blocked (missing prereqs), or locked (can't afford)
+        let statusClass, statusText;
+        if (unlocked) {
+          statusClass = 'unlocked';
+          statusText = 'Unlocked';
+        } else if (!prereqsMet) {
+          statusClass = 'blocked';
+          const prereqName = UNLOCKS[missingPrereq]?.name || missingPrereq;
+          statusText = `Requires: ${prereqName}`;
+        } else if (!canAfford) {
+          statusClass = 'locked';
+          statusText = 'Too Expensive';
+        } else {
+          statusClass = 'available';
+          statusText = 'Available';
+        }
 
         // Debug logging for each node
         if (prog.data.unlocks[node.id]) {
@@ -893,7 +928,7 @@ class GameUI {
         }
 
         treeHtml += `
-          <div class="tree-node ${statusClass}" data-node-id="${node.id}">
+          <div class="tree-node ${statusClass}" data-node-id="${node.id}" ${!prereqsMet ? `data-blocked-reason="Requires: ${UNLOCKS[missingPrereq]?.name || missingPrereq}"` : ''}>
             <div class="node-name">${node.name}</div>
             <div class="node-cost">${node.cost} PP</div>
             <div class="node-status ${statusClass}">${statusText}</div>
@@ -902,7 +937,12 @@ class GameUI {
 
         // Add arrow if not last node
         if (i < category.nodes.length - 1) {
-          treeHtml += `<div class="tree-arrow">→</div>`;
+          const nextNode = category.nodes[i + 1];
+          const nextUnlocked = prog.data.unlocks[nextNode.id] || false;
+          const nextPrereqsMet = !nextNode.requires || nextNode.requires.every(req => prog.data.unlocks[req]);
+          const nextBlocked = !nextUnlocked && !nextPrereqsMet;
+          const arrowClass = nextBlocked ? 'tree-arrow blocked' : 'tree-arrow';
+          treeHtml += `<div class="${arrowClass}">→</div>`;
         }
       }
 
@@ -1398,11 +1438,11 @@ class GameUI {
           const x = padding + dayIdx * xStep;
           const y = h - padding + 20;
 
-          // Calculate date accounting for filtered range
+          // Calculate date accounting for filtered range, include year
           const actualDayIdx = startOffset + dayIdx;
           const date = new Date(game.market.startDate);
           date.setDate(date.getDate() + actualDayIdx);
-          const label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          const label = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
 
           ctx.fillText(label, x, y);
         }
@@ -1645,10 +1685,6 @@ class GameUI {
         <div class="stat-item highlight">
           <span class="stat-label">Win Rate</span>
           <span class="stat-value text-accent">${rec.winRate || '0.0%'}</span>
-        </div>
-        <div class="stat-item highlight">
-          <span class="stat-label">Max Drawdown</span>
-          <span class="stat-value ${parseFloat(rec.maxDrawdown) < 20 ? 'text-success' : 'text-warning'}">${rec.maxDrawdown || '0.0%'}</span>
         </div>
         <div class="stat-item">
           <span class="stat-label">Winning Trades</span>

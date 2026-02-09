@@ -172,7 +172,7 @@ class ChartManager {
 
     // Draw gridlines and Y-axis labels
     ctx.font = '12px var(--font-mono)';
-    ctx.fillStyle = '#666';
+    ctx.fillStyle = '#fff';
     ctx.textAlign = 'right';
     for (let i = 0; i <= 5; i++) {
       const price = min + (range * i / 5);
@@ -250,12 +250,12 @@ class ChartManager {
 
     // Asset name
     ctx.font = '14px var(--font-primary)';
-    ctx.fillStyle = '#A0A0A0';
+    ctx.fillStyle = '#fff';
     ctx.fillText(asset.ticker, 20, 50);
 
     // X-axis date labels (for candlestick chart, each candle is a day or minute)
     if (startDate) {
-      ctx.fillStyle = '#888';
+      ctx.fillStyle = '#fff';
       ctx.font = '11px var(--font-mono)';
       ctx.textAlign = 'center';
 
@@ -268,11 +268,11 @@ class ChartManager {
           const x = padding + dataIdx * candleSpacing + candleSpacing / 2;
           const y = h - padding + 20;
 
-          // Calculate date - for intraday, use minutes; otherwise use days
+          // Calculate date - for intraday, use minutes; otherwise use days with year
           const daysFromStart = currentDay - (visibleData.length - 1 - dataIdx);
           const date = new Date(startDate);
           date.setDate(date.getDate() + daysFromStart);
-          const label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          const label = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
 
           ctx.fillText(label, x, y);
         }
@@ -339,7 +339,7 @@ class ChartManager {
 
     // Draw gridlines and Y-axis labels
     ctx.font = '12px var(--font-mono)';
-    ctx.fillStyle = '#666';
+    ctx.fillStyle = '#fff';
     ctx.textAlign = 'right';
     for (let i = 0; i <= 5; i++) {
       const price = min + (range * i / 5);
@@ -406,12 +406,12 @@ class ChartManager {
 
     // Asset name
     ctx.font = '14px var(--font-primary)';
-    ctx.fillStyle = '#A0A0A0';
+    ctx.fillStyle = '#fff';
     ctx.fillText(asset.ticker, 20, 50);
 
     // X-axis date labels
     if (startDate) {
-      ctx.fillStyle = '#888';
+      ctx.fillStyle = '#fff';
       ctx.font = '11px var(--font-mono)';
       ctx.textAlign = 'center';
 
@@ -424,11 +424,11 @@ class ChartManager {
           const x = padding + dataIdx * spacing;
           const y = h - padding + 20;
 
-          // Calculate date
+          // Calculate date with year
           const daysFromStart = currentDay - (visibleData.length - 1 - dataIdx);
           const date = new Date(startDate);
           date.setDate(date.getDate() + daysFromStart);
-          const label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          const label = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
 
           ctx.fillText(label, x, y);
         }
