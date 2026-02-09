@@ -10,12 +10,14 @@ class GameUI {
     this.achievementQueue = [];
     this.tradeResultTimeout = null;
     this.chartManager = null;
+    this.netWorthTimeRange = 'max';  // Time range filter for net worth graph
   }
 
   init() {
     // Cache DOM elements
     this.el = {
       menuScreen: document.getElementById('menu-screen'),
+      shopScreen: document.getElementById('shop-screen'),
       gameScreen: document.getElementById('game-screen'),
       runEndScreen: document.getElementById('run-end-screen'),
       loadingOverlay: document.getElementById('loading-overlay'),
@@ -28,12 +30,13 @@ class GameUI {
       volumeSlider: document.getElementById('volume-slider'),
 
       // Trading panel
+      assetSearch: document.getElementById('asset-search'),
       assetSelector: document.getElementById('asset-selector'),
       tradeQuantity: document.getElementById('trade-quantity'),
+      sharesPreview: document.getElementById('shares-preview'),
       buyBtn: document.getElementById('buy-btn'),
       sellBtn: document.getElementById('sell-btn'),
       shortBtn: document.getElementById('short-btn'),
-      cooldownIndicator: document.getElementById('cooldown-indicator'),
       tradeResult: document.getElementById('trade-result'),
 
       // Graphs
@@ -67,11 +70,23 @@ class GameUI {
       menuPP: document.getElementById('menu-pp'),
       menuRunCount: document.getElementById('menu-run-count'),
       modeSelector: document.getElementById('mode-selector'),
-      unlockShop: document.getElementById('unlock-shop'),
-      toolSelector: document.getElementById('tool-selector'),
       menuAchievements: document.getElementById('menu-achievements'),
       menuLeaderboards: document.getElementById('menu-leaderboards'),
       titleSelector: document.getElementById('title-selector'),
+      openShopBtn: document.getElementById('open-shop-btn'),
+      backToMenuBtn: document.getElementById('back-to-menu-btn'),
+
+      // Year Selection
+      startYearSlider: document.getElementById('start-year-slider'),
+      endYearSlider: document.getElementById('end-year-slider'),
+      startYearDisplay: document.getElementById('start-year-display'),
+      endYearDisplay: document.getElementById('end-year-display'),
+      yearSpanDisplay: document.getElementById('year-span-display'),
+
+      // Shop
+      shopPP: document.getElementById('shop-pp'),
+      progressionTree: document.getElementById('progression-tree'),
+      shopItemDetail: document.getElementById('shop-item-detail'),
 
       // Run end
       runEndTitle: document.getElementById('run-end-title'),
@@ -94,6 +109,57 @@ class GameUI {
   }
 
   bindEvents() {
+    // Shop navigation
+    if (this.el.openShopBtn) {
+      this.el.openShopBtn.addEventListener('click', () => this.showShop());
+    }
+    if (this.el.backToMenuBtn) {
+      this.el.backToMenuBtn.addEventListener('click', () => this.showMenu());
+    }
+
+    // Year selection sliders
+    if (this.el.startYearSlider) {
+      this.el.startYearSlider.addEventListener('input', (e) => {
+        let startYear = parseInt(e.target.value);
+        let endYear = parseInt(this.el.endYearSlider.value);
+
+        // Ensure start year doesn't exceed end year
+        if (startYear > endYear) {
+          endYear = startYear;
+          this.el.endYearSlider.value = endYear;
+        }
+
+        this.updateYearDisplay(startYear, endYear);
+      });
+    }
+
+    if (this.el.endYearSlider) {
+      this.el.endYearSlider.addEventListener('input', (e) => {
+        let endYear = parseInt(e.target.value);
+        let startYear = parseInt(this.el.startYearSlider.value);
+
+        // Ensure end year doesn't go below start year
+        if (endYear < startYear) {
+          startYear = endYear;
+          this.el.startYearSlider.value = startYear;
+        }
+
+        this.updateYearDisplay(startYear, endYear);
+      });
+    }
+
+    // Year preset buttons
+    document.querySelectorAll('.year-preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const startYear = parseInt(btn.dataset.start);
+        const endYear = parseInt(btn.dataset.end);
+
+        this.el.startYearSlider.value = startYear;
+        this.el.endYearSlider.value = endYear;
+        this.updateYearDisplay(startYear, endYear);
+      });
+    });
+
     // Speed controls
     document.querySelectorAll('.speed-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -135,6 +201,13 @@ class GameUI {
       });
     }
 
+    // Asset search
+    if (this.el.assetSearch) {
+      this.el.assetSearch.addEventListener('input', (e) => {
+        this.filterAssets(e.target.value);
+      });
+    }
+
     // Add chart button
     if (this.el.addChartBtn) {
       this.el.addChartBtn.addEventListener('click', () => {
@@ -146,7 +219,51 @@ class GameUI {
       });
     }
 
-    // Max quantity button
+    // Chart timeframe buttons
+    document.querySelectorAll('.timeframe-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const range = btn.dataset.range;
+
+        // Update active button
+        document.querySelectorAll('.timeframe-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Update chart manager
+        if (this.chartManager) {
+          this.chartManager.setTimeRange(range);
+          // Trigger re-render
+          if (this.game.state === 'playing') {
+            this.chartManager.renderActiveChart(
+              this.game.market,
+              this.game.currentDay,
+              this.game.selectedMode,
+              this.game.trading.positions
+            );
+          }
+        }
+      });
+    });
+
+    // Net worth graph timeframe buttons
+    document.querySelectorAll('.nw-timeframe-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const range = btn.dataset.range;
+
+        // Update active button
+        document.querySelectorAll('.nw-timeframe-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Update time range
+        this.netWorthTimeRange = range;
+
+        // Trigger re-render
+        if (this.game.state === 'playing') {
+          this.renderGraph(this.game);
+        }
+      });
+    });
+
+    // Max amount button
     const maxQtyBtn = document.getElementById('max-qty-btn');
     if (maxQtyBtn) {
       maxQtyBtn.addEventListener('click', () => {
@@ -160,19 +277,43 @@ class GameUI {
         const modeConfig = TRADING_MODES[this.game.selectedMode];
         const feePercent = CONFIG.BASE_FEE_PERCENT * modeConfig.feeMod * (1 - feeReduction);
 
-        const totalAvailable = this.game.trading.cash * leverage;
-        const costPerShare = asset.price * (1 + feePercent / 100);
-        const maxQty = Math.floor(totalAvailable / costPerShare);
+        // Calculate max dollar amount: cash * leverage, accounting for fees
+        const maxDollarAmount = Math.floor(this.game.trading.cash * leverage / (1 + feePercent / (100 * leverage)));
 
-        this.el.tradeQuantity.value = Math.max(1, maxQty);
+        this.el.tradeQuantity.value = Math.max(1, maxDollarAmount);
       });
     }
+
+    // Quick buy percentage buttons
+    document.querySelectorAll('.quick-buy-buttons .btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (this.game.state !== 'playing' || !this.game.selectedAsset) return;
+
+        const asset = this.game.market.getAsset(this.game.selectedAsset);
+        if (!asset) return;
+
+        const percent = parseFloat(btn.dataset.percent);
+        const leverage = this.game.trading.getLeverage(this.game.progression.data);
+        const feeReduction = this.game.trading.getFeeReduction(this.game.progression.data);
+        const modeConfig = TRADING_MODES[this.game.selectedMode];
+        const feePercent = CONFIG.BASE_FEE_PERCENT * modeConfig.feeMod * (1 - feeReduction);
+
+        // Calculate max amount accounting for leverage and fees
+        const maxDollarAmount = this.game.trading.cash * leverage / (1 + feePercent / (100 * leverage));
+        const amount = Math.floor(maxDollarAmount * (percent / 100));
+
+        this.el.tradeQuantity.value = Math.max(1, amount);
+
+        // Trigger input event to update shares preview
+        this.el.tradeQuantity.dispatchEvent(new Event('input'));
+      });
+    });
 
     // Buy
     if (this.el.buyBtn) {
       this.el.buyBtn.addEventListener('click', () => {
-        const qty = parseInt(this.el.tradeQuantity.value) || 1;
-        this.game.buyAsset(qty);
+        const amount = parseFloat(this.el.tradeQuantity.value) || 1000;
+        this.game.buyAsset(amount);
       });
     }
 
@@ -194,8 +335,8 @@ class GameUI {
     // Short
     if (this.el.shortBtn) {
       this.el.shortBtn.addEventListener('click', () => {
-        const qty = parseInt(this.el.tradeQuantity.value) || 1;
-        this.game.shortAsset(qty);
+        const amount = parseFloat(this.el.tradeQuantity.value) || 1000;
+        this.game.shortAsset(amount);
       });
     }
 
@@ -261,6 +402,17 @@ class GameUI {
     }
   }
 
+  updateYearDisplay(startYear, endYear) {
+    this.el.startYearDisplay.textContent = startYear;
+    this.el.endYearDisplay.textContent = endYear;
+
+    const yearSpan = endYear - startYear + 1;
+    this.el.yearSpanDisplay.textContent = `${yearSpan} year${yearSpan === 1 ? '' : 's'} selected`;
+
+    // Store selected years in game object
+    this.game.selectedYears = { start: startYear, end: endYear };
+  }
+
   showGame() {
     this.el.menuScreen.classList.add('hidden');
     this.el.gameScreen.classList.remove('hidden');
@@ -300,27 +452,62 @@ class GameUI {
 
     // Mode selector
     const modes = prog.getAvailableModes();
-    const lockedModes = Object.entries(TRADING_MODES).filter(([id]) => !modes.find(m => m.id === id));
 
     let modeHtml = '';
     for (const mode of modes) {
-      modeHtml += `
-        <div class="mode-card" data-mode="${mode.id}">
-          <h3>${mode.name}</h3>
-          <p>${mode.description}</p>
-          <button class="btn btn-primary start-run-btn" data-mode="${mode.id}">Play</button>
-        </div>
-      `;
-    }
-    for (const [id, mode] of lockedModes) {
-      modeHtml += `
-        <div class="mode-card locked">
-          <h3>${mode.name}</h3>
-          <p>Unlocks after run ${mode.unlockRun}</p>
-        </div>
-      `;
+      if (mode.unlocked) {
+        // Unlocked mode - show play button
+        modeHtml += `
+          <div class="mode-card unlocked" data-mode="${mode.id}">
+            <div class="mode-card-content">
+              <h3>${mode.name}</h3>
+              <p>${mode.description}</p>
+            </div>
+            <button class="btn btn-primary start-run-btn mode-card-play-btn" data-mode="${mode.id}">Play</button>
+          </div>
+        `;
+      } else {
+        // Locked mode - show with unlock button
+        const canAfford = prog.data.prestigePoints >= mode.unlockCost;
+        modeHtml += `
+          <div class="mode-card locked" data-mode="${mode.id}">
+            <div class="mode-card-content">
+              <h3>${mode.name}</h3>
+              <p>${mode.description}</p>
+              <div class="mode-lock-info">
+                <span class="lock-icon">🔒</span>
+                <span class="mode-cost">${mode.unlockCost} PP Required</span>
+              </div>
+            </div>
+            <button class="btn ${canAfford ? 'btn-accent' : 'btn-disabled'} unlock-mode-btn"
+                    data-unlock-mode="${mode.id}"
+                    ${canAfford ? '' : 'disabled'}>
+              ${canAfford ? `Unlock (${mode.unlockCost} PP)` : 'Insufficient PP'}
+            </button>
+          </div>
+        `;
+      }
     }
     this.el.modeSelector.innerHTML = modeHtml;
+
+    // Bind unlock buttons for locked modes
+    document.querySelectorAll('.unlock-mode-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent card click event
+        const modeId = btn.dataset.unlockMode;
+        const result = prog.unlockMode(modeId);
+
+        if (result.success) {
+          // Show success notification
+          this.showToast(`Unlocked ${result.mode.name}!`, 'success');
+          // Refresh menu to show newly unlocked mode
+          this.renderMenu();
+        } else {
+          // Show error notification
+          this.showToast(result.message, 'error');
+        }
+      });
+    });
 
     // Bind start buttons
     document.querySelectorAll('.start-run-btn').forEach(btn => {
@@ -329,7 +516,8 @@ class GameUI {
       });
     });
 
-    // Unlock shop - rendered as tile grid
+    // Unlock shop - MOVED TO SHOP SCREEN, COMMENTING OUT OLD CODE
+    /*
     const unlocks = prog.getAvailableUnlocks();
     const purchased = Object.keys(prog.data.unlocks);
 
@@ -389,8 +577,10 @@ class GameUI {
         if (result.success) this.renderMenu();
       });
     });
+    */
 
-    // Equipable Tools
+    // Equipable Tools - MOVED TO SHOP SCREEN, COMMENTING OUT OLD CODE
+    /*
     const ownedTools = prog.data.ownedTools || [];
     const equippedTool = prog.data.equippedTool;
 
@@ -463,6 +653,7 @@ class GameUI {
         }
       });
     });
+    */
 
     // Achievements
     const achProgress = AchievementUI.getProgressSummary(prog);
@@ -532,48 +723,296 @@ class GameUI {
     this.el.menuLeaderboards.innerHTML = html;
   }
 
+  // ---- Shop Screen ----
+
+  showShop() {
+    this.el.menuScreen.classList.add('hidden');
+    this.el.shopScreen.classList.remove('hidden');
+    this.renderShop();
+  }
+
+  showMenu() {
+    this.el.shopScreen.classList.add('hidden');
+    this.el.menuScreen.classList.remove('hidden');
+    this.renderMenu();
+  }
+
+  renderShop() {
+    const prog = this.game.progression;
+
+    // Update PP display
+    this.el.shopPP.textContent = prog.data.prestigePoints.toFixed(1);
+
+    // Define progression tree structure
+    const treeStructure = [
+      {
+        category: '💪 Trading Power',
+        icon: '💪',
+        nodes: [
+          { id: 'leverage2x', name: '2x Leverage', icon: '📈', cost: 10 },
+          { id: 'leverage5x', name: '5x Leverage', icon: '🚀', cost: 50, requires: ['leverage2x'] },
+          { id: 'leverage10x', name: '10x Leverage', icon: '💥', cost: 100, requires: ['leverage5x'] },
+        ]
+      },
+      {
+        category: '💰 Fee Reduction',
+        icon: '💰',
+        nodes: [
+          { id: 'reducedFees1', name: 'Fees -10%', icon: '💵', cost: 15 },
+          { id: 'reducedFees2', name: 'Fees -20%', icon: '💴', cost: 40, requires: ['reducedFees1'] },
+          { id: 'reducedFees3', name: 'Fees -30%', icon: '💶', cost: 80, requires: ['reducedFees2'] },
+        ]
+      },
+      {
+        category: '🛡️ Risk Management',
+        icon: '🛡️',
+        nodes: [
+          { id: 'shortSelling', name: 'Short Selling', icon: '📉', cost: 20 },
+          { id: 'riskManagement', name: 'Risk Control', icon: '🎯', cost: 30 },
+        ]
+      },
+      {
+        category: '📊 Information Tools',
+        icon: '📊',
+        nodes: [
+          { id: 'sentiment', name: 'Sentiment', icon: '😊', cost: 25 },
+          { id: 'news', name: 'News Feed', icon: '📰', cost: 25 },
+          { id: 'marketDepth', name: 'Market Depth', icon: '📊', cost: 35, requires: ['sentiment'] },
+          { id: 'heatmap', name: 'Heatmap', icon: '🔥', cost: 45, requires: ['marketDepth'] },
+          { id: 'correlation', name: 'Correlation', icon: '🔗', cost: 55, requires: ['heatmap'] },
+        ]
+      },
+      {
+        category: '⚠️ Illegal Activities',
+        icon: '⚠️',
+        nodes: [
+          { id: 'insiderNetwork', name: 'Insider Network', icon: '🕵️', cost: 40 },
+          { id: 'hedgeFund', name: 'Hedge Fund', icon: '🏦', cost: 75, requires: ['insiderNetwork'] },
+          { id: 'marketManipulation', name: 'Market Control', icon: '🎭', cost: 120, requires: ['hedgeFund'] },
+        ]
+      },
+    ];
+
+    // Render tree
+    let treeHtml = '';
+    for (const category of treeStructure) {
+      treeHtml += `<div class="tree-category">`;
+      treeHtml += `<div class="tree-category-title">${category.icon} ${category.category}</div>`;
+      treeHtml += `<div class="tree-nodes">`;
+
+      for (let i = 0; i < category.nodes.length; i++) {
+        const node = category.nodes[i];
+        const unlocked = prog.data.unlocks[node.id] || false;
+        const canAfford = prog.data.prestigePoints >= node.cost;
+
+        // Check if prerequisites are met
+        let prereqsMet = true;
+        if (node.requires) {
+          prereqsMet = node.requires.every(req => prog.data.unlocks[req]);
+        }
+
+        const available = !unlocked && prereqsMet && canAfford;
+        const locked = !unlocked && (!prereqsMet || !canAfford);
+
+        let statusClass = unlocked ? 'unlocked' : (available ? 'available' : 'locked');
+        let statusText = unlocked ? 'Unlocked' : (prereqsMet ? (canAfford ? 'Available' : 'Too Expensive') : 'Locked');
+
+        treeHtml += `
+          <div class="tree-node ${statusClass}" data-node-id="${node.id}">
+            <div class="node-icon">${node.icon}</div>
+            <div class="node-name">${node.name}</div>
+            <div class="node-cost">${node.cost} PP</div>
+            <div class="node-status ${statusClass}">${statusText}</div>
+          </div>
+        `;
+
+        // Add arrow if not last node
+        if (i < category.nodes.length - 1) {
+          treeHtml += `<div class="tree-arrow">→</div>`;
+        }
+      }
+
+      treeHtml += `</div></div>`;
+    }
+
+    this.el.progressionTree.innerHTML = treeHtml;
+
+    // Bind node click events
+    document.querySelectorAll('.tree-node').forEach(node => {
+      node.addEventListener('click', () => {
+        const nodeId = node.dataset.nodeId;
+        this.showNodeDetail(nodeId, treeStructure);
+      });
+    });
+  }
+
+  showNodeDetail(nodeId, treeStructure) {
+    const prog = this.game.progression;
+
+    // Find the node in tree structure
+    let nodeData = null;
+    for (const category of treeStructure) {
+      const found = category.nodes.find(n => n.id === nodeId);
+      if (found) {
+        nodeData = found;
+        break;
+      }
+    }
+
+    if (!nodeData) return;
+
+    // Get unlock details from config
+    const unlock = UNLOCKS[nodeId] || EQUIPABLE_TOOLS[nodeId];
+    if (!unlock) return;
+
+    const unlocked = prog.data.unlocks[nodeId] || false;
+    const canAfford = prog.data.prestigePoints >= nodeData.cost;
+
+    let prereqsMet = true;
+    let prereqText = 'None';
+    if (nodeData.requires) {
+      prereqsMet = nodeData.requires.every(req => prog.data.unlocks[req]);
+      if (!prereqsMet) {
+        const missing = nodeData.requires.filter(req => !prog.data.unlocks[req]);
+        prereqText = `Requires: ${missing.map(r => {
+          for (const cat of treeStructure) {
+            const n = cat.nodes.find(node => node.id === r);
+            if (n) return n.name;
+          }
+          return r;
+        }).join(', ')}`;
+      }
+    }
+
+    const available = !unlocked && prereqsMet && canAfford;
+
+    let detailHtml = `
+      <div class="detail-header">
+        <div class="detail-icon">${nodeData.icon}</div>
+        <div class="detail-name">${nodeData.name}</div>
+        <div class="detail-cost">${nodeData.cost} PP</div>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-section-title">Description</div>
+        <div class="detail-description">${unlock.description}</div>
+      </div>
+    `;
+
+    if (nodeData.requires) {
+      detailHtml += `
+        <div class="detail-section">
+          <div class="detail-section-title">Prerequisites</div>
+          <div class="detail-prereqs">${prereqText}</div>
+        </div>
+      `;
+    }
+
+    detailHtml += `<div class="detail-action">`;
+
+    if (unlocked) {
+      detailHtml += `<button class="btn btn-disabled" disabled>Already Unlocked</button>`;
+    } else if (!prereqsMet) {
+      detailHtml += `<button class="btn btn-disabled" disabled>Prerequisites Not Met</button>`;
+    } else if (!canAfford) {
+      detailHtml += `<button class="btn btn-disabled" disabled>Cannot Afford (${nodeData.cost} PP)</button>`;
+    } else {
+      detailHtml += `<button class="btn btn-accent" data-unlock="${nodeId}">Unlock for ${nodeData.cost} PP</button>`;
+    }
+
+    detailHtml += `</div>`;
+
+    this.el.shopItemDetail.innerHTML = detailHtml;
+
+    // Bind unlock button
+    const unlockBtn = this.el.shopItemDetail.querySelector('[data-unlock]');
+    if (unlockBtn) {
+      unlockBtn.addEventListener('click', () => {
+        const result = prog.purchaseUnlock(nodeId);
+        if (result.success) {
+          this.renderShop(); // Refresh shop display
+          this.showNodeDetail(nodeId, treeStructure); // Refresh detail view
+        } else {
+          alert(result.message);
+        }
+      });
+    }
+  }
+
   // ---- Game Rendering ----
 
   update(game) {
     if (game.state !== 'playing' && game.state !== 'paused') return;
 
-    // Header
-    const currentDate = game.getCurrentDate();
-    const dateStr = currentDate.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-    this.el.dayCounter.textContent = dateStr;
+    // Header - Time display
+    if (game.isIntraday && game.currentTime) {
+      // Intraday mode: show time-of-day
+      const timeStr = game.currentTime.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+      this.el.dayCounter.textContent = timeStr;
 
-    // Countdown timer
-    if (this.el.countdownTimer) {
-      const remaining = game.totalDays - game.currentDay;
-      this.el.countdownTimer.textContent = `T-${remaining} days`;
+      // Countdown
+      const remaining = CONFIG.INTRADAY_TOTAL_TICKS - game.currentMinute;
+      this.el.countdownTimer.textContent = `T-${remaining} min`;
 
-      // Color code
-      if (remaining > 100) {
+      // Color coding
+      if (remaining > 200) {
         this.el.countdownTimer.style.color = 'var(--rh-green)';
-      } else if (remaining > 30) {
+      } else if (remaining > 60) {
         this.el.countdownTimer.style.color = 'var(--rh-yellow)';
       } else {
         this.el.countdownTimer.style.color = 'var(--rh-red)';
       }
+    } else {
+      // Daily mode: show calendar date
+      const currentDate = game.getCurrentDate();
+      const dateStr = currentDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+      this.el.dayCounter.textContent = dateStr;
+
+      // Countdown timer
+      if (this.el.countdownTimer) {
+        const remaining = game.totalDays - game.currentDay;
+
+        // For multi-year runs, show years + days
+        if (game.totalDays > 730) {
+          const yearsRemaining = Math.floor(remaining / 365);
+          const daysRemaining = remaining % 365;
+          this.el.countdownTimer.textContent = `T-${yearsRemaining}y ${daysRemaining}d`;
+        } else {
+          this.el.countdownTimer.textContent = `T-${remaining} days`;
+        }
+
+        // Color code based on percentage remaining
+        const percentRemaining = remaining / game.totalDays;
+        if (percentRemaining > 0.3) {
+          this.el.countdownTimer.style.color = 'var(--rh-green)';
+        } else if (percentRemaining > 0.1) {
+          this.el.countdownTimer.style.color = 'var(--rh-yellow)';
+        } else {
+          this.el.countdownTimer.style.color = 'var(--rh-red)';
+        }
+      }
     }
 
     // Cooldown indicator
-    if (this.el.cooldownIndicator) {
-      const cooldown = game.trading.getCooldown(game.progression.data);
-      const elapsed = Date.now() - game.trading.lastTradeTime;
-      const remaining = Math.max(0, cooldown - elapsed);
+    // Cooldown system removed for better UX
 
-      if (remaining > 0) {
-        const seconds = (remaining / 1000).toFixed(1);
-        this.el.cooldownIndicator.textContent = `${seconds}s`;
-        this.el.cooldownIndicator.className = 'cooldown-indicator cooldown-active';
+    // Update shares preview
+    if (this.el.sharesPreview && game.selectedAsset) {
+      const amount = parseFloat(this.el.tradeQuantity.value) || 0;
+      const asset = game.market.getAsset(game.selectedAsset);
+      if (asset && amount > 0) {
+        const shares = amount / asset.price;
+        this.el.sharesPreview.textContent = `~${shares.toFixed(4)} shares`;
       } else {
-        this.el.cooldownIndicator.textContent = 'Ready';
-        this.el.cooldownIndicator.className = 'cooldown-indicator cooldown-ready';
+        this.el.sharesPreview.textContent = '~0 shares';
       }
     }
 
@@ -588,10 +1027,19 @@ class GameUI {
       this.chartManager.renderActiveChart(game.market, game.currentDay, game.selectedMode, game.trading.positions);
     }
 
-    // Meters
+    // Meters with risk warnings
     const risk = game.trading.getRiskLevel(game.market);
     this.el.riskFill.style.width = risk + '%';
     this.el.riskValue.textContent = Math.round(risk) + '%';
+
+    // Add warning classes
+    let riskClass = 'safe';
+    if (risk >= CONFIG.RISK_DANGER_PERCENT) {
+      riskClass = 'danger';
+    } else if (risk >= CONFIG.RISK_WARNING_PERCENT) {
+      riskClass = 'warning';
+    }
+    this.el.riskFill.className = `meter-fill risk ${riskClass}`;
 
     this.el.secFill.style.width = game.sec.attention + '%';
     this.el.secValue.textContent = Math.round(game.sec.attention) + '%';
@@ -633,8 +1081,8 @@ class GameUI {
     }
   }
 
-  renderAssetSelector(game) {
-    const assets = game.market.getAllAssets();
+  renderAssetSelector(game, filteredAssets = null) {
+    const assets = filteredAssets || game.market.getAllAssets();
     const modeConfig = TRADING_MODES[game.selectedMode];
 
     if (modeConfig && (modeConfig.isPassive || modeConfig.isAlgo)) {
@@ -674,6 +1122,45 @@ class GameUI {
     });
   }
 
+  filterAssets(searchTerm) {
+    if (!this.game || this.game.state !== 'playing') return;
+
+    const assets = this.game.market.getAllAssets();
+    const searchLower = searchTerm.toLowerCase().trim();
+
+    let filtered = assets;
+    if (searchTerm) {
+      filtered = assets.filter(asset => {
+        const ticker = asset.ticker.toLowerCase();
+        const name = asset.name.toLowerCase();
+
+        // Exact match
+        if (ticker === searchLower || name === searchLower) return true;
+
+        // Contains match
+        if (ticker.includes(searchLower) || name.includes(searchLower)) return true;
+
+        // Fuzzy match (allow 1 character difference)
+        return this.fuzzyMatch(searchLower, ticker) || this.fuzzyMatch(searchLower, name);
+      });
+    }
+
+    this.renderAssetSelector(this.game, filtered);
+  }
+
+  fuzzyMatch(search, target) {
+    if (search.length < 2) return false;
+
+    let searchIdx = 0;
+    for (let i = 0; i < target.length && searchIdx < search.length; i++) {
+      if (target[i] === search[searchIdx]) {
+        searchIdx++;
+      }
+    }
+
+    return searchIdx >= search.length - 1; // Allow 1 missing character
+  }
+
   renderGraph(game) {
     const canvas = this.graphCanvas;
     const ctx = this.graphCtx;
@@ -683,8 +1170,26 @@ class GameUI {
     canvas.width = rect.width;
     canvas.height = rect.height;
 
-    const data = game.trading.netWorthHistory;
-    if (data.length < 2) return;
+    // Apply time range filter
+    let data;
+    if (this.netWorthTimeRange === 'max') {
+      data = game.trading.netWorthHistory;
+    } else {
+      const days = parseInt(this.netWorthTimeRange);
+      data = game.trading.netWorthHistory.slice(-days);
+    }
+
+    if (data.length < 2) {
+      // Show "No data in this time range" message
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = '#888';
+      ctx.font = '14px var(--font-primary)';
+      ctx.textAlign = 'center';
+      ctx.fillText('No data in this time range', w / 2, h / 2);
+      return;
+    }
 
     const w = canvas.width;
     const h = canvas.height;
@@ -751,6 +1256,37 @@ class GameUI {
     ctx.font = 'bold 12px monospace';
     ctx.textAlign = 'left';
     ctx.fillText(formatMoney(data[data.length - 1]), lastX + 4, lastY - 4);
+
+    // X-axis date labels
+    if (game.market && game.market.startDate) {
+      ctx.fillStyle = '#888';
+      ctx.font = '11px monospace';
+      ctx.textAlign = 'center';
+
+      const totalDays = data.length;
+      const labelCount = Math.min(5, totalDays);
+      const xLabelStep = Math.floor(totalDays / labelCount);
+
+      // Calculate offset for filtered data
+      const fullHistory = game.trading.netWorthHistory;
+      const startOffset = fullHistory.length - data.length;
+
+      for (let i = 0; i < labelCount; i++) {
+        const dayIdx = i * xLabelStep;
+        if (dayIdx < totalDays) {
+          const x = padding + dayIdx * xStep;
+          const y = h - padding + 20;
+
+          // Calculate date accounting for filtered range
+          const actualDayIdx = startOffset + dayIdx;
+          const date = new Date(game.market.startDate);
+          date.setDate(date.getDate() + actualDayIdx);
+          const label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+          ctx.fillText(label, x, y);
+        }
+      }
+    }
   }
 
   renderPortfolio(game) {
@@ -899,13 +1435,15 @@ class GameUI {
     const reasonText = {
       arrested: 'ARRESTED BY THE SEC',
       bankrupt: 'BANKRUPT',
-      timeUp: 'TIME\'S UP'
+      timeUp: 'TIME\'S UP',
+      fired: 'FIRED - RISK LIMIT EXCEEDED'
     };
 
     const reasonClass = {
       arrested: 'text-danger',
       bankrupt: 'text-danger',
-      timeUp: 'text-success'
+      timeUp: 'text-success',
+      fired: 'text-danger'
     };
 
     this.el.runEndTitle.textContent = reasonText[game.runEndReason] || 'RUN OVER';
@@ -948,6 +1486,26 @@ class GameUI {
         <div class="stat-item">
           <span class="stat-label">Total Trades</span>
           <span class="stat-value">${rec.trades}</span>
+        </div>
+        <div class="stat-item highlight">
+          <span class="stat-label">Sharpe Ratio</span>
+          <span class="stat-value text-accent">${rec.sharpe || '0.00'}</span>
+        </div>
+        <div class="stat-item highlight">
+          <span class="stat-label">Win Rate</span>
+          <span class="stat-value text-accent">${rec.winRate || '0.0%'}</span>
+        </div>
+        <div class="stat-item highlight">
+          <span class="stat-label">Max Drawdown</span>
+          <span class="stat-value ${parseFloat(rec.maxDrawdown) < 20 ? 'text-success' : 'text-warning'}">${rec.maxDrawdown || '0.0%'}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Winning Trades</span>
+          <span class="stat-value text-success">${rec.winningTrades || 0}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Losing Trades</span>
+          <span class="stat-value text-danger">${rec.losingTrades || 0}</span>
         </div>
         <div class="stat-item">
           <span class="stat-label">Illegal Actions</span>

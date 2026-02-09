@@ -6,8 +6,16 @@ const CONFIG = {
   // --- Time ---
   TICK_MS: 1000,            // 1 second per game day
   DEFAULT_RUN_DAYS: 365,    // 1 year per run
-  SPEED_OPTIONS: [0.5, 1, 2, 5, 10],
+  SPEED_OPTIONS: [0.5, 1, 2, 5, 10, 20, 50],
   GAME_START_DATE: new Date('2000-01-01'),  // Fixed start date
+
+  // Intraday mode (day trading)
+  INTRADAY_TICK_MS: 1538,           // Day trading: 1.538 seconds per minute
+  INTRADAY_TOTAL_TICKS: 390,        // 9:30 AM - 4:00 PM = 390 minutes
+  MARKET_OPEN_HOUR: 9,              // 9:30 AM
+  MARKET_OPEN_MINUTE: 30,
+  MARKET_CLOSE_HOUR: 16,            // 4:00 PM
+  MARKET_CLOSE_MINUTE: 0,
 
   // --- Starting Values ---
   STARTING_CASH: 10000,
@@ -51,7 +59,9 @@ const CONFIG = {
   // --- Risk ---
   RISK_PER_POSITION_PERCENT: 10,  // each position adds to risk
   LEVERAGE_RISK_MULTIPLIER: 1.5,  // risk scales with leverage
-  MARGIN_CALL_THRESHOLD: 85,      // risk % that triggers margin call
+  RISK_LIMIT_PERCENT: 100,        // Fired at 100%
+  RISK_WARNING_PERCENT: 75,       // Yellow warning
+  RISK_DANGER_PERCENT: 90,        // Red warning
 
   // --- Market ---
   BASE_VOLATILITY: 0.02,          // 2% daily volatility
@@ -59,10 +69,13 @@ const CONFIG = {
   CRASH_CHANCE_PER_DAY: 0.005,    // 0.5% chance of crash event
   BULL_DRIFT: 0.0003,             // slight upward bias
 
-  // --- Prestige ---
-  PRESTIGE_PER_DOLLAR_EARNED: 0.0001,  // 1 PP per $10k profit
-  PRESTIGE_BONUS_CLEAN_RUN: 2.0,       // 2x multiplier for no illegal
-  PRESTIGE_BONUS_SURVIVAL: 0.5,        // bonus per 100 days survived
+  // --- Prestige (Skill-Based) ---
+  BASE_PRESTIGE_PER_RUN: 10,              // Base PP for completing a run
+  SHARPE_DIVISOR: 2.0,                    // Sharpe 2.0 = 1x multiplier
+  WIN_RATE_BASELINE: 0.3,                 // Below 30% = 0x multiplier
+  WIN_RATE_SCALE: 3,                      // Each 10% above baseline = 0.3x
+  DRAWDOWN_BONUS_THRESHOLD: 0.2,          // <20% max drawdown = bonus
+  DRAWDOWN_BONUS_MULTIPLIER: 1.5,         // 1.5x multiplier for low drawdown
 
   // --- Leaderboard ---
   MAX_LEADERBOARD_ENTRIES: 20,
@@ -74,27 +87,20 @@ const CONFIG = {
 
 const TRADING_MODES = {
   stocks: {
-    name: 'Stocks',
-    description: 'Buy and sell equities. The classic.',
+    name: 'S&P 500 Stocks',
+    description: 'Trade the S&P 500. Choose from 50 stocks with real historical data.',
     unlockRun: 0,
+    unlockCost: 0,      // Free starter mode
     volatilityMod: 1.0,
     feeMod: 1.0,
     secHeatMod: 1.0,
-    assets: [
-      { ticker: 'AAPL', name: 'Appulse Inc.', basePrice: 150 },
-      { ticker: 'TSLA', name: 'Tessler Motors', basePrice: 250 },
-      { ticker: 'AMZN', name: 'Rainforest Corp.', basePrice: 3200 },
-      { ticker: 'GOOG', name: 'Alfabets Ltd.', basePrice: 2800 },
-      { ticker: 'META', name: 'FaceSpace Inc.', basePrice: 330 },
-      { ticker: 'NFLX', name: 'Streamflix', basePrice: 550 },
-      { ticker: 'NVDA', name: 'Neutron Chips', basePrice: 480 },
-      { ticker: 'JPM',  name: 'J.P. Organ', basePrice: 160 },
-    ]
+    assets: SP500_ASSETS  // Defined in sp500_tickers.js
   },
   dayTrading: {
     name: 'Day Trading',
     description: 'Fast trades, pattern rules apply. Male astrology.',
     unlockRun: 0,
+    unlockCost: 5,      // 5 PP to unlock
     volatilityMod: 1.3,
     feeMod: 0.8,
     secHeatMod: 0.8,
@@ -109,6 +115,7 @@ const TRADING_MODES = {
     name: 'Options',
     description: 'Calls, puts, and the greeks. Leveraged chaos.',
     unlockRun: 2,
+    unlockCost: 15,     // 15 PP to unlock
     volatilityMod: 2.0,
     feeMod: 1.5,
     secHeatMod: 1.0,
@@ -125,6 +132,7 @@ const TRADING_MODES = {
     name: 'Forex',
     description: 'Currency pairs. The market that never sleeps.',
     unlockRun: 3,
+    unlockCost: 20,     // 20 PP to unlock
     volatilityMod: 0.6,
     feeMod: 0.3,
     secHeatMod: 0.5,
@@ -140,6 +148,7 @@ const TRADING_MODES = {
     name: 'Commodities',
     description: 'Oil, gold, wheat. Geopolitics is your friend.',
     unlockRun: 4,
+    unlockCost: 25,     // 25 PP to unlock
     volatilityMod: 1.2,
     feeMod: 1.2,
     secHeatMod: 0.7,
@@ -155,6 +164,7 @@ const TRADING_MODES = {
     name: 'Crypto',
     description: 'Wild west. No regulation, max degen.',
     unlockRun: 5,
+    unlockCost: 30,     // 30 PP to unlock
     volatilityMod: 3.0,
     feeMod: 0.5,
     secHeatMod: 0.3,

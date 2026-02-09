@@ -14,6 +14,7 @@ class ProgressionSystem {
       runCount: 0,
       totalArrests: 0,
       unlocks: {},
+      unlockedModes: ['stocks'],  // Always start with stocks unlocked
       ownedTools: [],
       equippedTool: null,
       equippedTitle: null,
@@ -34,6 +35,23 @@ class ProgressionSystem {
       const saved = localStorage.getItem('pastTrading_progression');
       if (saved) {
         this.data = { ...this.getDefaultData(), ...JSON.parse(saved) };
+
+        // MIGRATION: Convert old runCount-based unlocks to new PP-based system
+        if (!this.data.unlockedModes) {
+          this.data.unlockedModes = ['stocks']; // Always unlocked
+
+          // Check which modes were unlocked by runCount
+          for (const [id, mode] of Object.entries(TRADING_MODES)) {
+            if (mode.unlockRun && this.data.runCount >= mode.unlockRun) {
+              if (!this.data.unlockedModes.includes(id)) {
+                this.data.unlockedModes.push(id);
+              }
+            }
+          }
+
+          console.log('Migrated old save data - unlocked modes:', this.data.unlockedModes);
+          this.save();
+        }
       }
     } catch (e) {
       console.warn('Failed to load progression:', e);
@@ -55,29 +73,45 @@ class ProgressionSystem {
       this.data.totalArrests++;
     }
 
-    // Calculate prestige points earned
-    const profit = tradingEngine.netWorth - CONFIG.STARTING_CASH;
-    let pp = Math.max(0, profit * CONFIG.PRESTIGE_PER_DOLLAR_EARNED);
+    // Calculate Sharpe ratio
+    const sharpe = this.calculateSharpe(tradingEngine.netWorthHistory);
 
-    // Clean run bonus
-    if (tradingEngine.stats.illegalActions === 0) {
-      pp *= CONFIG.PRESTIGE_BONUS_CLEAN_RUN;
+    // Get skill metrics
+    const { winRate, maxDrawdown } = tradingEngine.getSkillMetrics();
+
+    // BASE PRESTIGE
+    let pp = CONFIG.BASE_PRESTIGE_PER_RUN;
+
+    // SHARPE MULTIPLIER
+    // Sharpe 2.0 = 1x, Sharpe 4.0 = 2x, negative Sharpe = 0x
+    const sharpeMultiplier = Math.max(0, sharpe / CONFIG.SHARPE_DIVISOR);
+    pp *= (1 + sharpeMultiplier);
+
+    // WIN RATE MULTIPLIER
+    // 30% win rate = 0x, 50% = 0.6x, 70% = 1.2x
+    const winRateAboveBaseline = Math.max(0, winRate - CONFIG.WIN_RATE_BASELINE);
+    const winRateMultiplier = winRateAboveBaseline * CONFIG.WIN_RATE_SCALE;
+    pp *= (1 + winRateMultiplier);
+
+    // DRAWDOWN BONUS
+    // <20% max drawdown = 1.5x multiplier
+    if (maxDrawdown < CONFIG.DRAWDOWN_BONUS_THRESHOLD) {
+      pp *= CONFIG.DRAWDOWN_BONUS_MULTIPLIER;
     }
-
-    // Survival bonus
-    pp += Math.floor(currentDay / 100) * CONFIG.PRESTIGE_BONUS_SURVIVAL;
 
     // Title bonus (Clean Hands)
     if (this.data.equippedTitle === 'cleanHands') {
       pp *= (1 + ACHIEVEMENTS.cleanHands.titleBonus.prestigeBonus);
     }
 
-    pp = Math.floor(pp * 10) / 10; // round to 1 decimal
+    // Round to 1 decimal
+    pp = Math.floor(pp * 10) / 10;
 
     this.data.prestigePoints += pp;
     this.data.totalPrestigeEarned += pp;
 
-    // Record run history
+    // Record run with skill metrics
+    const profit = tradingEngine.netWorth - CONFIG.STARTING_CASH;
     const runRecord = {
       run: this.data.runCount,
       netWorth: tradingEngine.netWorth,
@@ -89,6 +123,13 @@ class ProgressionSystem {
       trades: tradingEngine.stats.totalTrades,
       prestigeEarned: pp,
       maxSecAttention: tradingEngine.stats.maxSecAttention,
+
+      // Skill metrics
+      sharpe: sharpe.toFixed(2),
+      winRate: (winRate * 100).toFixed(1) + '%',
+      maxDrawdown: (maxDrawdown * 100).toFixed(1) + '%',
+      winningTrades: tradingEngine.stats.winningTrades,
+      losingTrades: tradingEngine.stats.losingTrades,
     };
     this.data.runHistory.push(runRecord);
     if (this.data.runHistory.length > 50) this.data.runHistory.shift();
@@ -128,22 +169,28 @@ class ProgressionSystem {
     return newlyEarned;
   }
 
-  updateBestScores(tradingEngine, currentDay, wasArrested) {
-    // Sharpe ratio (simplified)
+  calculateSharpe(netWorthHistory) {
     const returns = [];
-    const hist = tradingEngine.netWorthHistory;
-    for (let i = 1; i < hist.length; i++) {
-      if (hist[i - 1] > 0) {
-        returns.push((hist[i] - hist[i - 1]) / hist[i - 1]);
+    for (let i = 1; i < netWorthHistory.length; i++) {
+      if (netWorthHistory[i - 1] > 0) {
+        returns.push((netWorthHistory[i] - netWorthHistory[i - 1]) / netWorthHistory[i - 1]);
       }
     }
-    if (returns.length > 1) {
-      const mean = returns.reduce((a, b) => a + b, 0) / returns.length;
-      const variance = returns.reduce((a, b) => a + (b - mean) ** 2, 0) / returns.length;
-      const std = Math.sqrt(variance);
-      const sharpe = std > 0 ? (mean / std) * Math.sqrt(252) : 0; // annualized
-      this.data.bestScores.sharpe = Math.max(this.data.bestScores.sharpe, sharpe);
-    }
+
+    if (returns.length < 2) return 0;
+
+    const mean = returns.reduce((a, b) => a + b, 0) / returns.length;
+    const variance = returns.reduce((a, b) => a + (b - mean) ** 2, 0) / returns.length;
+    const std = Math.sqrt(variance);
+
+    // Annualized Sharpe (assuming 252 trading days)
+    return std > 0 ? (mean / std) * Math.sqrt(252) : 0;
+  }
+
+  updateBestScores(tradingEngine, currentDay, wasArrested) {
+    // Sharpe ratio
+    const sharpe = this.calculateSharpe(tradingEngine.netWorthHistory);
+    this.data.bestScores.sharpe = Math.max(this.data.bestScores.sharpe, sharpe);
 
     // Longest survival
     this.data.bestScores.longestSurvival = Math.max(this.data.bestScores.longestSurvival, currentDay);
@@ -215,13 +262,47 @@ class ProgressionSystem {
     this.save();
   }
 
+  unlockMode(modeId) {
+    const mode = TRADING_MODES[modeId];
+    if (!mode) return { success: false, message: 'Unknown mode' };
+
+    // Initialize unlockedModes if needed
+    if (!this.data.unlockedModes) {
+      this.data.unlockedModes = ['stocks']; // Default mode
+    }
+
+    if (this.data.unlockedModes.includes(modeId)) {
+      return { success: false, message: 'Already unlocked' };
+    }
+
+    const cost = mode.unlockCost || 0;
+    if (this.data.prestigePoints < cost) {
+      return { success: false, message: `Need ${cost} PP, have ${this.data.prestigePoints.toFixed(1)}` };
+    }
+
+    this.data.prestigePoints -= cost;
+    this.data.unlockedModes.push(modeId);
+    this.save();
+
+    return { success: true, message: `Unlocked: ${mode.name}!`, mode: mode };
+  }
+
   getAvailableModes() {
+    // Initialize if needed
+    if (!this.data.unlockedModes) {
+      this.data.unlockedModes = ['stocks'];
+    }
+
     const available = [];
     for (const [id, mode] of Object.entries(TRADING_MODES)) {
-      if (this.data.runCount >= mode.unlockRun) {
-        available.push({ id, ...mode });
-      }
+      const isUnlocked = this.data.unlockedModes.includes(id);
+      available.push({
+        id,
+        ...mode,
+        unlocked: isUnlocked
+      });
     }
+
     return available;
   }
 

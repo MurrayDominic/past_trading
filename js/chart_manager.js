@@ -6,6 +6,11 @@ class ChartManager {
     this.containerEl = containerEl;
     this.tabBarEl = tabBarEl;
     this.nextId = 0;
+    this.timeRange = 'max';  // Time range filter: 7, 30, 252, or 'max'
+  }
+
+  setTimeRange(range) {
+    this.timeRange = range;
   }
 
   addTab(ticker, type = 'line') {
@@ -102,13 +107,13 @@ class ChartManager {
     activeTab.canvas.height = rect.height;
 
     if (mode === 'dayTrading' && asset.ohlcHistory && asset.ohlcHistory.length > 1) {
-      this.renderCandlestickChart(activeTab, asset, positions);
+      this.renderCandlestickChart(activeTab, asset, positions, market.startDate, currentDay);
     } else if (asset.history && asset.history.length > 1) {
-      this.renderLineChart(activeTab, asset, positions);
+      this.renderLineChart(activeTab, asset, positions, market.startDate, currentDay);
     }
   }
 
-  renderCandlestickChart(tab, asset, positions = []) {
+  renderCandlestickChart(tab, asset, positions = [], startDate = null, currentDay = 0) {
     const ctx = tab.ctx;
     const canvas = tab.canvas;
     const w = canvas.width;
@@ -117,9 +122,23 @@ class ChartManager {
 
     ctx.clearRect(0, 0, w, h);
 
-    // Show last 90 candles
-    const data = asset.ohlcHistory.slice(-90);
-    if (data.length < 2) return;
+    // Apply time range filter
+    let data;
+    if (this.timeRange === 'max') {
+      data = asset.ohlcHistory;
+    } else {
+      const days = parseInt(this.timeRange);
+      data = asset.ohlcHistory.slice(-days);
+    }
+
+    if (data.length < 2) {
+      // Show "No data in this time range" message
+      ctx.fillStyle = '#888';
+      ctx.font = '14px var(--font-primary)';
+      ctx.textAlign = 'center';
+      ctx.fillText('No data in this time range', w / 2, h / 2);
+      return;
+    }
 
     // Find min/max
     let min = Infinity, max = -Infinity;
@@ -218,9 +237,35 @@ class ChartManager {
     ctx.font = '14px var(--font-primary)';
     ctx.fillStyle = '#A0A0A0';
     ctx.fillText(asset.ticker, 20, 50);
+
+    // X-axis date labels (for candlestick chart, each candle is a day or minute)
+    if (startDate) {
+      ctx.fillStyle = '#888';
+      ctx.font = '11px var(--font-mono)';
+      ctx.textAlign = 'center';
+
+      const visibleData = data;
+      const xStep = Math.floor(visibleData.length / 5);
+
+      for (let i = 0; i < 5; i++) {
+        const dataIdx = i * xStep;
+        if (dataIdx < visibleData.length) {
+          const x = padding + dataIdx * barWidth + barWidth / 2;
+          const y = h - padding + 20;
+
+          // Calculate date - for intraday, use minutes; otherwise use days
+          const daysFromStart = currentDay - (visibleData.length - 1 - dataIdx);
+          const date = new Date(startDate);
+          date.setDate(date.getDate() + daysFromStart);
+          const label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+          ctx.fillText(label, x, y);
+        }
+      }
+    }
   }
 
-  renderLineChart(tab, asset, positions = []) {
+  renderLineChart(tab, asset, positions = [], startDate = null, currentDay = 0) {
     const ctx = tab.ctx;
     const canvas = tab.canvas;
     const w = canvas.width;
@@ -229,13 +274,27 @@ class ChartManager {
 
     ctx.clearRect(0, 0, w, h);
 
-    // Show last 90 days
-    const data = asset.history.slice(-90);
-    if (data.length < 2) return;
+    // Apply time range filter
+    let data;
+    if (this.timeRange === 'max') {
+      data = asset.history;
+    } else {
+      const days = parseInt(this.timeRange);
+      data = asset.history.slice(-days);
+    }
 
-    // Find min/max
-    let min = Math.min(...data);
-    let max = Math.max(...data);
+    if (data.length < 2) {
+      // Show "No data in this time range" message
+      ctx.fillStyle = '#888';
+      ctx.font = '14px var(--font-primary)';
+      ctx.textAlign = 'center';
+      ctx.fillText('No data in this time range', w / 2, h / 2);
+      return;
+    }
+
+    // Find min/max from FULL history, not just visible data
+    let min = Math.min(...asset.history);
+    let max = Math.max(...asset.history);
 
     // Check for position entry price to include in range
     const position = positions.find(p => p.ticker === asset.ticker);
@@ -318,6 +377,32 @@ class ChartManager {
     ctx.font = '14px var(--font-primary)';
     ctx.fillStyle = '#A0A0A0';
     ctx.fillText(asset.ticker, 20, 50);
+
+    // X-axis date labels
+    if (startDate) {
+      ctx.fillStyle = '#888';
+      ctx.font = '11px var(--font-mono)';
+      ctx.textAlign = 'center';
+
+      const visibleData = data;
+      const xStep = Math.floor(visibleData.length / 5);
+
+      for (let i = 0; i < 5; i++) {
+        const dataIdx = i * xStep;
+        if (dataIdx < visibleData.length) {
+          const x = padding + dataIdx * spacing;
+          const y = h - padding + 20;
+
+          // Calculate date
+          const daysFromStart = currentDay - (visibleData.length - 1 - dataIdx);
+          const date = new Date(startDate);
+          date.setDate(date.getDate() + daysFromStart);
+          const label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+          ctx.fillText(label, x, y);
+        }
+      }
+    }
   }
 
   formatPrice(price) {

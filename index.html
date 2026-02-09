@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PAST TRADING</title>
+  <title>Second Chance at a Billion</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -13,7 +13,7 @@
   <!-- ============================================================ -->
   <div id="menu-screen">
     <div class="menu-container">
-      <h1 class="menu-title">PAST TRADING</h1>
+      <h1 class="menu-title">Second Chance at a Billion</h1>
       <p class="menu-subtitle">Travel back in time. Trade with foresight. Try not to get arrested.</p>
 
       <div class="menu-stats">
@@ -27,22 +27,48 @@
         </div>
       </div>
 
+      <!-- Navigation Buttons -->
+      <div class="menu-nav-buttons">
+        <button class="btn btn-accent" id="open-shop-btn">Shop</button>
+      </div>
+
+      <!-- Year Selection -->
+      <div class="menu-section">
+        <h2>⏰ Select Time Period</h2>
+        <p class="section-subtitle">Choose a continuous range of years to trade (2000-2025)</p>
+        <div class="year-selection-container">
+          <div class="year-range-display">
+            <div class="year-display-box">
+              <label>Start Year</label>
+              <div class="year-value" id="start-year-display">2008</div>
+            </div>
+            <div class="year-arrow">→</div>
+            <div class="year-display-box">
+              <label>End Year</label>
+              <div class="year-value" id="end-year-display">2020</div>
+            </div>
+            <div class="year-info">
+              <span id="year-span-display">13 years selected</span>
+            </div>
+          </div>
+          <div class="year-slider-container">
+            <input type="range" id="start-year-slider" min="2000" max="2025" value="2008" class="year-slider">
+            <input type="range" id="end-year-slider" min="2000" max="2025" value="2020" class="year-slider">
+          </div>
+          <div class="year-presets">
+            <button class="btn btn-small year-preset-btn" data-start="2008" data-end="2009">2008 Crisis</button>
+            <button class="btn btn-small year-preset-btn" data-start="2020" data-end="2021">2020 Pandemic</button>
+            <button class="btn btn-small year-preset-btn" data-start="2000" data-end="2002">Dot-com Bubble</button>
+            <button class="btn btn-small year-preset-btn" data-start="2017" data-end="2018">Crypto Boom</button>
+            <button class="btn btn-small year-preset-btn" data-start="2000" data-end="2025">All Years</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Trading Modes -->
       <div class="menu-section">
         <h2>Select Mode</h2>
         <div id="mode-selector" class="mode-grid"></div>
-      </div>
-
-      <!-- Unlock Shop -->
-      <div class="menu-section">
-        <h2>Unlock Shop</h2>
-        <div id="unlock-shop"></div>
-      </div>
-
-      <!-- Equipable Tools -->
-      <div class="menu-section">
-        <h2>Equipable Tools</h2>
-        <div id="tool-selector"></div>
       </div>
 
       <!-- Titles -->
@@ -73,6 +99,38 @@
   </div>
 
   <!-- ============================================================ -->
+  <!-- SHOP SCREEN                                                    -->
+  <!-- ============================================================ -->
+  <div id="shop-screen" class="hidden">
+    <div class="shop-container">
+      <div class="shop-header">
+        <button class="btn btn-small" id="back-to-menu-btn">← Back to Menu</button>
+        <h1>Progression Shop</h1>
+        <div class="shop-pp-display">
+          <span class="pp-label">Prestige Points:</span>
+          <span class="pp-value" id="shop-pp">0</span>
+        </div>
+      </div>
+
+      <div class="shop-content">
+        <!-- Tree visualization -->
+        <div class="shop-tree-area">
+          <h2>Unlock Tree</h2>
+          <div id="progression-tree" class="progression-tree"></div>
+        </div>
+
+        <!-- Detail sidebar -->
+        <div class="shop-detail-sidebar">
+          <h2>Selected Item</h2>
+          <div id="shop-item-detail" class="shop-item-detail">
+            <p class="detail-placeholder">Select an item to view details</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
   <!-- GAME SCREEN                                                    -->
   <!-- ============================================================ -->
   <div id="game-screen" class="hidden">
@@ -88,6 +146,8 @@
           <button class="speed-btn" data-speed="2">2x</button>
           <button class="speed-btn" data-speed="5">5x</button>
           <button class="speed-btn" data-speed="10">10x</button>
+          <button class="speed-btn" data-speed="20">20x</button>
+          <button class="speed-btn" data-speed="50">50x</button>
         </div>
       </div>
       <div class="audio-controls">
@@ -98,46 +158,70 @@
       </div>
     </div>
 
-    <!-- Left: Trading Panel -->
-    <div class="trading-panel">
+    <!-- Assets Panel (left) -->
+    <div class="assets-panel">
       <!-- Asset Selector -->
       <div class="panel-section">
         <div class="section-title">Assets</div>
+        <input type="text"
+               id="asset-search"
+               class="asset-search-input"
+               placeholder="Search ticker or name...">
         <div id="asset-selector" class="asset-list"></div>
-      </div>
-
-      <!-- Trade Controls -->
-      <div class="trade-controls">
-        <div class="quantity-input-group">
-          <label>Quantity</label>
-          <div class="quantity-input-wrapper">
-            <input type="number" id="trade-quantity" value="10" min="1" max="99999">
-            <button class="btn btn-small btn-max" id="max-qty-btn">Max</button>
-          </div>
-        </div>
-        <div class="trade-button-column">
-          <button class="btn btn-primary" id="buy-btn">Buy</button>
-          <button class="btn btn-accent" id="sell-btn">Sell</button>
-          <button class="btn btn-danger" id="short-btn">Short</button>
-        </div>
-        <div class="cooldown-indicator" id="cooldown-indicator">Ready</div>
-        <div id="trade-result"></div>
-      </div>
-
-      <!-- Positions -->
-      <div class="panel-section" style="flex: 1; overflow-y: auto;">
-        <div class="section-title">Positions</div>
-        <div id="portfolio-list" class="positions-list"></div>
       </div>
 
       <!-- Actions -->
       <div class="actions-bar" id="actions-panel"></div>
     </div>
 
+    <!-- Trade Panel (center-left) -->
+    <div class="trade-panel">
+      <div class="panel-section">
+        <div class="section-title">Trade</div>
+        <div class="trade-controls">
+          <div class="quantity-input-group">
+            <label>Amount</label>
+            <div class="quantity-input-wrapper">
+              <input type="number" id="trade-quantity" value="1000" min="1" step="100" placeholder="$ Amount">
+              <button class="btn btn-small btn-max" id="max-qty-btn">Max</button>
+            </div>
+            <div class="quick-buy-buttons">
+              <button class="btn btn-tiny" data-percent="10">10%</button>
+              <button class="btn btn-tiny" data-percent="20">20%</button>
+              <button class="btn btn-tiny" data-percent="50">50%</button>
+              <button class="btn btn-tiny" data-percent="80">80%</button>
+              <button class="btn btn-tiny" data-percent="100">100%</button>
+            </div>
+            <div id="shares-preview" class="shares-preview">~0 shares</div>
+          </div>
+          <div class="trade-button-column">
+            <button class="btn btn-primary" id="buy-btn">Buy</button>
+            <button class="btn btn-accent" id="sell-btn">Sell</button>
+            <button class="btn btn-danger" id="short-btn">Short</button>
+          </div>
+          <div id="trade-result"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Positions Panel (center-center) -->
+    <div class="positions-panel">
+      <div class="panel-section" style="flex: 1; overflow-y: auto;">
+        <div class="section-title">Positions</div>
+        <div id="portfolio-list" class="positions-list"></div>
+      </div>
+    </div>
+
     <!-- Center: Chart Area -->
     <div class="center-panel">
       <div class="chart-tabs-bar" id="chart-tabs-bar">
         <div class="tabs-scroll-container" id="tabs-scroll"></div>
+        <div class="chart-timeframe-buttons">
+          <button class="timeframe-btn" data-range="7">1W</button>
+          <button class="timeframe-btn" data-range="30">1M</button>
+          <button class="timeframe-btn" data-range="252">1Y</button>
+          <button class="timeframe-btn active" data-range="max">Max</button>
+        </div>
         <button class="tab-add-btn" id="add-chart-btn" title="Add chart">+</button>
       </div>
       <div class="chart-container" id="chart-container"></div>
@@ -148,6 +232,12 @@
       <!-- Net Worth -->
       <div class="stat-card">
         <h3>Net Worth</h3>
+        <div class="chart-timeframe-buttons">
+          <button class="nw-timeframe-btn" data-range="7">1W</button>
+          <button class="nw-timeframe-btn" data-range="30">1M</button>
+          <button class="nw-timeframe-btn" data-range="252">1Y</button>
+          <button class="nw-timeframe-btn active" data-range="max">Max</button>
+        </div>
         <div class="stat-value" id="net-worth-display">$10,000</div>
         <div class="stat-subvalue">
           Cash: <span id="cash-display">$10,000</span>
@@ -259,6 +349,7 @@
   <!-- ============================================================ -->
   <!-- SCRIPTS (order matters)                                        -->
   <!-- ============================================================ -->
+  <script src="js/sp500_tickers.js"></script>
   <script src="js/config.js"></script>
   <script src="js/data_loader.js"></script>
   <script src="js/market.js"></script>

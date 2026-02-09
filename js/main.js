@@ -21,6 +21,12 @@ class Game {
     this.tickInterval = null;
     this.selectedMode = 'stocks';
     this.selectedAsset = null;
+    this.selectedYears = { start: 2008, end: 2020 }; // Default year range
+
+    // Intraday time tracking
+    this.isIntraday = false;
+    this.currentMinute = 0;
+    this.currentTime = null;
 
     this.pendingInsiderTips = [];
     this.activeInsiderTip = null;
@@ -51,12 +57,36 @@ class Game {
   async startRun(mode) {
     this.selectedMode = mode;
     this.currentDay = 0;
-    this.totalDays = CONFIG.DEFAULT_RUN_DAYS;
     this.speed = 1;
     this.runEndReason = '';
     this.pendingInsiderTips = [];
     this.activeInsiderTip = null;
     this.lastNetWorth = CONFIG.STARTING_CASH;
+
+    // Reset speed button UI to 1x
+    document.querySelectorAll('.speed-btn').forEach(btn => {
+      btn.classList.remove('active');
+      if (parseFloat(btn.dataset.speed) === 1) {
+        btn.classList.add('active');
+      }
+    });
+
+    // Check if intraday mode
+    this.isIntraday = (mode === 'dayTrading');
+
+    if (this.isIntraday) {
+      this.currentMinute = 0;
+      this.totalDays = 1;  // Single day
+      this.currentTime = new Date();
+      this.currentTime.setHours(CONFIG.MARKET_OPEN_HOUR, CONFIG.MARKET_OPEN_MINUTE, 0, 0);
+    } else {
+      // Calculate run duration based on selected year range
+      const yearSpan = this.selectedYears.end - this.selectedYears.start + 1;
+      this.totalDays = yearSpan * 365;
+      this.currentTime = null;
+
+      console.log(`Starting run spanning ${yearSpan} years (${this.totalDays} days): ${this.selectedYears.start}-${this.selectedYears.end}`);
+    }
 
     // Show loading screen
     this.state = 'loading';
@@ -67,7 +97,8 @@ class Game {
       await this.dataLoader.loadNewsEvents();
 
       // Init subsystems (market.init is now async)
-      await this.market.init(mode, this.dataLoader);
+      // Pass selected year range from year selection UI
+      await this.market.init(mode, this.dataLoader, this.selectedYears.start, this.selectedYears.end);
       this.trading.init(CONFIG.STARTING_CASH, this.progression.data);
       this.sec.init();
       this.news.init(this.dataLoader);
@@ -93,7 +124,9 @@ class Game {
 
   startTicker() {
     this.stopTicker();
-    const ms = CONFIG.TICK_MS / this.speed;
+    // Use intraday tick rate for day trading
+    const baseTickMs = this.isIntraday ? CONFIG.INTRADAY_TICK_MS : CONFIG.TICK_MS;
+    const ms = baseTickMs / this.speed;
     this.tickInterval = setInterval(() => this.tick(), ms);
   }
 
@@ -126,6 +159,14 @@ class Game {
   tick() {
     if (this.state !== 'playing') return;
 
+    if (this.isIntraday) {
+      this.tickIntraday();
+    } else {
+      this.tickDaily();
+    }
+  }
+
+  tickDaily() {
     this.currentDay++;
 
     // Market tick
@@ -139,6 +180,12 @@ class Game {
 
     // Update positions
     this.trading.updatePositions(this.market, this.currentDay);
+
+    // Check risk limit
+    if (this.trading.isOverRiskLimit(this.market)) {
+      this.endRun('fired');
+      return;
+    }
 
     // Audio feedback based on net worth changes
     const currentNetWorth = this.trading.netWorth;
@@ -189,11 +236,91 @@ class Game {
     this.ui.update(this);
   }
 
+  tickIntraday() {
+    this.currentMinute++;
+
+    // Advance time by 1 game minute
+    this.currentTime.setMinutes(this.currentTime.getMinutes() + 1);
+
+    // Market tick with intraday volatility
+    if (this.market.tickIntraday) {
+      this.market.tickIntraday(this.currentMinute);
+    }
+
+    // Passive income (scaled for intraday)
+    const passiveIncome = this.trading.processPassiveIncome(this.selectedMode, this.progression.data);
+    if (passiveIncome > 0) {
+      this.news.addTradeNews(`Passive: +${formatMoney(passiveIncome)}`, this.currentMinute);
+    }
+
+    // Update positions
+    this.trading.updatePositions(this.market, this.currentMinute);
+
+    // Check risk limit
+    if (this.trading.isOverRiskLimit(this.market)) {
+      this.endRun('fired');
+      return;
+    }
+
+    // Audio feedback
+    const currentNetWorth = this.trading.netWorth;
+    const netWorthChange = currentNetWorth - this.lastNetWorth;
+    const percentChange = this.lastNetWorth > 0 ? netWorthChange / this.lastNetWorth : 0;
+
+    if (percentChange >= 0.05 && percentChange < 0.10) {
+      this.audio.playSmallGain();
+    }
+    if (percentChange >= 0.10 || netWorthChange >= 10000) {
+      this.audio.playWinningSound();
+    }
+    if (percentChange <= -0.08) {
+      this.audio.playLossSound();
+    }
+
+    this.lastNetWorth = currentNetWorth;
+
+    // Update music intensity (use minutes remaining)
+    this.audio.updateMusicIntensity(CONFIG.INTRADAY_TOTAL_TICKS - this.currentMinute, CONFIG.INTRADAY_TOTAL_TICKS);
+
+    // SEC tick (scaled for intraday)
+    const arrested = this.sec.tick(this.trading, this.market, this.progression.data);
+
+    // News tick - will add tickIntraday to news.js
+    if (this.news.tickIntraday) {
+      this.news.tickIntraday(this.currentMinute, this.market, this.sec);
+    }
+
+    // Check end conditions
+    if (arrested) {
+      this.endRun('arrested');
+      return;
+    }
+
+    if (this.trading.stats.wentBankrupt) {
+      this.endRun('bankrupt');
+      return;
+    }
+
+    // Market close
+    if (this.currentMinute >= CONFIG.INTRADAY_TOTAL_TICKS) {
+      this.endRun('timeUp');
+      return;
+    }
+
+    // Update UI
+    this.ui.update(this);
+  }
+
   endRun(reason) {
     this.stopTicker();
     this.audio.stopMusic();
     this.state = 'runEnd';
     this.runEndReason = reason;
+
+    // Add news for fired condition
+    if (reason === 'fired') {
+      this.news.addSecNews('RISK LIMIT EXCEEDED - You have been terminated', this.currentDay);
+    }
 
     // Mark survival
     this.trading.stats.survived = (reason === 'timeUp');
@@ -222,7 +349,7 @@ class Game {
 
   // --- Player Actions ---
 
-  buyAsset(quantity) {
+  buyAsset(dollarAmount) {
     if (this.state !== 'playing' || !this.selectedAsset) return;
     if (this.sec.tradeRestricted) {
       this.news.addSecNews('Trade blocked: Under investigation', this.currentDay);
@@ -230,7 +357,7 @@ class Game {
     }
 
     const result = this.trading.buy(
-      this.selectedAsset, quantity, this.market,
+      this.selectedAsset, dollarAmount, this.market,
       this.progression.data, this.currentDay
     );
 
@@ -239,8 +366,7 @@ class Game {
       this.news.addTradeNews(result.message, this.currentDay);
 
       // SEC watches large trades
-      const asset = this.market.getAsset(this.selectedAsset);
-      if (asset && asset.price * quantity > this.trading.netWorth * 0.3) {
+      if (dollarAmount > this.trading.netWorth * 0.3) {
         this.sec.addAttention(1, 'Large position opened');
       }
     }
@@ -275,7 +401,7 @@ class Game {
     this.ui.update(this);
   }
 
-  shortAsset(quantity) {
+  shortAsset(dollarAmount) {
     if (this.state !== 'playing' || !this.selectedAsset) return;
     if (this.sec.tradeRestricted) {
       this.news.addSecNews('Trade blocked: Under investigation', this.currentDay);
@@ -283,7 +409,7 @@ class Game {
     }
 
     const result = this.trading.short(
-      this.selectedAsset, quantity, this.market,
+      this.selectedAsset, dollarAmount, this.market,
       this.progression.data, this.currentDay
     );
 

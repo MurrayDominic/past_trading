@@ -36,6 +36,12 @@ class TradingEngine {
       boughtAtBottom: false,
       soldAtTop: false,
       totalArrests: 0,  // pulled from meta progression
+
+      // Skill metrics
+      winningTrades: 0,
+      losingTrades: 0,
+      maxDrawdown: 0,
+      peakNetWorth: CONFIG.STARTING_CASH,
     };
   }
 
@@ -96,12 +102,10 @@ class TradingEngine {
   }
 
   canTrade(metaProgression) {
-    const now = Date.now();
-    const cooldown = this.getCooldown(metaProgression);
-    return now - this.lastTradeTime >= cooldown;
+    return true;  // Always allow trading (cooldown removed)
   }
 
-  buy(ticker, quantity, market, metaProgression, currentDay) {
+  buy(ticker, dollarAmount, market, metaProgression, currentDay) {
     const asset = market.getAsset(ticker);
     if (!asset) return { success: false, message: 'Asset not found' };
 
@@ -114,13 +118,16 @@ class TradingEngine {
     const modeConfig = TRADING_MODES[market.currentMode];
     const feePercent = CONFIG.BASE_FEE_PERCENT * modeConfig.feeMod * (1 - feeReduction);
 
-    const totalCost = asset.price * quantity;
-    const fee = totalCost * feePercent / 100;
-    const cashNeeded = totalCost / leverage + fee;
+    // Calculate shares from dollar amount
+    const fee = dollarAmount * feePercent / 100;
+    const cashNeeded = dollarAmount / leverage + fee;
 
     if (cashNeeded > this.cash) {
       return { success: false, message: `Need ${formatMoney(cashNeeded)}, have ${formatMoney(this.cash)}` };
     }
+
+    // Calculate quantity (float, not int)
+    const quantity = dollarAmount / asset.price;
 
     this.cash -= cashNeeded;
 
@@ -130,9 +137,11 @@ class TradingEngine {
     if (existingPos) {
       // Consolidate: calculate weighted average entry price
       const totalQuantity = existingPos.quantity + quantity;
-      const weightedEntry = (existingPos.quantity * existingPos.entryPrice + quantity * asset.price) / totalQuantity;
+      const totalDollarAmount = existingPos.dollarAmount + dollarAmount;
+      const weightedEntry = totalDollarAmount / totalQuantity;
 
       existingPos.quantity = totalQuantity;
+      existingPos.dollarAmount = totalDollarAmount;
       existingPos.entryPrice = weightedEntry;
       // Keep earliest entryDay
       existingPos.entryDay = Math.min(existingPos.entryDay, currentDay);
@@ -148,6 +157,7 @@ class TradingEngine {
         ticker,
         name: asset.name,
         quantity,
+        dollarAmount,
         entryPrice: asset.price,
         entryDay: currentDay,
         type: 'long',
@@ -168,7 +178,7 @@ class TradingEngine {
     const trade = { action: 'BUY', ticker, quantity, price: asset.price, fee, day: currentDay };
     this.tradeHistory.push(trade);
 
-    return { success: true, message: `Bought ${quantity} ${ticker} @ ${formatPrice(asset.price)}`, trade };
+    return { success: true, message: `Bought ${quantity.toFixed(4)} ${ticker} @ ${formatPrice(asset.price)} (${formatMoney(dollarAmount)})`, trade };
   }
 
   sell(ticker, positionIndex, market, metaProgression, currentDay) {
@@ -218,6 +228,7 @@ class TradingEngine {
       this.stats.loseStreak = 0;
       this.stats.maxWinStreak = Math.max(this.stats.maxWinStreak, this.stats.winStreak);
       this.stats.totalProfit += profit;
+      this.stats.winningTrades++;  // Skill metric
 
       // Diamond hands check
       if (pos.daysInLoss >= 30) {
@@ -236,6 +247,7 @@ class TradingEngine {
       this.stats.loseStreak++;
       this.stats.winStreak = 0;
       this.stats.totalLoss += Math.abs(profit);
+      this.stats.losingTrades++;  // Skill metric
     }
 
     // Sold at top check
@@ -251,7 +263,7 @@ class TradingEngine {
     return { success: true, message: `Sold ${pos.quantity} ${pos.ticker} @ ${formatPrice(asset.price)} (${profit >= 0 ? '+' : ''}${formatMoney(profit)})`, trade, profit };
   }
 
-  short(ticker, quantity, market, metaProgression, currentDay) {
+  short(ticker, dollarAmount, market, metaProgression, currentDay) {
     const asset = market.getAsset(ticker);
     if (!asset) return { success: false, message: 'Asset not found' };
 
@@ -264,13 +276,15 @@ class TradingEngine {
     const modeConfig = TRADING_MODES[market.currentMode];
     const feePercent = CONFIG.BASE_FEE_PERCENT * modeConfig.feeMod * (1 - feeReduction);
 
-    const totalValue = asset.price * quantity;
-    const fee = totalValue * feePercent / 100;
-    const collateral = totalValue / leverage + fee;
+    const fee = dollarAmount * feePercent / 100;
+    const collateral = dollarAmount / leverage + fee;
 
     if (collateral > this.cash) {
       return { success: false, message: `Need ${formatMoney(collateral)} collateral, have ${formatMoney(this.cash)}` };
     }
+
+    // Calculate quantity (float, not int)
+    const quantity = dollarAmount / asset.price;
 
     this.cash -= collateral;
 
@@ -280,9 +294,11 @@ class TradingEngine {
     if (existingPos) {
       // Consolidate: calculate weighted average entry price
       const totalQuantity = existingPos.quantity + quantity;
-      const weightedEntry = (existingPos.quantity * existingPos.entryPrice + quantity * asset.price) / totalQuantity;
+      const totalDollarAmount = existingPos.dollarAmount + dollarAmount;
+      const weightedEntry = totalDollarAmount / totalQuantity;
 
       existingPos.quantity = totalQuantity;
+      existingPos.dollarAmount = totalDollarAmount;
       existingPos.entryPrice = weightedEntry;
       // Keep earliest entryDay
       existingPos.entryDay = Math.min(existingPos.entryDay, currentDay);
@@ -298,6 +314,7 @@ class TradingEngine {
         ticker,
         name: asset.name,
         quantity,
+        dollarAmount,
         entryPrice: asset.price,
         entryDay: currentDay,
         type: 'short',
@@ -313,7 +330,7 @@ class TradingEngine {
     const trade = { action: 'SHORT', ticker, quantity, price: asset.price, fee, day: currentDay };
     this.tradeHistory.push(trade);
 
-    return { success: true, message: `Shorted ${quantity} ${ticker} @ ${formatPrice(asset.price)}`, trade };
+    return { success: true, message: `Shorted ${quantity.toFixed(4)} ${ticker} @ ${formatPrice(asset.price)} (${formatMoney(dollarAmount)})`, trade };
   }
 
   updatePositions(market, currentDay) {
@@ -346,14 +363,6 @@ class TradingEngine {
       }
 
       pos.lowestPriceSinceEntry = Math.min(pos.lowestPriceSinceEntry, asset.price);
-
-      // Liquidation check: if position value drops below 10% of collateral
-      const collateral = pos.entryPrice * pos.quantity / pos.leverage;
-      if (posValue < collateral * 0.1) {
-        // Liquidated
-        this.positions.splice(i, 1);
-        this.stats.hadMarginCall = true;
-      }
     }
 
     this.netWorth = this.cash + totalPositionValue;
@@ -379,6 +388,11 @@ class TradingEngine {
     return Math.min(100, riskPercent);
   }
 
+  isOverRiskLimit(market) {
+    const risk = this.getRiskLevel(market);
+    return risk >= CONFIG.RISK_LIMIT_PERCENT;
+  }
+
   getPositionPnL(pos, market) {
     const asset = market.getAsset(pos.ticker);
     if (!asset) return { pnl: 0, pnlPercent: 0, currentPrice: 0 };
@@ -394,6 +408,29 @@ class TradingEngine {
     const pnlPercent = invested > 0 ? pnl / invested : 0;
 
     return { pnl, pnlPercent, currentPrice: asset.price };
+  }
+
+  getSkillMetrics() {
+    // Win rate
+    const totalTrades = this.stats.winningTrades + this.stats.losingTrades;
+    const winRate = totalTrades > 0 ? this.stats.winningTrades / totalTrades : 0;
+
+    // Max drawdown
+    let peak = this.netWorthHistory[0] || CONFIG.STARTING_CASH;
+    let maxDD = 0;
+
+    for (const nw of this.netWorthHistory) {
+      if (nw > peak) {
+        peak = nw;
+        this.stats.peakNetWorth = peak;
+      }
+      const dd = (peak - nw) / peak;
+      if (dd > maxDD) maxDD = dd;
+    }
+
+    this.stats.maxDrawdown = maxDD;
+
+    return { winRate, maxDrawdown: maxDD };
   }
 
   // Passive income from modes and equipable tools

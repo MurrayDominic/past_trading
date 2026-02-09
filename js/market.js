@@ -12,11 +12,18 @@ class Market {
     this.dataLoader = null;   // Historical data loader
   }
 
-  async init(mode, dataLoader) {
+  async init(mode, dataLoader, startYear = null, endYear = null) {
     this.currentMode = mode;
     this.assets = {};
     this.dayCount = 0;
     this.dataLoader = dataLoader;
+
+    // Calculate start date and offset (random year 2000-2024 if not specified)
+    this.startYear = startYear || 2000 + Math.floor(Math.random() * 25);
+    this.endYear = endYear || this.startYear;
+    this.startDate = new Date(this.startYear, 0, 1);
+
+    console.log(`Starting market simulation from ${this.startDate.toDateString()} to year ${this.endYear}`);
 
     const modeConfig = TRADING_MODES[mode];
     if (!modeConfig) return;
@@ -40,7 +47,15 @@ class Market {
       // Determine starting price
       let startPrice = assetDef.basePrice * (0.9 + Math.random() * 0.2);
       if (hasHistoricalData && historicalData.ohlc && historicalData.ohlc.length > 0) {
-        startPrice = historicalData.ohlc[0].close;
+        // Calculate offset based on start year
+        const baseDate = new Date(2000, 0, 1);
+        const elapsedMs = this.startDate - baseDate;
+        const dayOffset = Math.floor(elapsedMs / (1000 * 60 * 60 * 24));
+
+        // Use data from the calculated offset, or fallback to synthetic
+        if (dayOffset >= 0 && dayOffset < historicalData.ohlc.length) {
+          startPrice = historicalData.ohlc[dayOffset].close;
+        }
       }
 
       this.assets[assetDef.ticker] = {
@@ -130,10 +145,58 @@ class Market {
     }
   }
 
+  tickIntraday(minute) {
+    // Scale volatility for minute bars (divide by sqrt(390))
+    const modeConfig = TRADING_MODES[this.currentMode];
+    if (!modeConfig) return;
+
+    const dailyVol = CONFIG.BASE_VOLATILITY * modeConfig.volatilityMod;
+    const minuteVol = dailyVol / Math.sqrt(390);
+
+    for (const ticker in this.assets) {
+      const asset = this.assets[ticker];
+      asset.previousPrice = asset.price;
+
+      // Random price movement (scaled for 1-minute interval)
+      const randomShock = (Math.random() - 0.5) * 2 * minuteVol;
+      const drift = CONFIG.BULL_DRIFT / 390; // Scale drift
+
+      const minuteReturn = drift + randomShock;
+      const newPrice = Math.max(0.01, asset.price * (1 + minuteReturn));
+
+      asset.price = newPrice;
+      asset.history.push(newPrice);
+
+      // Track minute OHLC for charts
+      if (!asset.intradayOhlc) asset.intradayOhlc = [];
+
+      asset.intradayOhlc.push({
+        minute,
+        time: new Date(), // Current time for display
+        open: asset.previousPrice,
+        high: Math.max(asset.previousPrice, newPrice),
+        low: Math.min(asset.previousPrice, newPrice),
+        close: newPrice
+      });
+
+      // Limit history
+      if (asset.history.length > 400) asset.history.shift();
+      if (asset.intradayOhlc.length > 390) asset.intradayOhlc.shift();
+
+      // Update highs/lows
+      if (newPrice > asset.highestPrice) asset.highestPrice = newPrice;
+      if (newPrice < asset.lowestPrice) asset.lowestPrice = newPrice;
+    }
+  }
+
   updateAssetPrice(asset, volatility, eventEffect) {
+    // Calculate which day in historical data to use
+    const dataDay = this.calculateDataDay();
+
     // Try to use historical data first
-    if (asset.hasHistoricalData && asset.historicalData.ohlc && this.dayCount < asset.historicalData.ohlc.length) {
-      const ohlc = asset.historicalData.ohlc[this.dayCount];
+    if (asset.hasHistoricalData && asset.historicalData.ohlc &&
+        dataDay >= 0 && dataDay < asset.historicalData.ohlc.length) {
+      const ohlc = asset.historicalData.ohlc[dataDay];
       asset.price = ohlc.close;
 
       // Store OHLC for candlestick charts
@@ -150,6 +213,13 @@ class Market {
       asset.trend = Math.max(-1, Math.min(1, asset.trend));
 
       return;
+    }
+
+    // Warn once if historical data exhausted
+    if (asset.hasHistoricalData && !asset._historicalDataWarned &&
+        dataDay >= asset.historicalData.ohlc.length) {
+      console.warn(`Historical data exhausted for ${asset.ticker} at day ${dataDay}. Using synthetic prices.`);
+      asset._historicalDataWarned = true;
     }
 
     // Fallback to synthetic generation (existing GBM code)
@@ -273,5 +343,15 @@ class Market {
 
     const effect = tip.direction === 'up' ? tip.magnitude : -tip.magnitude;
     asset.price = Math.max(0.01, asset.price * (1 + effect));
+  }
+
+  calculateDataDay() {
+    // Convert market start date + current day to absolute day in dataset
+    // Historical data starts at 2000-01-01
+    const baseDate = new Date(2000, 0, 1);
+    const elapsedMs = this.startDate - baseDate;
+    const baseDayOffset = Math.floor(elapsedMs / (1000 * 60 * 60 * 24));
+
+    return baseDayOffset + this.dayCount;
   }
 }
