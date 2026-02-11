@@ -1000,7 +1000,7 @@ input[type="range"].year-slider {
 #game-screen {
   display: grid;
   grid-template-rows: var(--header-height) 1fr var(--footer-height);
-  grid-template-columns: 280px 280px 280px 1fr 280px;
+  grid-template-columns: 1fr 1fr 1fr 2fr 1fr;
   grid-template-areas:
     "header header header header header"
     "assets trade positions center right"
