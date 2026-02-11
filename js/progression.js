@@ -106,40 +106,35 @@ class ProgressionSystem {
     }
   }
 
-  endRun(tradingEngine, secSystem, currentDay, wasArrested) {
+  endRun(tradingEngine, secSystem, currentDay, wasArrested, quarterlySystem = null) {
     this.data.runCount++;
 
     if (wasArrested) {
       this.data.totalArrests++;
     }
 
-    // Calculate Sharpe ratio
+    // Calculate Sharpe ratio (still used for display/achievements)
     const sharpe = this.calculateSharpe(tradingEngine.netWorthHistory);
 
-    // Get skill metrics
+    // Get skill metrics (still used for display/achievements)
     const { winRate, maxDrawdown } = tradingEngine.getSkillMetrics();
 
-    // BASE PRESTIGE
-    let pp = CONFIG.BASE_PRESTIGE_PER_RUN;
-
-    // SHARPE MULTIPLIER
-    // Sharpe 2.0 = 1x, Sharpe 4.0 = 2x, negative Sharpe = 0x
-    const sharpeMultiplier = Math.max(0, sharpe / CONFIG.SHARPE_DIVISOR);
-    pp *= (1 + sharpeMultiplier);
-
-    // WIN RATE MULTIPLIER
-    // 30% win rate = 0x, 50% = 0.6x, 70% = 1.2x
-    const winRateAboveBaseline = Math.max(0, winRate - CONFIG.WIN_RATE_BASELINE);
-    const winRateMultiplier = winRateAboveBaseline * CONFIG.WIN_RATE_SCALE;
-    pp *= (1 + winRateMultiplier);
-
-    // DRAWDOWN BONUS
-    // <20% max drawdown = 1.5x multiplier
-    if (maxDrawdown < CONFIG.DRAWDOWN_BONUS_THRESHOLD) {
-      pp *= CONFIG.DRAWDOWN_BONUS_MULTIPLIER;
+    // PP from quarterly targets (replaces old Sharpe/win-rate formula)
+    let pp = 0;
+    if (quarterlySystem) {
+      pp = quarterlySystem.ppEarned;
+      // Pity PP if you didn't even pass level 1
+      if (quarterlySystem.completedLevels === 0) {
+        pp = 1;
+      }
     }
 
-    // Bug Fix #31: Generic title bonus (not hard-coded to cleanHands)
+    // Golden Parachute: 50% bonus PP when fired for missing quarterly targets
+    if (quarterlySystem && quarterlySystem.fired && this.data.unlocks.goldenParachute) {
+      pp *= 1.5;
+    }
+
+    // Title bonus still applies on top of quarterly PP
     if (this.data.equippedTitle) {
       const achievement = ACHIEVEMENTS[this.data.equippedTitle];
       if (achievement && achievement.titleBonus && achievement.titleBonus.prestigeBonus) {

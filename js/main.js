@@ -12,6 +12,7 @@ class Game {
     this.leaderboard = new LeaderboardSystem();
     this.dataLoader = new DataLoader();
     this.audio = new AudioEngine();
+    this.quarterly = new QuarterlyTargetSystem();
     this.ui = null; // set after UI init
 
     this.state = 'menu';     // menu | playing | paused | runEnd | loading
@@ -21,7 +22,7 @@ class Game {
     this.tickInterval = null;
     this.selectedMode = 'stocks';
     this.selectedAsset = null;
-    this.selectedYears = { start: 2008, end: 2020 }; // Default year range
+    this.selectedYears = { start: 2008, end: 2009 }; // Default: 2-year fixed run
 
     // Intraday time tracking
     this.isIntraday = false;
@@ -102,12 +103,11 @@ class Game {
       this.currentTime = new Date();
       this.currentTime.setHours(CONFIG.MARKET_OPEN_HOUR, CONFIG.MARKET_OPEN_MINUTE, 0, 0);
     } else {
-      // Calculate run duration based on selected year range
-      const yearSpan = this.selectedYears.end - this.selectedYears.start + 1;
-      this.totalDays = yearSpan * 365;
+      // Fixed 2-year runs for quarterly target system
+      this.totalDays = CONFIG.FIXED_RUN_YEARS * 365;
       this.currentTime = null;
 
-      console.log(`Starting run spanning ${yearSpan} years (${this.totalDays} days): ${this.selectedYears.start}-${this.selectedYears.end}`);
+      console.log(`Starting ${CONFIG.FIXED_RUN_YEARS}-year run (${this.totalDays} days): ${this.selectedYears.start}-${this.selectedYears.end}`);
     }
 
     // Show loading screen
@@ -133,6 +133,7 @@ class Game {
         timeoutPromise
       ]);
       this.trading.init(CONFIG.STARTING_CASH, this.progression.data);
+      this.quarterly.init(CONFIG.STARTING_CASH);
       this.sec.init();
       this.news.init(this.dataLoader);
 
@@ -242,10 +243,32 @@ class Game {
       }
     }
 
-    // Check risk limit
-    if (this.trading.isOverRiskLimit(this.market)) {
+    // Check risk limit (pass metaProgression for Risk Immunity)
+    if (this.trading.isOverRiskLimit(this.market, this.progression.data)) {
       this.endRun('fired');
       return;
+    }
+
+    // Quarterly target check (net worth thresholds - pass instantly when hit)
+    const quarterResult = this.quarterly.tick(this.currentDay, this.trading.netWorth);
+    if (quarterResult.fired) {
+      this.news.addSecNews(
+        `MISSED QUARTERLY TARGET - Needed ${formatMoney(quarterResult.failInfo.target)} net worth, had ${formatMoney(quarterResult.failInfo.netWorth)}`,
+        this.currentDay
+      );
+      this.endRun('quarterFail');
+      return;
+    }
+    if (quarterResult.levelUp) {
+      const info = quarterResult.levelUpInfo;
+      if (info.allComplete) {
+        this.news.addNews(`ALL 8 QUARTERLY TARGETS COMPLETE! Bonus: +${info.bonusPP} PP`, 'milestone', this.currentDay);
+      } else {
+        this.news.addNews(
+          `NET WORTH TARGET HIT! Level ${info.level} complete (+${info.pp} PP). Next: reach ${formatMoney(this.quarterly.getCurrentTarget().target)}`,
+          'milestone', this.currentDay
+        );
+      }
     }
 
     // Audio feedback based on net worth changes
@@ -284,8 +307,13 @@ class Game {
 
     // Check run-end conditions
     if (arrested) {
-      this.endRun('arrested');
-      return;
+      // Bail Fund: survive one arrest per run
+      if (this.sec.useBailFund()) {
+        this.news.addSecNews('BAIL POSTED! Your lawyers got you out. SEC attention reset to 60%.', this.currentDay);
+      } else {
+        this.endRun('arrested');
+        return;
+      }
     }
 
     if (this.trading.stats.wentBankrupt) {
@@ -330,8 +358,8 @@ class Game {
       }
     }
 
-    // Check risk limit
-    if (this.trading.isOverRiskLimit(this.market)) {
+    // Check risk limit (pass metaProgression for Risk Immunity)
+    if (this.trading.isOverRiskLimit(this.market, this.progression.data)) {
       this.endRun('fired');
       return;
     }
@@ -371,8 +399,12 @@ class Game {
 
     // Check end conditions
     if (arrested) {
-      this.endRun('arrested');
-      return;
+      if (this.sec.useBailFund()) {
+        this.news.addSecNews('BAIL POSTED! Your lawyers got you out.', this.currentMinute);
+      } else {
+        this.endRun('arrested');
+        return;
+      }
     }
 
     if (this.trading.stats.wentBankrupt) {
@@ -407,12 +439,13 @@ class Game {
     // Mark survival
     this.trading.stats.survived = (reason === 'timeUp');
 
-    // Process progression
+    // Process progression (using quarterly PP instead of old formula)
     const result = this.progression.endRun(
       this.trading,
       this.sec,
       this.currentDay,
-      reason === 'arrested'
+      reason === 'arrested',
+      this.quarterly
     );
 
     // Submit to leaderboard
@@ -447,9 +480,13 @@ class Game {
       this.audio.playTradeClick();
       this.news.addTradeNews(result.message, this.currentDay);
 
-      // SEC watches large trades
+      // SEC watches large trades (Dark Pool Access reduces this)
       if (dollarAmount > this.trading.netWorth * 0.3) {
-        this.sec.addAttention(1, 'Large position opened');
+        let secHit = 1;
+        if (this.progression.data.unlocks.darkPoolAccess) {
+          secHit *= (1 - UNLOCKS.darkPoolAccess.largeTradeSECReduction);
+        }
+        this.sec.addAttention(secHit, 'Large position opened');
       }
     }
 
@@ -647,6 +684,17 @@ class Game {
     this.audio.playIllegalAction();
     const result = this.sec.doFrontRun(this.trading);
     this.news.addSecNews(result.message, this.currentDay);
+    this.ui.update(this);
+  }
+
+  useFallGuy() {
+    if (!this.isPlaying()) return;
+    const result = this.sec.useFallGuy();
+    if (result.success) {
+      this.audio.playIllegalAction();
+      this.news.addSecNews(result.message, this.currentDay);
+    }
+    this.ui.showTradeResult(result);
     this.ui.update(this);
   }
 

@@ -1240,6 +1240,18 @@ input[type="range"].year-slider {
   font-family: var(--font-mono);
 }
 
+/* Bloomberg Terminal: 5-day trend arrows */
+.asset-trend {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+}
+.asset-trend.trend-strong-up { color: var(--rh-green); }
+.asset-trend.trend-mild-up { color: #81c784; }
+.asset-trend.trend-flat { color: var(--rh-text-tertiary); }
+.asset-trend.trend-mild-down { color: #ef9a9a; }
+.asset-trend.trend-strong-down { color: var(--rh-red); }
+
 .trade-controls {
   display: flex;
   flex-direction: column;
@@ -1485,7 +1497,7 @@ input[type="range"].year-slider {
 }
 
 .chart-container {
-  flex: 1;
+  flex: 3;
   position: relative;
   overflow: hidden;
 }
@@ -1684,6 +1696,26 @@ canvas {
 
 .news-item.system {
   border-left-color: var(--rh-text-tertiary);
+}
+
+/* Time Traveler's Almanac: upcoming event preview */
+.news-item.almanac {
+  border-left-color: #ab47bc;
+  background: rgba(171, 71, 188, 0.08);
+  font-style: italic;
+}
+
+.almanac-tag {
+  display: inline-block;
+  background: #ab47bc;
+  color: #000;
+  font-size: 9px;
+  font-weight: 700;
+  font-style: normal;
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-right: 4px;
+  letter-spacing: 0.5px;
 }
 
 .news-timestamp {
@@ -2166,4 +2198,161 @@ canvas {
   border: 1px solid var(--rh-border);
   border-radius: 4px;
   margin-bottom: var(--spacing-sm);
+}
+
+/* ======== QUARTERLY TARGET PANEL ======== */
+.quarterly-target-panel {
+  flex: 1;
+  background: var(--rh-dark);
+  border-top: 1px solid var(--rh-border);
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  min-height: 0;
+}
+
+.quarterly-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+}
+
+.quarterly-level-badges {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.quarterly-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  border: 2px solid var(--rh-border);
+  background: var(--rh-darker);
+  color: var(--rh-text-tertiary);
+  transition: all 200ms;
+}
+
+.quarterly-badge.completed {
+  background: var(--rh-green);
+  border-color: var(--rh-green);
+  color: #000;
+}
+
+.quarterly-badge.current {
+  border-color: var(--rh-accent);
+  color: var(--rh-accent);
+  box-shadow: 0 0 8px rgba(0, 200, 5, 0.3);
+  animation: pulse-badge 2s infinite;
+}
+
+@keyframes pulse-badge {
+  0%, 100% { box-shadow: 0 0 8px rgba(0, 200, 5, 0.3); }
+  50% { box-shadow: 0 0 16px rgba(0, 200, 5, 0.6); }
+}
+
+.quarterly-badge.locked {
+  opacity: 0.3;
+}
+
+.quarterly-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--rh-accent);
+  font-family: var(--font-mono);
+}
+
+.quarterly-target-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--spacing-md);
+}
+
+.quarterly-target-amount,
+.quarterly-earnings-amount {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.quarterly-target-label,
+.quarterly-earnings-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--rh-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.quarterly-target-value {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--rh-text);
+}
+
+.quarterly-earnings-value {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--rh-green);
+}
+
+.quarterly-earnings-value.behind {
+  color: var(--rh-red);
+}
+
+.quarterly-progress-bar {
+  height: 10px;
+  background: var(--rh-darker);
+  border-radius: 5px;
+  overflow: hidden;
+  position: relative;
+}
+
+.quarterly-progress-fill {
+  height: 100%;
+  border-radius: 5px;
+  background: linear-gradient(90deg, var(--rh-green), var(--rh-accent));
+  transition: width 300ms;
+}
+
+.quarterly-progress-fill.behind {
+  background: linear-gradient(90deg, var(--rh-red), var(--rh-yellow));
+}
+
+.quarterly-timer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+
+.quarterly-timer-label {
+  color: var(--rh-text-tertiary);
+}
+
+.quarterly-timer-value {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--rh-text);
+}
+
+.quarterly-timer-value.urgent {
+  color: var(--rh-red);
+  animation: pulse-timer 1s infinite;
+}
+
+@keyframes pulse-timer {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }

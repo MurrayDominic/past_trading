@@ -34,8 +34,8 @@
 
       <!-- Year Selection -->
       <div class="menu-section">
-        <h2>⏰ Select Time Period</h2>
-        <p class="section-subtitle">Choose a continuous range of years to trade (2000-2025)</p>
+        <h2>⏰ Select Starting Year</h2>
+        <p class="section-subtitle">Choose when to start your 2-year run (2000-2023)</p>
         <div class="year-selection-container">
           <div class="year-range-display">
             <div class="year-display-box">
@@ -45,22 +45,21 @@
             <div class="year-arrow">→</div>
             <div class="year-display-box">
               <label>End Year</label>
-              <div class="year-value" id="end-year-display">2020</div>
+              <div class="year-value" id="end-year-display">2009</div>
             </div>
             <div class="year-info">
-              <span id="year-span-display">13 years selected</span>
+              <span id="year-span-display">2 years (8 quarters)</span>
             </div>
           </div>
           <div class="year-slider-container">
-            <input type="range" id="start-year-slider" min="2000" max="2025" value="2008" class="year-slider">
-            <input type="range" id="end-year-slider" min="2000" max="2025" value="2020" class="year-slider">
+            <input type="range" id="start-year-slider" min="2000" max="2023" value="2008" class="year-slider">
           </div>
           <div class="year-presets">
-            <button class="btn btn-small year-preset-btn" data-start="2008" data-end="2009">2008 Crisis</button>
-            <button class="btn btn-small year-preset-btn" data-start="2020" data-end="2021">2020 Pandemic</button>
-            <button class="btn btn-small year-preset-btn" data-start="2000" data-end="2002">Dot-com Bubble</button>
-            <button class="btn btn-small year-preset-btn" data-start="2017" data-end="2018">Crypto Boom</button>
-            <button class="btn btn-small year-preset-btn" data-start="2000" data-end="2025">All Years</button>
+            <button class="btn btn-small year-preset-btn" data-start="2007">2008 Crisis</button>
+            <button class="btn btn-small year-preset-btn" data-start="2020">2020 Pandemic</button>
+            <button class="btn btn-small year-preset-btn" data-start="2000">Dot-com Bubble</button>
+            <button class="btn btn-small year-preset-btn" data-start="2017">Crypto Boom</button>
+            <button class="btn btn-small year-preset-btn" data-start="2022">Recent Market</button>
           </div>
         </div>
       </div>
@@ -232,6 +231,30 @@
         <button class="tab-add-btn" id="add-chart-btn" title="Add chart">+</button>
       </div>
       <div class="chart-container" id="chart-container"></div>
+      <!-- Quarterly Target Panel -->
+      <div class="quarterly-target-panel" id="quarterly-panel">
+        <div class="quarterly-header">
+          <div class="quarterly-level-badges" id="quarterly-badges"></div>
+          <div class="quarterly-label" id="quarterly-label">Q1 Y1</div>
+        </div>
+        <div class="quarterly-target-info">
+          <div class="quarterly-target-amount">
+            <span class="quarterly-target-label">TARGET</span>
+            <span class="quarterly-target-value" id="quarterly-target-value">$2,000</span>
+          </div>
+          <div class="quarterly-earnings-amount">
+            <span class="quarterly-earnings-label">NET WORTH</span>
+            <span class="quarterly-earnings-value" id="quarterly-earnings-value">$0</span>
+          </div>
+        </div>
+        <div class="quarterly-progress-bar">
+          <div class="quarterly-progress-fill" id="quarterly-progress-fill" style="width: 0%"></div>
+        </div>
+        <div class="quarterly-timer">
+          <span class="quarterly-timer-label">Days remaining:</span>
+          <span class="quarterly-timer-value" id="quarterly-timer-value">91</span>
+        </div>
+      </div>
     </div>
 
     <!-- Right: Stats & News -->
@@ -363,6 +386,7 @@
   <script src="js/trading.js"></script>
   <script src="js/sec.js"></script>
   <script src="js/news.js"></script>
+  <script src="js/quarterly.js"></script>
   <script src="js/progression.js"></script>
   <script src="js/achievements.js"></script>
   <script src="js/leaderboard.js"></script>

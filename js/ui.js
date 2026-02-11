@@ -81,10 +81,18 @@ class GameUI {
 
       // Year Selection
       startYearSlider: document.getElementById('start-year-slider'),
-      endYearSlider: document.getElementById('end-year-slider'),
       startYearDisplay: document.getElementById('start-year-display'),
       endYearDisplay: document.getElementById('end-year-display'),
       yearSpanDisplay: document.getElementById('year-span-display'),
+
+      // Quarterly Target Panel
+      quarterlyPanel: document.getElementById('quarterly-panel'),
+      quarterlyBadges: document.getElementById('quarterly-badges'),
+      quarterlyLabel: document.getElementById('quarterly-label'),
+      quarterlyTargetValue: document.getElementById('quarterly-target-value'),
+      quarterlyEarningsValue: document.getElementById('quarterly-earnings-value'),
+      quarterlyProgressFill: document.getElementById('quarterly-progress-fill'),
+      quarterlyTimerValue: document.getElementById('quarterly-timer-value'),
 
       // Shop
       shopPP: document.getElementById('shop-pp'),
@@ -120,45 +128,22 @@ class GameUI {
       this.el.backToMenuBtn.addEventListener('click', () => this.showMenu());
     }
 
-    // Year selection sliders
+    // Year selection slider (single slider, fixed 2-year window)
     if (this.el.startYearSlider) {
       this.el.startYearSlider.addEventListener('input', (e) => {
-        let startYear = parseInt(e.target.value);
-        let endYear = parseInt(this.el.endYearSlider.value);
-
-        // Ensure start year doesn't exceed end year
-        if (startYear > endYear) {
-          endYear = startYear;
-          this.el.endYearSlider.value = endYear;
-        }
-
+        const startYear = parseInt(e.target.value);
+        const endYear = startYear + CONFIG.FIXED_RUN_YEARS - 1;
         this.updateYearDisplay(startYear, endYear);
       });
     }
 
-    if (this.el.endYearSlider) {
-      this.el.endYearSlider.addEventListener('input', (e) => {
-        let endYear = parseInt(e.target.value);
-        let startYear = parseInt(this.el.startYearSlider.value);
-
-        // Ensure end year doesn't go below start year
-        if (endYear < startYear) {
-          startYear = endYear;
-          this.el.startYearSlider.value = startYear;
-        }
-
-        this.updateYearDisplay(startYear, endYear);
-      });
-    }
-
-    // Year preset buttons
+    // Year preset buttons (single start year)
     document.querySelectorAll('.year-preset-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const startYear = parseInt(btn.dataset.start);
-        const endYear = parseInt(btn.dataset.end);
+        const endYear = startYear + CONFIG.FIXED_RUN_YEARS - 1;
 
         this.el.startYearSlider.value = startYear;
-        this.el.endYearSlider.value = endYear;
         this.updateYearDisplay(startYear, endYear);
       });
     });
@@ -434,8 +419,7 @@ class GameUI {
     this.el.startYearDisplay.textContent = startYear;
     this.el.endYearDisplay.textContent = endYear;
 
-    const yearSpan = endYear - startYear + 1;
-    this.el.yearSpanDisplay.textContent = `${yearSpan} year${yearSpan === 1 ? '' : 's'} selected`;
+    this.el.yearSpanDisplay.textContent = `${CONFIG.FIXED_RUN_YEARS} years (${CONFIG.TOTAL_QUARTERS} quarters)`;
 
     // Store selected years in game object
     this.game.selectedYears = { start: startYear, end: endYear };
@@ -484,9 +468,18 @@ class GameUI {
       .filter(([key]) => unlockedCategories.includes(key))
       .sort((a, b) => a[1].sortOrder - b[1].sortOrder);
 
+    // Analyst Reports: sector momentum indicators
+    const hasAnalyst = this.game.progression.data.unlocks.analystReports;
+    const momentum = hasAnalyst ? this.game.market.getSectorMomentum() : {};
+
     for (const [key, config] of sortedCategories) {
       const stockCount = SP500_ASSETS.filter(a => (a.category || 'consumer') === key).length;
-      html += `<option value="${key}">${config.icon} ${config.name} (${stockCount})</option>`;
+      let momentumTag = '';
+      if (hasAnalyst && momentum[key]) {
+        const m = momentum[key];
+        momentumTag = m.label === 'HOT' ? ' \u25B2' : m.label === 'COLD' ? ' \u25BC' : '';
+      }
+      html += `<option value="${key}">${config.icon} ${config.name} (${stockCount})${momentumTag}</option>`;
     }
 
     this.el.categoryFilter.innerHTML = html;
@@ -844,6 +837,7 @@ class GameUI {
           { id: 'leverage2x', name: '2x Leverage', icon: '', cost: UNLOCKS.leverage2x.cost },
           { id: 'leverage5x', name: '5x Leverage', icon: '', cost: UNLOCKS.leverage5x.cost, requires: [UNLOCKS.leverage5x.requires] },
           { id: 'leverage10x', name: '10x Leverage', icon: '', cost: UNLOCKS.leverage10x.cost, requires: [UNLOCKS.leverage10x.requires] },
+          { id: 'leverage50x', name: '50x Leverage', icon: '', cost: UNLOCKS.leverage50x.cost, requires: [UNLOCKS.leverage50x.requires] },
         ]
       },
       {
@@ -862,6 +856,18 @@ class GameUI {
           { id: 'morePositions', name: 'Portfolio+', icon: '', cost: UNLOCKS.morePositions.cost },
           { id: 'startingCash2x', name: 'Trust Fund', icon: '', cost: UNLOCKS.startingCash2x.cost },
           { id: 'startingCash5x', name: 'Rich Parents', icon: '', cost: UNLOCKS.startingCash5x.cost, requires: [UNLOCKS.startingCash5x.requires] },
+          { id: 'silverSpoon', name: 'Silver Spoon', icon: '', cost: UNLOCKS.silverSpoon.cost, requires: [UNLOCKS.silverSpoon.requires] },
+          { id: 'oligarchHeir', name: "Oligarch's Heir", icon: '', cost: UNLOCKS.oligarchHeir.cost, requires: [UNLOCKS.oligarchHeir.requires] },
+        ]
+      },
+      {
+        category: 'Risk Management',
+        icon: '',
+        nodes: [
+          { id: 'riskManager1', name: 'Risk Mgr I', icon: '', cost: UNLOCKS.riskManager1.cost },
+          { id: 'riskManager2', name: 'Risk Mgr II', icon: '', cost: UNLOCKS.riskManager2.cost, requires: [UNLOCKS.riskManager2.requires] },
+          { id: 'riskManager3', name: 'Risk Mgr III', icon: '', cost: UNLOCKS.riskManager3.cost, requires: [UNLOCKS.riskManager3.requires] },
+          { id: 'riskImmunity', name: 'Risk Immunity', icon: '', cost: UNLOCKS.riskImmunity.cost, requires: [UNLOCKS.riskImmunity.requires] },
         ]
       },
       {
@@ -870,6 +876,24 @@ class GameUI {
         nodes: [
           { id: 'lowerSurv1', name: 'Low Profile I', icon: '', cost: UNLOCKS.lowerSurv1.cost },
           { id: 'lowerSurv2', name: 'Low Profile II', icon: '', cost: UNLOCKS.lowerSurv2.cost, requires: [UNLOCKS.lowerSurv2.requires] },
+          { id: 'ghostMode', name: 'Ghost Mode', icon: '', cost: UNLOCKS.ghostMode.cost, requires: [UNLOCKS.ghostMode.requires] },
+        ]
+      },
+      {
+        category: 'Market Intel',
+        icon: '',
+        nodes: [
+          { id: 'bloombergTerminal', name: 'Bloomberg', icon: '', cost: UNLOCKS.bloombergTerminal.cost },
+          { id: 'analystReports', name: 'Analyst Reports', icon: '', cost: UNLOCKS.analystReports.cost, requires: [UNLOCKS.analystReports.requires] },
+          { id: 'timeTravelersAlmanac', name: "Almanac", icon: '', cost: UNLOCKS.timeTravelersAlmanac.cost, requires: [UNLOCKS.timeTravelersAlmanac.requires] },
+        ]
+      },
+      {
+        category: 'Passive Income',
+        icon: '',
+        nodes: [
+          { id: 'dividendPortfolio', name: 'Dividends', icon: '', cost: UNLOCKS.dividendPortfolio.cost },
+          { id: 'hedgeFundFee', name: 'Hedge Fund Fee', icon: '', cost: UNLOCKS.hedgeFundFee.cost, requires: [UNLOCKS.hedgeFundFee.requires] },
         ]
       },
       {
@@ -878,6 +902,27 @@ class GameUI {
         nodes: [
           { id: 'politicalDonations', name: 'PAC Access', icon: '', cost: UNLOCKS.politicalDonations.cost },
           { id: 'insiderNetwork', name: 'Insider Network', icon: '', cost: UNLOCKS.insiderNetwork.cost },
+          { id: 'burnerPhone', name: 'Burner Phone', icon: '', cost: UNLOCKS.burnerPhone.cost, requires: [UNLOCKS.burnerPhone.requires] },
+          { id: 'caymanShellCorp', name: 'Cayman Shell Corp', icon: '', cost: UNLOCKS.caymanShellCorp.cost, requires: [UNLOCKS.caymanShellCorp.requires] },
+        ]
+      },
+      {
+        category: 'Connections',
+        icon: '',
+        nodes: [
+          { id: 'darkPoolAccess', name: 'Dark Pool', icon: '', cost: UNLOCKS.darkPoolAccess.cost },
+          { id: 'offshoreAccounts', name: 'Offshore Accounts', icon: '', cost: UNLOCKS.offshoreAccounts.cost, requires: [UNLOCKS.offshoreAccounts.requires] },
+          { id: 'politicianRetainer', name: 'Politician', icon: '', cost: UNLOCKS.politicianRetainer.cost, requires: [UNLOCKS.politicianRetainer.requires] },
+          { id: 'lobbyistNetwork', name: 'Lobbyist Network', icon: '', cost: UNLOCKS.lobbyistNetwork.cost, requires: [UNLOCKS.lobbyistNetwork.requires] },
+        ]
+      },
+      {
+        category: 'Survival',
+        icon: '',
+        nodes: [
+          { id: 'goldenParachute', name: 'Golden Parachute', icon: '', cost: UNLOCKS.goldenParachute.cost },
+          { id: 'fallGuy', name: 'Fall Guy', icon: '', cost: UNLOCKS.fallGuy.cost, requires: [UNLOCKS.fallGuy.requires] },
+          { id: 'bailFund', name: 'Bail Fund', icon: '', cost: UNLOCKS.bailFund.cost, requires: [UNLOCKS.bailFund.requires] },
         ]
       },
     ];
@@ -1137,15 +1182,7 @@ class GameUI {
       // Countdown timer
       if (this.el.countdownTimer) {
         const remaining = game.totalDays - game.currentDay;
-
-        // For multi-year runs, show years + days
-        if (game.totalDays > 730) {
-          const yearsRemaining = Math.floor(remaining / 365);
-          const daysRemaining = remaining % 365;
-          this.el.countdownTimer.textContent = `T-${yearsRemaining}y ${daysRemaining}d`;
-        } else {
-          this.el.countdownTimer.textContent = `T-${remaining} days`;
-        }
+        this.el.countdownTimer.textContent = `T-${remaining} days`;
 
         // Color code based on percentage remaining
         const percentRemaining = remaining / game.totalDays;
@@ -1185,8 +1222,11 @@ class GameUI {
       this.chartManager.renderActiveChart(game.market, game.currentDay, game.selectedMode, game.trading.positions);
     }
 
+    // Quarterly target panel
+    this.renderQuarterlyTarget(game);
+
     // Meters with risk warnings
-    const risk = game.trading.getRiskLevel(game.market);
+    const risk = game.trading.getRiskLevel(game.market, game.progression.data);
     this.el.riskFill.style.width = risk + '%';
     this.el.riskValue.textContent = Math.round(risk) + '%';
 
@@ -1248,6 +1288,8 @@ class GameUI {
       return;
     }
 
+    const hasBloomberg = game.progression.data.unlocks.bloombergTerminal;
+
     let html = '';
     for (const asset of assets) {
       const change = game.market.getPriceChange(asset.ticker);
@@ -1255,6 +1297,13 @@ class GameUI {
       const selected = asset.ticker === game.selectedAsset ? 'selected' : '';
       const impacted = game.news.isTickerImpacted(asset.ticker);
       const impactClass = impacted ? 'asset-impacted' : '';
+
+      // Bloomberg Terminal: 5-day trend arrow
+      let trendHtml = '';
+      if (hasBloomberg) {
+        const trend = game.market.get5DayTrend(asset.ticker);
+        trendHtml = `<span class="asset-trend trend-${trend.className}">${trend.arrow}</span>`;
+      }
 
       html += `
         <button class="asset-btn ${selected} ${impactClass}" data-ticker="${asset.ticker}">
@@ -1264,6 +1313,7 @@ class GameUI {
             <span class="asset-name">${asset.name}</span>
           </div>
           <div class="asset-btn-right">
+            ${trendHtml}
             <span class="asset-price">${formatPrice(asset.price)}</span>
             <span class="asset-change ${changeClass}">${(change >= 0 ? '+' : '')}${(change * 100).toFixed(1)}%</span>
           </div>
@@ -1534,8 +1584,21 @@ class GameUI {
   }
 
   renderNews(game) {
-    const news = game.news.getRecentNews(12);
     let html = '';
+
+    // Time Traveler's Almanac: show upcoming events at the top
+    if (game.progression.data.unlocks.timeTravelersAlmanac) {
+      const upcoming = game.news.getUpcomingEvents(game.currentDay, 3);
+      for (const event of upcoming) {
+        const daysAway = event.day - game.currentDay;
+        html += `<div class="news-item almanac">
+          <span class="news-timestamp">in ${daysAway}d</span>
+          <span class="almanac-tag">ALMANAC</span> ${event.headline}
+        </div>`;
+      }
+    }
+
+    const news = game.news.getRecentNews(12);
     for (const item of news) {
       html += `<div class="news-item ${item.type}">
         <span class="news-timestamp">Day ${item.day}</span>
@@ -1580,6 +1643,11 @@ class GameUI {
       html += `<button class="btn btn-accent action-btn" id="action-donate">Donate to PAC (${formatMoney(cost)})</button>`;
     }
 
+    // Fall Guy (one-time use per run)
+    if (prog.unlocks.fallGuy && !game.sec.fallGuyUsed) {
+      html += `<button class="btn btn-accent action-btn" id="action-fallguy">Use Fall Guy (-40 SEC)</button>`;
+    }
+
     // Insider tip display
     if (game.activeInsiderTip) {
       const tip = game.activeInsiderTip;
@@ -1600,6 +1668,68 @@ class GameUI {
     bind('action-wash', () => game.doWashTrade());
     bind('action-front', () => game.doFrontRun());
     bind('action-donate', () => game.makeDonation());
+    bind('action-fallguy', () => game.useFallGuy());
+  }
+
+  renderQuarterlyTarget(game) {
+    if (!this.el.quarterlyPanel || !game.quarterly) return;
+
+    const q = game.quarterly;
+    const target = q.getCurrentTarget();
+    const netWorth = game.trading.netWorth;
+    const daysRemaining = q.getDaysRemainingInQuarter(game.currentDay);
+    const progress = q.getEarningsProgress(netWorth);
+
+    // Level badges (1-8)
+    let badgesHtml = '';
+    for (let i = 0; i < CONFIG.TOTAL_QUARTERS; i++) {
+      let badgeClass = 'quarterly-badge';
+      if (i < q.completedLevels) {
+        badgeClass += ' completed';
+      } else if (i === q.currentQuarter && !q.isAllComplete()) {
+        badgeClass += ' current';
+      } else {
+        badgeClass += ' locked';
+      }
+      badgesHtml += `<div class="${badgeClass}">${i + 1}</div>`;
+    }
+    this.el.quarterlyBadges.innerHTML = badgesHtml;
+
+    // Quarter label
+    if (q.isAllComplete()) {
+      this.el.quarterlyLabel.textContent = 'COMPLETE';
+      this.el.quarterlyLabel.style.color = 'var(--rh-green)';
+    } else {
+      this.el.quarterlyLabel.textContent = q.getQuarterLabel();
+      this.el.quarterlyLabel.style.color = '';
+    }
+
+    // Target value
+    this.el.quarterlyTargetValue.textContent = formatMoney(target.target);
+
+    // Net worth value (compared against target)
+    this.el.quarterlyEarningsValue.textContent = formatMoney(netWorth);
+    if (netWorth < target.target) {
+      this.el.quarterlyEarningsValue.classList.add('behind');
+    } else {
+      this.el.quarterlyEarningsValue.classList.remove('behind');
+    }
+
+    // Progress bar
+    this.el.quarterlyProgressFill.style.width = Math.min(100, progress * 100) + '%';
+    if (netWorth < target.target) {
+      this.el.quarterlyProgressFill.classList.add('behind');
+    } else {
+      this.el.quarterlyProgressFill.classList.remove('behind');
+    }
+
+    // Timer
+    this.el.quarterlyTimerValue.textContent = daysRemaining;
+    if (daysRemaining <= 14) {
+      this.el.quarterlyTimerValue.classList.add('urgent');
+    } else {
+      this.el.quarterlyTimerValue.classList.remove('urgent');
+    }
   }
 
   showTradeResult(result) {
@@ -1648,15 +1778,17 @@ class GameUI {
     const reasonText = {
       arrested: 'ARRESTED BY THE SEC',
       bankrupt: 'BANKRUPT',
-      timeUp: 'TIME\'S UP',
-      fired: 'FIRED - RISK LIMIT EXCEEDED'
+      timeUp: 'ALL QUARTERS COMPLETE',
+      fired: 'FIRED - RISK LIMIT EXCEEDED',
+      quarterFail: 'FIRED - MISSED QUARTERLY TARGET'
     };
 
     const reasonClass = {
       arrested: 'text-danger',
       bankrupt: 'text-danger',
       timeUp: 'text-success',
-      fired: 'text-danger'
+      fired: 'text-danger',
+      quarterFail: 'text-danger'
     };
 
     this.el.runEndTitle.textContent = reasonText[game.runEndReason] || 'RUN OVER';
@@ -1723,6 +1855,10 @@ class GameUI {
         <div class="stat-item">
           <span class="stat-label">Max SEC Attention</span>
           <span class="stat-value">${Math.round(rec.maxSecAttention)}%</span>
+        </div>
+        <div class="stat-item highlight">
+          <span class="stat-label">Quarters Completed</span>
+          <span class="stat-value text-accent">${game.quarterly.completedLevels} / ${CONFIG.TOTAL_QUARTERS}</span>
         </div>
         <div class="stat-item highlight">
           <span class="stat-label">Prestige Earned</span>

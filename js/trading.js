@@ -46,10 +46,12 @@ class TradingEngine {
   }
 
   init(startingCash, metaProgression) {
-    // Apply starting cash bonuses
+    // Apply starting cash bonuses (check highest tier first)
     let cash = startingCash;
     if (metaProgression) {
-      if (metaProgression.unlocks.startingCash5x) cash = CONFIG.STARTING_CASH * 5;
+      if (metaProgression.unlocks.oligarchHeir) cash = CONFIG.STARTING_CASH * 25;
+      else if (metaProgression.unlocks.silverSpoon) cash = CONFIG.STARTING_CASH * 10;
+      else if (metaProgression.unlocks.startingCash5x) cash = CONFIG.STARTING_CASH * 5;
       else if (metaProgression.unlocks.startingCash2x) cash = CONFIG.STARTING_CASH * 2;
 
       // Title bonuses
@@ -445,7 +447,7 @@ class TradingEngine {
     }
   }
 
-  getRiskLevel(market) {
+  getRiskLevel(market, metaProgression) {
     if (this.positions.length === 0) return 0;
 
     let totalExposure = 0;
@@ -457,13 +459,28 @@ class TradingEngine {
 
     // Bug Fix #16: Risk calculation now scales with position count
     const positionScaling = Math.sqrt(this.positions.length); // Diversification reduces risk
-    const riskPercent = (totalExposure / Math.max(1, this.netWorth)) * CONFIG.RISK_PER_POSITION_PERCENT * positionScaling;
+    let riskPercent = (totalExposure / Math.max(1, this.netWorth)) * CONFIG.RISK_PER_POSITION_PERCENT * positionScaling;
+
+    // Apply risk reduction from Risk Manager unlocks
+    if (metaProgression) {
+      if (metaProgression.unlocks.riskManager3) riskPercent *= (1 - 0.60);
+      else if (metaProgression.unlocks.riskManager2) riskPercent *= (1 - 0.40);
+      else if (metaProgression.unlocks.riskManager1) riskPercent *= (1 - 0.20);
+    }
+
     return Math.min(100, riskPercent);
   }
 
-  isOverRiskLimit(market) {
-    const risk = this.getRiskLevel(market);
-    return risk >= CONFIG.RISK_LIMIT_PERCENT;
+  isOverRiskLimit(market, metaProgression) {
+    const risk = this.getRiskLevel(market, metaProgression);
+    let limit = CONFIG.RISK_LIMIT_PERCENT;
+
+    // Risk Immunity raises the cap
+    if (metaProgression && metaProgression.unlocks.riskImmunity) {
+      limit = UNLOCKS.riskImmunity.riskLimitOverride;
+    }
+
+    return risk >= limit;
   }
 
   getPositionPnL(pos, market) {
@@ -508,7 +525,7 @@ class TradingEngine {
     return { winRate, maxDrawdown: maxDD };
   }
 
-  // Passive income from modes and equipable tools
+  // Passive income from modes, equipable tools, and unlock-based income
   processPassiveIncome(mode, metaProgression, isIntraday = false) {
     let income = 0;
 
@@ -523,6 +540,15 @@ class TradingEngine {
       const tool = EQUIPABLE_TOOLS[metaProgression.equippedTool];
       if (tool) {
         income += tool.passiveIncomePerDay;
+      }
+    }
+
+    // Unlock-based passive income (% of net worth)
+    if (metaProgression) {
+      if (metaProgression.unlocks.hedgeFundFee) {
+        income += this.netWorth * UNLOCKS.hedgeFundFee.passivePercent;
+      } else if (metaProgression.unlocks.dividendPortfolio) {
+        income += this.netWorth * UNLOCKS.dividendPortfolio.passivePercent;
       }
     }
 

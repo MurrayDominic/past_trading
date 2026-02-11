@@ -439,4 +439,57 @@ class Market {
     );
     return unlockKey && progression.data.unlocks[unlockKey];
   }
+
+  // Bloomberg Terminal: 5-day trend for an asset
+  // Returns { arrow, className, changePercent }
+  get5DayTrend(ticker) {
+    const asset = this.assets[ticker];
+    if (!asset || !asset.history || asset.history.length < 2) {
+      return { arrow: '-', className: 'flat', changePercent: 0 };
+    }
+
+    const h = asset.history;
+    const lookback = Math.min(5, h.length - 1);
+    const oldPrice = h[h.length - 1 - lookback];
+    const newPrice = h[h.length - 1];
+    if (oldPrice <= 0) return { arrow: '-', className: 'flat', changePercent: 0 };
+
+    const change = (newPrice - oldPrice) / oldPrice;
+
+    if (change > 0.03) return { arrow: '\u2191', className: 'strong-up', changePercent: change };
+    if (change > 0.01) return { arrow: '\u2197', className: 'mild-up', changePercent: change };
+    if (change > -0.01) return { arrow: '\u2192', className: 'flat', changePercent: change };
+    if (change > -0.03) return { arrow: '\u2198', className: 'mild-down', changePercent: change };
+    return { arrow: '\u2193', className: 'strong-down', changePercent: change };
+  }
+
+  // Analyst Reports: sector momentum (average daily change across all live assets in category)
+  getSectorMomentum() {
+    const sectorChanges = {};
+    const sectorCounts = {};
+
+    for (const asset of Object.values(this.assets)) {
+      if (!this.isAssetLive(asset)) continue;
+      const assetDef = SP500_ASSETS.find(a => a.ticker === asset.ticker);
+      const category = assetDef ? (assetDef.category || 'consumer') : 'consumer';
+
+      if (!sectorChanges[category]) {
+        sectorChanges[category] = 0;
+        sectorCounts[category] = 0;
+      }
+
+      const change = this.getPriceChange(asset.ticker);
+      sectorChanges[category] += change;
+      sectorCounts[category]++;
+    }
+
+    const momentum = {};
+    for (const cat of Object.keys(sectorChanges)) {
+      const avg = sectorCounts[cat] > 0 ? sectorChanges[cat] / sectorCounts[cat] : 0;
+      if (avg > 0.005) momentum[cat] = { label: 'HOT', className: 'sector-hot' };
+      else if (avg < -0.005) momentum[cat] = { label: 'COLD', className: 'sector-cold' };
+      else momentum[cat] = { label: '-', className: 'sector-neutral' };
+    }
+    return momentum;
+  }
 }

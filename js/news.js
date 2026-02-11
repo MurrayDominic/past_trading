@@ -27,7 +27,6 @@ class NewsSystem {
         this.addNews(event.headline, 'market', day);
         if (event.tickers_affected) {
           this.impactedTickers = event.tickers_affected;
-          // Clear impact indicator after a few seconds
           setTimeout(() => { this.impactedTickers = []; }, 5000);
         }
       });
@@ -64,27 +63,6 @@ class NewsSystem {
     return null;
   }
 
-  tickIntraday(minute, market, secSystem) {
-    // Less frequent news in intraday mode
-    if (minute % 30 === 0) { // Every 30 minutes
-      // Random market commentary
-      if (this.marketsEventData && this.marketsEventData.length > 0) {
-        const event = this.marketsEventData[Math.floor(Math.random() * this.marketsEventData.length)];
-        this.addNews(event.headline || event.text || 'Market movement detected', 'market', minute);
-      }
-    }
-
-    // Satirical news less frequently in intraday
-    this.satiricalCooldown--;
-    if (this.satiricalCooldown <= 0 && minute % 60 === 0) { // Once per hour
-      if (Math.random() < 0.2) {
-        const satire = SATIRICAL_NEWS[Math.floor(Math.random() * SATIRICAL_NEWS.length)];
-        this.addNews(satire, 'satirical', minute);
-        this.satiricalCooldown = 60; // Reset for another hour
-      }
-    }
-  }
-
   addNews(text, type, day) {
     this.feed.unshift({ text, type, day });
     if (this.feed.length > this.maxEntries) {
@@ -117,6 +95,12 @@ class NewsSystem {
 
   isTickerImpacted(ticker) {
     return this.impactedTickers.includes(ticker);
+  }
+
+  // Time Traveler's Almanac: get upcoming events within N days
+  getUpcomingEvents(currentDay, daysAhead) {
+    if (!this.dataLoader) return [];
+    return this.dataLoader.getUpcomingEvents(currentDay, daysAhead);
   }
 
   getNewsColor(type) {

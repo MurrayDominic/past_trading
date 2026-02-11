@@ -27,20 +27,32 @@ class SECSystem {
     this.pendingTips = [];
     this.activeIllegalActions = [];
     this.warningShown = false;
-    // Randomize arrest threshold for each new run
+    // Randomize arrest threshold between 60-100%
     this.arrestThreshold = 60 + Math.random() * 40;
+    // Survival unlock tracking
+    this.fallGuyUsed = false;
+    this.bailFundUsed = false;
   }
 
   tick(tradingEngine, market, metaProgression) {
+    // Cache metaProgression for use in illegal action methods
+    this._meta = metaProgression;
+
     // Natural decay
     let decay = CONFIG.SEC_DECAY_PER_DAY;
 
     // Passive decay bonus from unlocks
     if (metaProgression) {
-      if (metaProgression.unlocks.lowerSurv2) {
+      if (metaProgression.unlocks.ghostMode) {
+        decay *= 1.6;
+      } else if (metaProgression.unlocks.lowerSurv2) {
         decay *= 1.4;
       } else if (metaProgression.unlocks.lowerSurv1) {
         decay *= 1.2;
+      }
+      // Lobbyist Network doubles decay rate
+      if (metaProgression.unlocks.lobbyistNetwork) {
+        decay *= 2.0;
       }
       // Teflon Don title
       if (metaProgression.equippedTitle === 'teflonDon') {
@@ -53,7 +65,13 @@ class SECSystem {
     // Check for suspicious returns
     if (tradingEngine.netWorthHistory.length >= 2) {
       const prev = tradingEngine.netWorthHistory[tradingEngine.netWorthHistory.length - 2];
-      const curr = tradingEngine.netWorth;
+      let curr = tradingEngine.netWorth;
+
+      // Offshore Accounts: hide a portion of net worth from SEC suspicion
+      if (metaProgression && metaProgression.unlocks.offshoreAccounts) {
+        curr = curr * (1 - UNLOCKS.offshoreAccounts.netWorthHidePercent);
+      }
+
       const dailyReturn = prev > 0 ? (curr - prev) / prev : 0;
 
       if (Math.abs(dailyReturn) > CONFIG.SUSPICIOUS_RETURN_THRESHOLD) {
@@ -130,11 +148,27 @@ class SECSystem {
     }
   }
 
+  // Helper: get SEC hit for illegal actions (reduced by Burner Phone)
+  getIllegalSecHit(baseHit) {
+    if (this._meta && this._meta.unlocks.burnerPhone) {
+      return baseHit * (1 - UNLOCKS.burnerPhone.illegalSecReduction);
+    }
+    return baseHit;
+  }
+
+  // Helper: get profit multiplier for illegal actions (doubled by Cayman Shell Corp)
+  getIllegalProfitMult() {
+    if (this._meta && this._meta.unlocks.caymanShellCorp) {
+      return UNLOCKS.caymanShellCorp.illegalProfitMultiplier;
+    }
+    return 1;
+  }
+
   doInsiderTrade(market, tradingEngine) {
     const tip = market.generateInsiderTip();
     if (!tip) return null;
 
-    this.addAttention(ILLEGAL_ACTIONS.insiderTrading.secHit, 'Insider trading detected');
+    this.addAttention(this.getIllegalSecHit(ILLEGAL_ACTIONS.insiderTrading.secHit), 'Insider trading detected');
     tradingEngine.stats.illegalActions++;
     this.pendingTips.push(tip);
 
@@ -142,28 +176,28 @@ class SECSystem {
   }
 
   doLiborRig(tradingEngine) {
-    this.addAttention(ILLEGAL_ACTIONS.liborRigging.secHit, 'LIBOR manipulation detected');
+    this.addAttention(this.getIllegalSecHit(ILLEGAL_ACTIONS.liborRigging.secHit), 'LIBOR manipulation detected');
     tradingEngine.stats.illegalActions++;
 
     // Guaranteed profit
-    const profit = tradingEngine.netWorth * 0.05; // 5% of net worth
+    const profit = tradingEngine.netWorth * 0.05 * this.getIllegalProfitMult();
     tradingEngine.cash += profit;
 
     return { profit, message: `LIBOR rigged. +${formatMoney(profit)} guaranteed.` };
   }
 
   doFrontRun(tradingEngine) {
-    this.addAttention(ILLEGAL_ACTIONS.frontRunning.secHit, 'Front running detected');
+    this.addAttention(this.getIllegalSecHit(ILLEGAL_ACTIONS.frontRunning.secHit), 'Front running detected');
     tradingEngine.stats.illegalActions++;
 
-    const profit = tradingEngine.netWorth * 0.02;
+    const profit = tradingEngine.netWorth * 0.02 * this.getIllegalProfitMult();
     tradingEngine.cash += profit;
 
     return { profit, message: `Front-ran a large order. +${formatMoney(profit)}` };
   }
 
   doPumpAndDump(ticker, market, tradingEngine) {
-    this.addAttention(ILLEGAL_ACTIONS.pumpAndDump.secHit, 'Pump & dump scheme detected');
+    this.addAttention(this.getIllegalSecHit(ILLEGAL_ACTIONS.pumpAndDump.secHit), 'Pump & dump scheme detected');
     tradingEngine.stats.illegalActions++;
 
     const asset = market.getAsset(ticker);
@@ -173,7 +207,7 @@ class SECSystem {
     const pumpAmount = 0.30 + Math.random() * 0.20; // 30-50% pump
     asset.price *= (1 + pumpAmount);
 
-    const profit = tradingEngine.netWorth * 0.08;
+    const profit = tradingEngine.netWorth * 0.08 * this.getIllegalProfitMult();
     tradingEngine.cash += profit;
 
     // Price will crash next tick
@@ -185,10 +219,10 @@ class SECSystem {
   }
 
   doWashTrade(tradingEngine) {
-    this.addAttention(ILLEGAL_ACTIONS.washTrading.secHit, 'Wash trading detected');
+    this.addAttention(this.getIllegalSecHit(ILLEGAL_ACTIONS.washTrading.secHit), 'Wash trading detected');
     tradingEngine.stats.illegalActions++;
 
-    const profit = tradingEngine.netWorth * 0.01;
+    const profit = tradingEngine.netWorth * 0.01 * this.getIllegalProfitMult();
     tradingEngine.cash += profit;
 
     return { profit, message: `Wash traded for fake volume. +${formatMoney(profit)}` };
@@ -211,14 +245,20 @@ class SECSystem {
     this.totalDonations += cost;
     tradingEngine.stats.totalDonations += cost;
 
-    const reduction = CONFIG.DONATION_SEC_REDUCTION;
+    let reduction = CONFIG.DONATION_SEC_REDUCTION;
+
+    // Politician on Retainer: donations are 2x more effective
+    if (metaProgression && metaProgression.unlocks.politicianRetainer) {
+      reduction *= UNLOCKS.politicianRetainer.donationEffectiveness;
+    }
+
     this.attention = Math.max(0, this.attention - reduction);
 
     const nextCost = CONFIG.DONATION_BASE_COST * Math.pow(CONFIG.DONATION_COST_MULTIPLIER, this.donationCount);
 
     return {
       success: true,
-      message: `Donated ${formatMoney(cost)} to PAC. SEC attention -${reduction}. Next donation: ${formatMoney(nextCost)}`,
+      message: `Donated ${formatMoney(cost)} to PAC. SEC attention -${reduction.toFixed(0)}. Next donation: ${formatMoney(nextCost)}`,
       cost,
       newAttention: this.attention
     };
@@ -231,6 +271,30 @@ class SECSystem {
       }
     }
     return CONFIG.SEC_LABELS[0];
+  }
+
+  useFallGuy() {
+    if (this.fallGuyUsed) return { success: false, message: 'Already used this run' };
+    if (!this._meta || !this._meta.unlocks.fallGuy) return { success: false, message: 'Not unlocked' };
+
+    this.fallGuyUsed = true;
+    const reduction = UNLOCKS.fallGuy.secReduction;
+    this.attention = Math.max(0, this.attention - reduction);
+    this.updateStage();
+
+    return { success: true, message: `Blamed the intern. SEC attention -${reduction}.` };
+  }
+
+  useBailFund() {
+    if (this.bailFundUsed) return false;
+    if (!this._meta || !this._meta.unlocks.bailFund) return false;
+
+    this.bailFundUsed = true;
+    this.attention = 60;
+    this.frozenAssets = false;
+    this.tradeRestricted = false;
+    this.updateStage();
+    return true;
   }
 
   canDoIllegalAction(actionId, metaProgression, runCount) {

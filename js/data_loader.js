@@ -64,6 +64,12 @@ class DataLoader {
     return this.newsEvents.filter(e => e.day === day);
   }
 
+  // Time Traveler's Almanac: get events in a future range
+  getUpcomingEvents(currentDay, daysAhead) {
+    if (!this.newsEvents) return [];
+    return this.newsEvents.filter(e => e.day > currentDay && e.day <= currentDay + daysAhead);
+  }
+
   getStartDate() {
     return this.startDate || new Date(2020, 0, 1);
   }

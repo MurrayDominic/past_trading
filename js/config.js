@@ -79,6 +79,22 @@ const CONFIG = {
 
   // --- Leaderboard ---
   MAX_LEADERBOARD_ENTRIES: 20,
+
+  // --- Quarterly Targets ---
+  QUARTER_DAYS: 91,
+  FIXED_RUN_YEARS: 2,
+  TOTAL_QUARTERS: 8,
+  QUARTERLY_TARGETS: [
+    { level: 1, label: 'Q1 Y1', target: 15000, pp: 2 },         // $15K net worth (50% growth)
+    { level: 2, label: 'Q2 Y1', target: 50000, pp: 3 },         // $50K
+    { level: 3, label: 'Q3 Y1', target: 250000, pp: 4 },        // $250K
+    { level: 4, label: 'Q4 Y1', target: 1000000, pp: 5 },       // $1M
+    { level: 5, label: 'Q1 Y2', target: 10000000, pp: 7 },      // $10M
+    { level: 6, label: 'Q2 Y2', target: 100000000, pp: 9 },     // $100M
+    { level: 7, label: 'Q3 Y2', target: 500000000, pp: 12 },    // $500M
+    { level: 8, label: 'Q4 Y2', target: 1000000000, pp: 16 },   // $1B
+  ],
+  ALL_QUARTERS_BONUS_PP: 10,
 };
 
 // ============================================================================
@@ -322,7 +338,44 @@ const UNLOCKS = {
   startingCash5x:{ name: 'Rich Parents', cost: 25, description: 'Start with $50,000', category: 'starting', cashMultiplier: 5, requires: 'startingCash2x' },
 
   // Endgame unlocks (40+ PP)
-  leverage50x:   { name: 'Leverage 50x', cost: 40, description: 'Degenerate leverage', category: 'trading', leverageLevel: 50, requires: 'leverage10x' }
+  leverage50x:   { name: 'Leverage 50x', cost: 40, description: 'Degenerate leverage', category: 'trading', leverageLevel: 50, requires: 'leverage10x' },
+
+  // --- Risk Management ---
+  riskManager1:  { name: 'Risk Manager I', cost: 3, description: 'Internal risk reduced by 20%', category: 'risk', riskReduction: 0.20 },
+  riskManager2:  { name: 'Risk Manager II', cost: 8, description: 'Internal risk reduced by 40%', category: 'risk', riskReduction: 0.40, requires: 'riskManager1' },
+  riskManager3:  { name: 'Risk Manager III', cost: 15, description: 'Internal risk reduced by 60%', category: 'risk', riskReduction: 0.60, requires: 'riskManager2' },
+  riskImmunity:  { name: 'Risk Immunity', cost: 30, description: 'Risk cap raised to 150%. Live dangerously.', category: 'risk', riskLimitOverride: 150, requires: 'riskManager3' },
+
+  // --- Starting Capital Extensions ---
+  silverSpoon:   { name: 'Silver Spoon', cost: 35, description: 'Start with $100,000', category: 'starting', cashMultiplier: 10, requires: 'startingCash5x' },
+  oligarchHeir:  { name: "Oligarch's Heir", cost: 50, description: 'Start with $250,000', category: 'starting', cashMultiplier: 25, requires: 'silverSpoon' },
+
+  // --- Market Intel ---
+  bloombergTerminal: { name: 'Bloomberg Terminal', cost: 5, description: 'See 5-day price trend arrows on assets', category: 'intel' },
+  analystReports:    { name: 'Analyst Reports', cost: 12, description: 'See sector momentum indicators', category: 'intel', requires: 'bloombergTerminal' },
+  timeTravelersAlmanac: { name: "Time Traveler's Almanac", cost: 25, description: 'Preview market events 3 days early', category: 'intel', requires: 'analystReports' },
+
+  // --- Stealth Extension ---
+  ghostMode:     { name: 'Ghost Mode', cost: 35, description: 'SEC attention grows 60% slower', category: 'stealth', survReduction: 0.60, requires: 'lowerSurv2' },
+
+  // --- Passive Income ---
+  dividendPortfolio: { name: 'Dividend Portfolio', cost: 10, description: 'Earn 0.1% of net worth per day passively', category: 'passive', passivePercent: 0.001 },
+  hedgeFundFee:      { name: 'Hedge Fund Fee', cost: 20, description: 'Earn 0.2% of net worth per day passively', category: 'passive', passivePercent: 0.002, requires: 'dividendPortfolio' },
+
+  // --- Naughty Activities Extensions ---
+  burnerPhone:     { name: 'Burner Phone', cost: 8, description: 'Illegal actions generate 30% less SEC heat', category: 'illegal', illegalSecReduction: 0.30, requires: 'insiderNetwork' },
+  caymanShellCorp: { name: 'Cayman Shell Corp', cost: 25, description: 'Double profits from illegal actions', category: 'illegal', illegalProfitMultiplier: 2.0, requires: 'burnerPhone' },
+
+  // --- Connections ---
+  darkPoolAccess:    { name: 'Dark Pool Access', cost: 10, description: 'Large trades generate 50% less SEC attention', category: 'connections', largeTradeSECReduction: 0.50 },
+  offshoreAccounts:  { name: 'Offshore Accounts', cost: 15, description: 'Hide 25% of net worth from SEC suspicion', category: 'connections', netWorthHidePercent: 0.25, requires: 'darkPoolAccess' },
+  politicianRetainer:{ name: 'Politician on Retainer', cost: 12, description: 'Political donations reduce 2x more SEC heat', category: 'connections', donationEffectiveness: 2.0, requires: 'offshoreAccounts' },
+  lobbyistNetwork:   { name: 'Lobbyist Network', cost: 18, description: 'SEC attention decay rate doubled', category: 'connections', decayMultiplier: 2.0, requires: 'politicianRetainer' },
+
+  // --- Survival ---
+  goldenParachute: { name: 'Golden Parachute', cost: 20, description: 'Earn 50% bonus PP when fired for missing targets', category: 'survival' },
+  fallGuy:         { name: 'Fall Guy', cost: 30, description: 'Once per run: blame someone else (-40 SEC attention)', category: 'survival', secReduction: 40, requires: 'goldenParachute' },
+  bailFund:        { name: 'Bail Fund', cost: 40, description: 'Survive one arrest per run (SEC resets to 60)', category: 'survival', requires: 'fallGuy' },
 };
 
 // ============================================================================
