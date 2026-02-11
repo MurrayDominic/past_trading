@@ -22,9 +22,9 @@ class DataLoader {
       const data = await response.json();
       this.cache.set(ticker, data);
 
-      // Set start date from first loaded asset
-      if (!this.startDate && data.period) {
-        this.startDate = new Date(data.period.start);
+      // Set start date from first loaded asset's actual OHLC data
+      if (!this.startDate && data.ohlc && data.ohlc.length > 0) {
+        this.startDate = new Date(data.ohlc[0].date);
       }
 
       return data;

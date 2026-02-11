@@ -2,7 +2,7 @@
   "ticker": "CBOE",
   "name": "Cboe Global Markets, Inc.",
   "period": {
-    "start": "2000-01-01",
+    "start": "2010-06-15",
     "end": "2025-12-30",
     "days": 3911
   },

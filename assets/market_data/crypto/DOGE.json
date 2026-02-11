@@ -2,7 +2,7 @@
   "ticker": "DOGE-USD",
   "name": "Dogecoin USD",
   "period": {
-    "start": "2000-01-01",
+    "start": "2017-11-09",
     "end": "2025-12-30",
     "days": 2974
   },

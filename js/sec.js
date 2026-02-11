@@ -13,6 +13,8 @@ class SECSystem {
     this.pendingTips = [];       // insider tips waiting to resolve
     this.activeIllegalActions = [];
     this.warningShown = false;
+    // Randomize arrest threshold between 60-100%
+    this.arrestThreshold = 60 + Math.random() * 40;
   }
 
   init() {
@@ -25,6 +27,8 @@ class SECSystem {
     this.pendingTips = [];
     this.activeIllegalActions = [];
     this.warningShown = false;
+    // Randomize arrest threshold for each new run
+    this.arrestThreshold = 60 + Math.random() * 40;
   }
 
   tick(tradingEngine, market, metaProgression) {
@@ -89,7 +93,18 @@ class SECSystem {
       this.attention
     );
 
-    return this.attention >= CONFIG.SEC_THRESHOLDS.ARRESTED;
+    return this.isArrested();
+  }
+
+  isArrested() {
+    // No arrest possible below 60%
+    if (this.attention < 60) return false;
+
+    // Guarantee arrest at 95%+
+    if (this.attention >= 95) return true;
+
+    // Between 60-95%, arrest when threshold is reached
+    return this.attention >= this.arrestThreshold;
   }
 
   updateStage() {

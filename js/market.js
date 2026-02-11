@@ -65,8 +65,8 @@ class Market {
       let actualDataStartDate = null;
 
       if (hasHistoricalData && historicalData.ohlc && historicalData.ohlc.length > 0) {
-        // Parse actual start date from historical data
-        actualDataStartDate = new Date(historicalData.period.start);
+        // Parse actual start date from first OHLC entry (period.start is unreliable for post-2000 IPOs)
+        actualDataStartDate = new Date(historicalData.ohlc[0].date);
 
         // Calculate offset from actual data start, not from 2000-01-01
         const elapsedMs = this.startDate - actualDataStartDate;

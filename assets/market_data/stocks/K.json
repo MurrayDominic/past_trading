@@ -2,7 +2,7 @@
   "ticker": "K",
   "name": "Kellanova",
   "period": {
-    "start": "2000-01-01",
+    "start": "2000-01-03",
     "end": "2025-12-10",
     "days": 6525
   },

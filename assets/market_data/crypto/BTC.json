@@ -2,7 +2,7 @@
   "ticker": "BTC-USD",
   "name": "Bitcoin USD",
   "period": {
-    "start": "2000-01-01",
+    "start": "2014-09-17",
     "end": "2025-12-30",
     "days": 4123
   },

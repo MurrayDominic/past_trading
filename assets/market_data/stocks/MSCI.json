@@ -2,7 +2,7 @@
   "ticker": "MSCI",
   "name": "MSCI Inc.",
   "period": {
-    "start": "2000-01-01",
+    "start": "2007-11-15",
     "end": "2025-12-30",
     "days": 4559
   },
