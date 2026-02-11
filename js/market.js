@@ -353,6 +353,18 @@ class Market {
     return Object.values(this.assets);
   }
 
+  // Check if a stock is live (publicly traded) at the current game date
+  isAssetLive(asset) {
+    if (!asset.hasHistoricalData) return false; // No data file = don't show
+    if (!asset.actualDataStartDate) return false;
+    const currentDate = new Date(this.startDate.getTime() + this.dayCount * 24 * 60 * 60 * 1000);
+    return currentDate >= asset.actualDataStartDate;
+  }
+
+  getLiveAssets() {
+    return Object.values(this.assets).filter(a => this.isAssetLive(a));
+  }
+
   getPriceChange(ticker) {
     const asset = this.assets[ticker];
     if (!asset) return 0;

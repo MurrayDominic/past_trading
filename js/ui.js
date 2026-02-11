@@ -894,14 +894,24 @@ class GameUI {
         const unlocked = prog.data.unlocks[node.id] || false;
         const canAfford = prog.data.prestigePoints >= node.cost;
 
-        // Check if prerequisites are met
+        // Check if prerequisites are met (explicit requires + implicit left-to-right chain)
         let prereqsMet = true;
         let missingPrereq = null;
+
+        // Explicit requires from config
         if (node.requires) {
           prereqsMet = node.requires.every(req => prog.data.unlocks[req]);
           if (!prereqsMet) {
-            // Find the first missing prerequisite
             missingPrereq = node.requires.find(req => !prog.data.unlocks[req]);
+          }
+        }
+
+        // Implicit: each node requires the previous node in the row to be unlocked
+        if (prereqsMet && i > 0) {
+          const prevNode = category.nodes[i - 1];
+          if (!prog.data.unlocks[prevNode.id]) {
+            prereqsMet = false;
+            missingPrereq = prevNode.id;
           }
         }
 
@@ -1005,6 +1015,21 @@ class GameUI {
           }
           return r;
         }).join(', ')}`;
+      }
+    }
+
+    // Implicit: each node requires the previous node in its row
+    if (prereqsMet) {
+      for (const cat of this.treeStructure) {
+        const idx = cat.nodes.findIndex(n => n.id === nodeId);
+        if (idx > 0) {
+          const prevNode = cat.nodes[idx - 1];
+          if (!prog.data.unlocks[prevNode.id]) {
+            prereqsMet = false;
+            prereqText = `Requires: ${prevNode.name}`;
+          }
+          break;
+        }
       }
     }
 
@@ -1149,12 +1174,8 @@ class GameUI {
       }
     }
 
-    // Asset selector - preserve search filter across ticks
-    if (this.currentSearchTerm) {
-      this.filterAssets(this.currentSearchTerm);
-    } else {
-      this.renderAssetSelector(game);
-    }
+    // Asset selector - re-apply filters every tick (same pattern as search)
+    this.filterAssets(this.currentSearchTerm || '');
 
     // Net worth graph
     this.renderGraph(game);
@@ -1262,7 +1283,8 @@ class GameUI {
   filterAssets(searchTerm) {
     if (!this.game || this.game.state !== 'playing') return;
 
-    const assets = this.game.market.getAllAssets();
+    // Only show stocks that are live (publicly traded) at the current game date
+    const assets = this.game.market.getLiveAssets();
     const searchLower = searchTerm.toLowerCase().trim();
 
     let filtered = assets;

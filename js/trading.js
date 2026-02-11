@@ -115,6 +115,7 @@ class TradingEngine {
   buy(ticker, dollarAmount, market, metaProgression, currentDay) {
     const asset = market.getAsset(ticker);
     if (!asset) return { success: false, message: 'Asset not found' };
+    if (!market.isAssetLive(asset)) return { success: false, message: `${ticker} is not yet publicly traded` };
 
     if (!this.canTrade(metaProgression)) {
       return { success: false, message: 'Trade on cooldown' };
@@ -281,6 +282,7 @@ class TradingEngine {
   short(ticker, dollarAmount, market, metaProgression, currentDay) {
     const asset = market.getAsset(ticker);
     if (!asset) return { success: false, message: 'Asset not found' };
+    if (!market.isAssetLive(asset)) return { success: false, message: `${ticker} is not yet publicly traded` };
 
     if (!this.canTrade(metaProgression)) {
       return { success: false, message: 'Trade on cooldown' };
@@ -359,6 +361,21 @@ class TradingEngine {
       const pos = this.positions[i];
       const asset = market.getAsset(pos.ticker);
       if (!asset) continue;
+
+      // Liquidate positions in stocks that aren't publicly traded yet at current game date
+      if (!market.isAssetLive(asset)) {
+        const collateral = this.getCollateral(pos);
+        this.cash += collateral; // Return collateral at cost basis (no profit/loss)
+        this.recentLiquidations.push({
+          ticker: pos.ticker,
+          type: pos.type,
+          quantity: pos.quantity,
+          loss: 0
+        });
+        this.positions.splice(i, 1);
+        console.log(`Position liquidated: ${pos.ticker} not yet publicly traded`);
+        continue;
+      }
 
       // Bug Fix #4: Position Value Calculation - Don't multiply by leverage, allow negative values for liquidation
       let posValue;
