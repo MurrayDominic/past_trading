@@ -9,6 +9,12 @@ class AudioEngine {
     this.volume = 0.7;
     this.musicOscillators = [];
     this.currentIntensity = 0;
+
+    // MP3 music support
+    this.musicSource = null;
+    this.musicBuffer = null;
+    this.musicFilter = null;
+    this.hasMusicFile = false;
   }
 
   init() {
@@ -27,10 +33,28 @@ class AudioEngine {
       this.sfxGain.connect(this.masterGain);
       this.sfxGain.gain.value = 0.5;
 
+      // Try to preload MP3 background music
+      this.preloadMusic();
+
       return true;
     } catch (e) {
       console.warn('Web Audio API not supported:', e);
       return false;
+    }
+  }
+
+  async preloadMusic() {
+    try {
+      const response = await fetch('assets/music/background.mp3');
+      if (!response.ok) throw new Error('No music file found');
+
+      const arrayBuffer = await response.arrayBuffer();
+      this.musicBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+      this.hasMusicFile = true;
+      console.log('Background music loaded successfully');
+    } catch (e) {
+      console.log('No background music file found (assets/music/background.mp3) - using synthesized audio');
+      this.hasMusicFile = false;
     }
   }
 
@@ -142,9 +166,44 @@ class AudioEngine {
   }
 
   startMusic() {
-    if (!this.audioContext || this.muted) return;
+    if (!this.audioContext) return;
 
     this.stopMusic();
+
+    if (this.hasMusicFile && this.musicBuffer) {
+      this.startMusicMP3();
+    } else {
+      this.startMusicSynth();
+    }
+  }
+
+  startMusicMP3() {
+    const now = this.audioContext.currentTime;
+
+    // Create source from buffer
+    this.musicSource = this.audioContext.createBufferSource();
+    this.musicSource.buffer = this.musicBuffer;
+    this.musicSource.loop = true;
+
+    // Low-pass filter for "building up" effect - starts muffled
+    this.musicFilter = this.audioContext.createBiquadFilter();
+    this.musicFilter.type = 'lowpass';
+    this.musicFilter.frequency.value = 400; // Start very muffled
+    this.musicFilter.Q.value = 0.7;
+
+    // Connect: source -> filter -> musicGain -> master
+    this.musicSource.connect(this.musicFilter);
+    this.musicFilter.connect(this.musicGain);
+
+    // Start quiet and muffled
+    this.musicGain.gain.setValueAtTime(0.15, now);
+
+    this.musicSource.start(0);
+  }
+
+  startMusicSynth() {
+    if (this.muted) return;
+
     const now = this.audioContext.currentTime;
 
     // Base drone (C2, 130Hz)
@@ -177,7 +236,21 @@ class AudioEngine {
     const targetIntensity = 1 - (daysRemaining / totalDays);
     this.currentIntensity += (targetIntensity - this.currentIntensity) * 0.05;
 
-    // Add tension layer when past 50%
+    // MP3 music: adjust filter and volume for building effect
+    if (this.hasMusicFile && this.musicFilter) {
+      const now = this.audioContext.currentTime;
+
+      // Open up filter as intensity increases: 400Hz -> 20000Hz
+      const filterFreq = 400 + this.currentIntensity * 19600;
+      this.musicFilter.frequency.setTargetAtTime(filterFreq, now, 0.5);
+
+      // Volume builds: 0.15 -> 0.5
+      const vol = 0.15 + this.currentIntensity * 0.35;
+      this.musicGain.gain.setTargetAtTime(vol, now, 0.5);
+      return;
+    }
+
+    // Synth fallback: Add tension layer when past 50%
     if (this.currentIntensity > 0.5 && this.musicOscillators.length < 4) {
       const now = this.audioContext.currentTime;
 
@@ -228,12 +301,23 @@ class AudioEngine {
   stopMusic() {
     if (!this.audioContext) return;
 
+    // Stop MP3 source
+    if (this.musicSource) {
+      try {
+        this.musicSource.stop();
+      } catch (e) {
+        console.debug('Music source stop error (non-critical):', e.message);
+      }
+      this.musicSource = null;
+      this.musicFilter = null;
+    }
+
+    // Stop synth oscillators
     this.musicOscillators.forEach(({ osc, lfo }) => {
       try {
         osc.stop();
         if (lfo) lfo.stop();
       } catch (e) {
-        // Bug Fix #18: Log audio errors for debugging (non-critical)
         console.debug('Audio oscillator stop error (non-critical):', e.message);
       }
     });

@@ -35,6 +35,10 @@ class Game {
 
     this.runEndReason = '';
     this.lastNetWorth = 0;
+
+    // Animation tracking
+    this.rocketShown = false;    // Rocket at $10k
+    this.confettiShown = false;  // Confetti at $1B
   }
 
   // Bug Fix #37: Centralized state checking helpers to reduce duplication
@@ -103,11 +107,20 @@ class Game {
       this.currentTime = new Date();
       this.currentTime.setHours(CONFIG.MARKET_OPEN_HOUR, CONFIG.MARKET_OPEN_MINUTE, 0, 0);
     } else {
-      // Fixed 2-year runs for quarterly target system
-      this.totalDays = CONFIG.FIXED_RUN_YEARS * 365;
+      // Calculate extra years from "Time in the Market" unlocks
+      let extraYears = 0;
+      if (this.progression.data.unlocks.timeInMarket3) extraYears = 3;
+      else if (this.progression.data.unlocks.timeInMarket2) extraYears = 2;
+      else if (this.progression.data.unlocks.timeInMarket1) extraYears = 1;
+
+      const runYears = CONFIG.FIXED_RUN_YEARS + extraYears;
+      this.totalDays = runYears * 365;
       this.currentTime = null;
 
-      console.log(`Starting ${CONFIG.FIXED_RUN_YEARS}-year run (${this.totalDays} days): ${this.selectedYears.start}-${this.selectedYears.end}`);
+      // Update end year to match actual run length
+      this.selectedYears.end = this.selectedYears.start + runYears - 1;
+
+      console.log(`Starting ${runYears}-year run (${this.totalDays} days): ${this.selectedYears.start}-${this.selectedYears.end}`);
     }
 
     // Show loading screen
@@ -144,6 +157,10 @@ class Game {
       }
       this.selectedAsset = assets[0].ticker;
 
+      // Reset animation flags
+      this.rocketShown = false;
+      this.confettiShown = false;
+
       // Start audio
       this.audio.resume();
       this.audio.startMusic();
@@ -151,7 +168,14 @@ class Game {
       this.state = 'playing';
       this.ui.showGame();
       this.ui.update(this);
-      this.startTicker();
+
+      // Show tutorial popup if user hasn't dismissed it
+      const hideTutorial = localStorage.getItem('pastTrading_hideTutorial');
+      if (!hideTutorial) {
+        this.showTutorial();
+      } else {
+        this.startTicker();
+      }
     } catch (error) {
       console.error('Failed to start run:', error);
       alert('Failed to load game data. Please refresh and try again.');
@@ -289,6 +313,24 @@ class Game {
     }
     if (percentChange <= -0.08) {
       this.audio.playLossSound();
+    }
+
+    // Rocket ship when net worth first crosses $10k (only if they started below)
+    if (!this.rocketShown && currentNetWorth >= 10000) {
+      // Only trigger if starting cash was below $10k (otherwise it's meaningless)
+      const startingCash = this.trading.netWorthHistory[0] || CONFIG.STARTING_CASH;
+      if (startingCash < 10000 || this.lastNetWorth < 10000) {
+        this.rocketShown = true;
+        this.spawnRocket();
+      } else {
+        this.rocketShown = true; // Skip silently if they started at/above 10k
+      }
+    }
+
+    // Confetti at $1B net worth
+    if (!this.confettiShown && currentNetWorth >= 1000000000) {
+      this.confettiShown = true;
+      this.spawnConfetti();
     }
 
     this.lastNetWorth = currentNetWorth;
@@ -457,7 +499,7 @@ class Game {
     );
 
     // Get ranking
-    const ranking = this.leaderboard.getRankForScore(this.trading.netWorth, 'longestSurvival');
+    const ranking = this.leaderboard.getRankForScore(this.trading.netWorth, 'highScore');
 
     this.ui.showRunEnd(this, result, ranking);
   }
@@ -645,38 +687,6 @@ class Game {
     this.ui.hideInsiderModal();
   }
 
-  doLiborRig() {
-    if (!this.isPlaying()) return;  // Bug Fix #37
-    if (!this.sec.canDoIllegalAction('liborRigging', this.progression.data, this.progression.data.runCount)) return;
-
-    this.audio.playIllegalAction();
-    const result = this.sec.doLiborRig(this.trading);
-    this.news.addSecNews(result.message, this.currentDay);
-    this.ui.update(this);
-  }
-
-  doPumpAndDump() {
-    if (!this.isPlaying() || !this.selectedAsset) return;  // Bug Fix #37
-    if (!this.sec.canDoIllegalAction('pumpAndDump', this.progression.data, this.progression.data.runCount)) return;
-
-    this.audio.playIllegalAction();
-    const result = this.sec.doPumpAndDump(this.selectedAsset, this.market, this.trading);
-    if (result) {
-      this.news.addSecNews(result.message, this.currentDay);
-    }
-    this.ui.update(this);
-  }
-
-  doWashTrade() {
-    if (!this.isPlaying()) return;  // Bug Fix #37
-    if (!this.sec.canDoIllegalAction('washTrading', this.progression.data, this.progression.data.runCount)) return;
-
-    this.audio.playIllegalAction();
-    const result = this.sec.doWashTrade(this.trading);
-    this.news.addSecNews(result.message, this.currentDay);
-    this.ui.update(this);
-  }
-
   doFrontRun() {
     if (!this.isPlaying()) return;  // Bug Fix #37
     if (!this.sec.canDoIllegalAction('frontRunning', this.progression.data, this.progression.data.runCount)) return;
@@ -712,6 +722,67 @@ class Game {
     }
     this.ui.showTradeResult(result);
     this.ui.update(this);
+  }
+
+  showTutorial() {
+    // Pause the game while tutorial is shown
+    this.stopTicker();
+
+    const modal = document.getElementById('tutorial-modal');
+    const startBtn = document.getElementById('tutorial-start-btn');
+    const dontShowCheckbox = document.getElementById('tutorial-dont-show');
+
+    if (!modal || !startBtn) {
+      this.startTicker();
+      return;
+    }
+
+    modal.classList.remove('hidden');
+
+    const dismiss = () => {
+      if (dontShowCheckbox && dontShowCheckbox.checked) {
+        localStorage.setItem('pastTrading_hideTutorial', 'true');
+      }
+      modal.classList.add('hidden');
+      this.startTicker();
+    };
+
+    startBtn.onclick = dismiss;
+  }
+
+  spawnRocket() {
+    const rocket = document.createElement('div');
+    rocket.className = 'rocket-animation';
+    rocket.textContent = '🚀';
+    document.body.appendChild(rocket);
+
+    setTimeout(() => {
+      if (rocket.parentNode) rocket.parentNode.removeChild(rocket);
+    }, 2500);
+  }
+
+  spawnConfetti() {
+    const container = document.createElement('div');
+    container.className = 'confetti-container';
+    document.body.appendChild(container);
+
+    const colors = ['#00C805', '#5AC8FA', '#BD10E0', '#FFD60A', '#FF5000', '#FFFFFF'];
+    for (let i = 0; i < 80; i++) {
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.left = Math.random() * 100 + '%';
+      piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      piece.style.animationDelay = Math.random() * 1.5 + 's';
+      piece.style.animationDuration = (2 + Math.random() * 2) + 's';
+      piece.style.width = (6 + Math.random() * 8) + 'px';
+      piece.style.height = (6 + Math.random() * 8) + 'px';
+      piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+      container.appendChild(piece);
+    }
+
+    setTimeout(() => {
+      if (container.parentNode) container.parentNode.removeChild(container);
+    }, 5000);
   }
 
   getCurrentDate() {

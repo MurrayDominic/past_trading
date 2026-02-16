@@ -128,12 +128,11 @@ class GameUI {
       this.el.backToMenuBtn.addEventListener('click', () => this.showMenu());
     }
 
-    // Year selection slider (single slider, fixed 2-year window)
+    // Year selection slider
     if (this.el.startYearSlider) {
       this.el.startYearSlider.addEventListener('input', (e) => {
         const startYear = parseInt(e.target.value);
-        const endYear = startYear + CONFIG.FIXED_RUN_YEARS - 1;
-        this.updateYearDisplay(startYear, endYear);
+        this.updateYearDisplay(startYear);
       });
     }
 
@@ -141,10 +140,8 @@ class GameUI {
     document.querySelectorAll('.year-preset-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const startYear = parseInt(btn.dataset.start);
-        const endYear = startYear + CONFIG.FIXED_RUN_YEARS - 1;
-
         this.el.startYearSlider.value = startYear;
-        this.updateYearDisplay(startYear, endYear);
+        this.updateYearDisplay(startYear);
       });
     });
 
@@ -415,11 +412,31 @@ class GameUI {
     }
   }
 
-  updateYearDisplay(startYear, endYear) {
+  getRunYears() {
+    let extraYears = 0;
+    const prog = this.game.progression;
+    if (prog && prog.data) {
+      if (prog.data.unlocks.timeInMarket3) extraYears = 3;
+      else if (prog.data.unlocks.timeInMarket2) extraYears = 2;
+      else if (prog.data.unlocks.timeInMarket1) extraYears = 1;
+    }
+    return CONFIG.FIXED_RUN_YEARS + extraYears;
+  }
+
+  updateYearDisplay(startYear) {
+    const totalYears = this.getRunYears();
+    const endYear = startYear + totalYears - 1;
+
     this.el.startYearDisplay.textContent = startYear;
     this.el.endYearDisplay.textContent = endYear;
 
-    this.el.yearSpanDisplay.textContent = `${CONFIG.FIXED_RUN_YEARS} years (${CONFIG.TOTAL_QUARTERS} quarters)`;
+    this.el.yearSpanDisplay.textContent = `${totalYears} years`;
+
+    // Update subtitle text
+    const subtitle = document.getElementById('year-section-subtitle');
+    if (subtitle) {
+      subtitle.textContent = `Choose when to start your ${totalYears}-year run (2000-2023)`;
+    }
 
     // Store selected years in game object
     this.game.selectedYears = { start: startYear, end: endYear };
@@ -510,6 +527,12 @@ class GameUI {
     // Stats
     this.el.menuPP.textContent = prog.data.prestigePoints.toFixed(1);
     this.el.menuRunCount.textContent = prog.data.runCount;
+
+    // Update year display (may have changed from shop unlocks)
+    if (this.el.startYearSlider) {
+      const currentStart = parseInt(this.el.startYearSlider.value);
+      this.updateYearDisplay(currentStart);
+    }
 
     // Mode selector
     const modes = prog.getAvailableModes();
@@ -780,21 +803,17 @@ class GameUI {
 
   renderLeaderboards() {
     const lb = this.game.leaderboard;
-    const names = lb.getBoardNames();
-    let html = '';
+    const entries = lb.getBoard('highScore');
+    let html = '<h4>Personal High Scores</h4>';
 
-    for (const [id, name] of Object.entries(names)) {
-      const entries = lb.getBoard(id);
-      html += `<h4>${name}</h4>`;
-      if (entries.length === 0) {
-        html += '<p class="muted">No entries yet</p>';
-      } else {
-        html += '<ol class="leaderboard-list">';
-        for (const e of entries.slice(0, 5)) {
-          html += `<li>Run #${e.run} - ${e.display} <span class="muted">(${e.date})</span></li>`;
-        }
-        html += '</ol>';
+    if (entries.length === 0) {
+      html += '<p class="muted">No runs completed yet</p>';
+    } else {
+      html += '<ol class="leaderboard-list">';
+      for (const e of entries.slice(0, 10)) {
+        html += `<li>${e.display} <span class="muted">Run #${e.run} (${e.date})</span></li>`;
       }
+      html += '</ol>';
     }
 
     this.el.menuLeaderboards.innerHTML = html;
@@ -889,6 +908,15 @@ class GameUI {
         ]
       },
       {
+        category: 'Time in the Market',
+        icon: '',
+        nodes: [
+          { id: 'timeInMarket1', name: '+1 Year (3yr)', icon: '', cost: UNLOCKS.timeInMarket1.cost },
+          { id: 'timeInMarket2', name: '+2 Years (4yr)', icon: '', cost: UNLOCKS.timeInMarket2.cost, requires: [UNLOCKS.timeInMarket2.requires] },
+          { id: 'timeInMarket3', name: '+3 Years (5yr)', icon: '', cost: UNLOCKS.timeInMarket3.cost, requires: [UNLOCKS.timeInMarket3.requires] },
+        ]
+      },
+      {
         category: 'Passive Income',
         icon: '',
         nodes: [
@@ -900,10 +928,16 @@ class GameUI {
         category: 'Naughty Activities',
         icon: '',
         nodes: [
-          { id: 'politicalDonations', name: 'PAC Access', icon: '', cost: UNLOCKS.politicalDonations.cost },
           { id: 'insiderNetwork', name: 'Insider Network', icon: '', cost: UNLOCKS.insiderNetwork.cost },
           { id: 'burnerPhone', name: 'Burner Phone', icon: '', cost: UNLOCKS.burnerPhone.cost, requires: [UNLOCKS.burnerPhone.requires] },
           { id: 'caymanShellCorp', name: 'Cayman Shell Corp', icon: '', cost: UNLOCKS.caymanShellCorp.cost, requires: [UNLOCKS.caymanShellCorp.requires] },
+        ]
+      },
+      {
+        category: 'Political',
+        icon: '',
+        nodes: [
+          { id: 'politicalDonations', name: 'PAC Access', icon: '', cost: UNLOCKS.politicalDonations.cost },
         ]
       },
       {
@@ -990,15 +1024,7 @@ class GameUI {
           </div>
         `;
 
-        // Add arrow if not last node
-        if (i < category.nodes.length - 1) {
-          const nextNode = category.nodes[i + 1];
-          const nextUnlocked = prog.data.unlocks[nextNode.id] || false;
-          const nextPrereqsMet = !nextNode.requires || nextNode.requires.every(req => prog.data.unlocks[req]);
-          const nextBlocked = !nextUnlocked && !nextPrereqsMet;
-          const arrowClass = nextBlocked ? 'tree-arrow blocked' : 'tree-arrow';
-          treeHtml += `<div class="${arrowClass}">→</div>`;
-        }
+        // Arrows removed - prerequisite chain shown via "Requires:" text
       }
 
       treeHtml += `</div></div>`;
@@ -1617,21 +1643,6 @@ class GameUI {
       html += `<button class="btn btn-danger action-btn" id="action-insider">Insider Tip</button>`;
     }
 
-    // LIBOR rigging
-    if (game.sec.canDoIllegalAction('liborRigging', prog, prog.runCount)) {
-      html += `<button class="btn btn-danger action-btn" id="action-libor">Rig LIBOR</button>`;
-    }
-
-    // Pump & dump
-    if (game.sec.canDoIllegalAction('pumpAndDump', prog, prog.runCount)) {
-      html += `<button class="btn btn-danger action-btn" id="action-pump">Pump & Dump</button>`;
-    }
-
-    // Wash trading
-    if (game.sec.canDoIllegalAction('washTrading', prog, prog.runCount)) {
-      html += `<button class="btn btn-danger action-btn" id="action-wash">Wash Trade</button>`;
-    }
-
     // Front running
     if (game.sec.canDoIllegalAction('frontRunning', prog, prog.runCount)) {
       html += `<button class="btn btn-danger action-btn" id="action-front">Front Run</button>`;
@@ -1663,9 +1674,6 @@ class GameUI {
     };
 
     bind('action-insider', () => game.doInsiderTrade());
-    bind('action-libor', () => game.doLiborRig());
-    bind('action-pump', () => game.doPumpAndDump());
-    bind('action-wash', () => game.doWashTrade());
     bind('action-front', () => game.doFrontRun());
     bind('action-donate', () => game.makeDonation());
     bind('action-fallguy', () => game.useFallGuy());
@@ -1813,63 +1821,133 @@ class GameUI {
       `;
     }
 
+    // Build trade history table
+    const trades = game.trading.tradeHistory || [];
+    let tradeTableHtml = '';
+    if (trades.length === 0) {
+      tradeTableHtml = '<p class="muted" style="text-align: center; padding: 20px;">No trades this run</p>';
+    } else {
+      tradeTableHtml = `
+        <div class="trade-summary-scroll">
+          <table class="trade-summary-table">
+            <thead>
+              <tr>
+                <th>Day</th>
+                <th>Action</th>
+                <th>Ticker</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Fee</th>
+                <th>P&L</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+      for (const t of trades) {
+        const actionClass = t.action === 'BUY' ? 'positive' : t.action === 'SHORT' ? 'negative' : '';
+        const pnlHtml = t.profit !== undefined
+          ? `<span class="${t.profit >= 0 ? 'positive' : 'negative'}">${t.profit >= 0 ? '+' : ''}${formatMoney(t.profit)}</span>`
+          : '-';
+        tradeTableHtml += `
+          <tr>
+            <td>${t.day}</td>
+            <td class="${actionClass}">${t.action}</td>
+            <td>${t.ticker}</td>
+            <td>${t.quantity.toFixed(2)}</td>
+            <td>${formatPrice(t.price)}</td>
+            <td>${formatMoney(t.fee)}</td>
+            <td>${pnlHtml}</td>
+          </tr>
+        `;
+      }
+      tradeTableHtml += '</tbody></table></div>';
+    }
+
     this.el.runEndStats.innerHTML = `
       ${rankingHTML}
-      <div class="stat-grid">
-        <div class="stat-item">
-          <span class="stat-label">Final Net Worth</span>
-          <span class="stat-value">${formatMoney(rec.netWorth)}</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">Profit</span>
-          <span class="stat-value ${rec.profit >= 0 ? 'positive' : 'negative'}">${rec.profit >= 0 ? '+' : ''}${formatMoney(rec.profit)}</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">Days Survived</span>
-          <span class="stat-value">${rec.days} / ${game.totalDays}</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">Total Trades</span>
-          <span class="stat-value">${rec.trades}</span>
-        </div>
-        <div class="stat-item highlight">
-          <span class="stat-label">Sharpe Ratio</span>
-          <span class="stat-value text-accent">${rec.sharpe || '0.00'}</span>
-        </div>
-        <div class="stat-item highlight">
-          <span class="stat-label">Win Rate</span>
-          <span class="stat-value text-accent">${rec.winRate || '0.0%'}</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">Winning Trades</span>
-          <span class="stat-value text-success">${rec.winningTrades || 0}</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">Losing Trades</span>
-          <span class="stat-value text-danger">${rec.losingTrades || 0}</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">Illegal Actions</span>
-          <span class="stat-value ${rec.illegalActions > 0 ? 'text-danger' : 'text-success'}">${rec.illegalActions}</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">Max SEC Attention</span>
-          <span class="stat-value">${Math.round(rec.maxSecAttention)}%</span>
-        </div>
-        <div class="stat-item highlight">
-          <span class="stat-label">Quarters Completed</span>
-          <span class="stat-value text-accent">${game.quarterly.completedLevels} / ${CONFIG.TOTAL_QUARTERS}</span>
-        </div>
-        <div class="stat-item highlight">
-          <span class="stat-label">Prestige Earned</span>
-          <span class="stat-value text-accent">+${result.pp.toFixed(1)} PP</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">Total Prestige</span>
-          <span class="stat-value">${game.progression.data.prestigePoints.toFixed(1)} PP</span>
+
+      <div class="run-end-tabs">
+        <button class="run-end-tab active" data-tab="stats">Stats</button>
+        <button class="run-end-tab" data-tab="trades">Trade History (${trades.length})</button>
+      </div>
+
+      <div class="run-end-tab-content active" data-tab-content="stats">
+        <div class="stat-grid">
+          <div class="stat-item">
+            <span class="stat-label">Final Net Worth</span>
+            <span class="stat-value">${formatMoney(rec.netWorth)}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Profit</span>
+            <span class="stat-value ${rec.profit >= 0 ? 'positive' : 'negative'}">${rec.profit >= 0 ? '+' : ''}${formatMoney(rec.profit)}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Days Survived</span>
+            <span class="stat-value">${rec.days} / ${game.totalDays}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Total Trades</span>
+            <span class="stat-value">${rec.trades}</span>
+          </div>
+          <div class="stat-item highlight">
+            <span class="stat-label">Sharpe Ratio</span>
+            <span class="stat-value text-accent">${rec.sharpe || '0.00'}</span>
+          </div>
+          <div class="stat-item highlight">
+            <span class="stat-label">Win Rate</span>
+            <span class="stat-value text-accent">${rec.winRate || '0.0%'}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Winning Trades</span>
+            <span class="stat-value text-success">${rec.winningTrades || 0}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Losing Trades</span>
+            <span class="stat-value text-danger">${rec.losingTrades || 0}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Illegal Actions</span>
+            <span class="stat-value ${rec.illegalActions > 0 ? 'text-danger' : 'text-success'}">${rec.illegalActions}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Max SEC Attention</span>
+            <span class="stat-value">${Math.round(rec.maxSecAttention)}%</span>
+          </div>
+          <div class="stat-item highlight">
+            <span class="stat-label">Quarters Completed</span>
+            <span class="stat-value text-accent">${game.quarterly.completedLevels} / ${CONFIG.TOTAL_QUARTERS}</span>
+          </div>
+          <div class="stat-item highlight">
+            <span class="stat-label">Prestige Earned</span>
+            <span class="stat-value text-accent">+${result.pp.toFixed(1)} PP</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Total Prestige</span>
+            <span class="stat-value">${game.progression.data.prestigePoints.toFixed(1)} PP</span>
+          </div>
         </div>
       </div>
+
+      <div class="run-end-tab-content" data-tab-content="trades">
+        ${tradeTableHtml}
+      </div>
     `;
+
+    // Bind tab switching
+    this.el.runEndStats.querySelectorAll('.run-end-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const tabName = tab.dataset.tab;
+
+        // Update active tab button
+        this.el.runEndStats.querySelectorAll('.run-end-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        // Show corresponding content
+        this.el.runEndStats.querySelectorAll('.run-end-tab-content').forEach(c => c.classList.remove('active'));
+        const content = this.el.runEndStats.querySelector(`[data-tab-content="${tabName}"]`);
+        if (content) content.classList.add('active');
+      });
+    });
 
     // New achievements
     let achHtml = '';

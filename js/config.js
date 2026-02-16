@@ -44,10 +44,7 @@ const CONFIG = {
     95: 'Grand jury convened'
   },
   INSIDER_TRADE_SEC_HIT: 12,
-  LIBOR_RIG_SEC_HIT: 25,
   FRONT_RUN_SEC_HIT: 15,
-  PUMP_DUMP_SEC_HIT: 20,
-  WASH_TRADE_SEC_HIT: 10,
   SUSPICIOUS_RETURN_THRESHOLD: 0.15, // 15% daily return triggers suspicion
   SUSPICIOUS_RETURN_SEC_HIT: 3,
 
@@ -358,6 +355,11 @@ const UNLOCKS = {
   // --- Stealth Extension ---
   ghostMode:     { name: 'Ghost Mode', cost: 35, description: 'SEC attention grows 60% slower', category: 'stealth', survReduction: 0.60, requires: 'lowerSurv2' },
 
+  // --- Time Extension ---
+  timeInMarket1: { name: 'Time in the Market I', cost: 8, description: 'Run lasts 3 years instead of 2', category: 'time', extraYears: 1 },
+  timeInMarket2: { name: 'Time in the Market II', cost: 18, description: 'Run lasts 4 years instead of 2', category: 'time', extraYears: 2, requires: 'timeInMarket1' },
+  timeInMarket3: { name: 'Time in the Market III', cost: 35, description: 'Run lasts 5 years instead of 2', category: 'time', extraYears: 3, requires: 'timeInMarket2' },
+
   // --- Passive Income ---
   dividendPortfolio: { name: 'Dividend Portfolio', cost: 10, description: 'Earn 0.1% of net worth per day passively', category: 'passive', passivePercent: 0.001 },
   hedgeFundFee:      { name: 'Hedge Fund Fee', cost: 20, description: 'Earn 0.2% of net worth per day passively', category: 'passive', passivePercent: 0.002, requires: 'dividendPortfolio' },
@@ -548,13 +550,6 @@ const ILLEGAL_ACTIONS = {
     profitMultiplier: 1.5,
     requires: 'insiderNetwork'
   },
-  liborRigging: {
-    name: 'LIBOR Rigging',
-    description: 'Manipulate benchmark rates. Guaranteed profit. Maximum heat.',
-    secHit: CONFIG.LIBOR_RIG_SEC_HIT,
-    profitMultiplier: 2.0,
-    unlockRun: 8
-  },
   frontRunning: {
     name: 'Front Running',
     description: 'Trade ahead of large orders you know about.',
@@ -562,20 +557,6 @@ const ILLEGAL_ACTIONS = {
     profitMultiplier: 1.3,
     requires: 'hedgeFund'
   },
-  pumpAndDump: {
-    name: 'Pump & Dump',
-    description: 'Inflate a stock, dump it on retail. Classic.',
-    secHit: CONFIG.PUMP_DUMP_SEC_HIT,
-    profitMultiplier: 2.5,
-    unlockRun: 4
-  },
-  washTrading: {
-    name: 'Wash Trading',
-    description: 'Fake volume to manipulate prices.',
-    secHit: CONFIG.WASH_TRADE_SEC_HIT,
-    profitMultiplier: 1.2,
-    unlockRun: 3
-  }
 };
 
 // ============================================================================

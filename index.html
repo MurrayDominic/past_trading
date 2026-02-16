@@ -35,7 +35,7 @@
       <!-- Year Selection -->
       <div class="menu-section">
         <h2>⏰ Select Starting Year</h2>
-        <p class="section-subtitle">Choose when to start your 2-year run (2000-2023)</p>
+        <p class="section-subtitle" id="year-section-subtitle">Choose when to start your 2-year run (2000-2023)</p>
         <div class="year-selection-container">
           <div class="year-range-display">
             <div class="year-display-box">
@@ -48,7 +48,7 @@
               <div class="year-value" id="end-year-display">2009</div>
             </div>
             <div class="year-info">
-              <span id="year-span-display">2 years (8 quarters)</span>
+              <span id="year-span-display">2 years</span>
             </div>
           </div>
           <div class="year-slider-container">
@@ -346,6 +346,45 @@
         <div class="insider-buttons">
           <button class="btn btn-danger" id="insider-accept">Accept Tip</button>
           <button class="btn" id="insider-ignore">Ignore</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tutorial Popup -->
+    <div id="tutorial-modal" class="tutorial-modal hidden">
+      <div class="tutorial-content">
+        <h2>How to Play</h2>
+        <div class="tutorial-body">
+          <p><strong>You're a time traveler with knowledge of the future.</strong> Use it to trade stocks and build your fortune - but don't attract too much attention from the SEC.</p>
+          <div class="tutorial-tips">
+            <div class="tutorial-tip">
+              <span class="tutorial-tip-icon">📈</span>
+              <span><strong>Buy & Sell:</strong> Select a stock from the left panel, enter a dollar amount, and click Buy. Close positions from the Positions panel.</span>
+            </div>
+            <div class="tutorial-tip">
+              <span class="tutorial-tip-icon">🎯</span>
+              <span><strong>Quarterly Targets:</strong> Hit net worth milestones each quarter or get fired. Early completion gives bonus time for the next target.</span>
+            </div>
+            <div class="tutorial-tip">
+              <span class="tutorial-tip-icon">🔍</span>
+              <span><strong>SEC Attention:</strong> Trading too well raises suspicion. If SEC Attention hits 100%, you get arrested and the run ends.</span>
+            </div>
+            <div class="tutorial-tip">
+              <span class="tutorial-tip-icon">⏱️</span>
+              <span><strong>Speed Controls:</strong> Use speed buttons (0.5x - 50x) or press Space to pause. Each tick = 1 trading day.</span>
+            </div>
+            <div class="tutorial-tip">
+              <span class="tutorial-tip-icon">🏆</span>
+              <span><strong>Prestige Points:</strong> Earned by hitting quarterly targets. Spend them in the Shop to unlock upgrades for future runs.</span>
+            </div>
+          </div>
+        </div>
+        <div class="tutorial-footer">
+          <label class="tutorial-checkbox-label">
+            <input type="checkbox" id="tutorial-dont-show">
+            Don't show this again
+          </label>
+          <button class="btn btn-primary" id="tutorial-start-btn">Start Trading</button>
         </div>
       </div>
     </div>

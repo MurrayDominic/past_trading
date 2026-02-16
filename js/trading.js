@@ -136,11 +136,19 @@ class TradingEngine {
     const feePercent = CONFIG.BASE_FEE_PERCENT * modeConfig.feeMod * (1 - feeReduction);
 
     // Calculate shares from dollar amount
-    const fee = dollarAmount * feePercent / 100;
-    const cashNeeded = dollarAmount / leverage + fee;
+    let fee = dollarAmount * feePercent / 100;
+    let cashNeeded = dollarAmount / leverage + fee;
 
+    // Auto-reduce amount if fees push it slightly over available cash
     if (cashNeeded > this.cash) {
-      return { success: false, message: `Need ${formatMoney(cashNeeded)}, have ${formatMoney(this.cash)}` };
+      const maxAffordable = Math.floor(this.cash * leverage / (1 + feePercent / (100 * leverage)));
+      if (maxAffordable > 0) {
+        dollarAmount = maxAffordable;
+        fee = dollarAmount * feePercent / 100;
+        cashNeeded = dollarAmount / leverage + fee;
+      } else {
+        return { success: false, message: `Need ${formatMoney(cashNeeded)}, have ${formatMoney(this.cash)}` };
+      }
     }
 
     // Calculate quantity (float, not int)

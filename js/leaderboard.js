@@ -5,11 +5,7 @@
 class LeaderboardSystem {
   constructor() {
     this.boards = {
-      riskAdjusted: [],    // Best Sharpe ratio
-      longestSurvival: [],  // Most days
-      cleanestRun: [],      // Best profit, no illegal
-      mostBrazen: [],       // Best profit before arrest
-      speedrun: [],         // Fastest to $1M
+      highScore: [],    // Personal best net worth
     };
   }
 
@@ -17,7 +13,14 @@ class LeaderboardSystem {
     try {
       const saved = localStorage.getItem('pastTrading_leaderboards');
       if (saved) {
-        this.boards = JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // Migration: if old format, keep highScore or convert longestSurvival
+        if (parsed.highScore) {
+          this.boards = { highScore: parsed.highScore };
+        } else {
+          // Old save - start fresh
+          this.boards = { highScore: [] };
+        }
       }
     } catch (e) {
       console.warn('Failed to load leaderboards:', e);
@@ -36,52 +39,20 @@ class LeaderboardSystem {
     const netWorth = tradingEngine.netWorth;
     const profit = netWorth - CONFIG.STARTING_CASH;
     const stats = tradingEngine.stats;
-    const hist = tradingEngine.netWorthHistory;
-
-    // Calculate Sharpe ratio
-    const returns = [];
-    for (let i = 1; i < hist.length; i++) {
-      if (hist[i - 1] > 0) {
-        returns.push((hist[i] - hist[i - 1]) / hist[i - 1]);
-      }
-    }
-    let sharpe = 0;
-    if (returns.length > 1) {
-      const mean = returns.reduce((a, b) => a + b, 0) / returns.length;
-      const variance = returns.reduce((a, b) => a + (b - mean) ** 2, 0) / returns.length;
-      const std = Math.sqrt(variance);
-      sharpe = std > 0 ? (mean / std) * Math.sqrt(252) : 0;
-    }
 
     const entry = {
       run: runNumber,
       date: new Date().toLocaleDateString(),
     };
 
-    // Risk-adjusted return
-    this.addEntry('riskAdjusted', { ...entry, score: sharpe, display: `Sharpe: ${sharpe.toFixed(2)}` }, (a, b) => b.score - a.score);
-
-    // Longest survival
-    this.addEntry('longestSurvival', { ...entry, score: currentDay, display: `${currentDay} days` }, (a, b) => b.score - a.score);
-
-    // Cleanest run
-    if (stats.illegalActions === 0) {
-      this.addEntry('cleanestRun', { ...entry, score: profit, display: formatMoney(profit) }, (a, b) => b.score - a.score);
-    }
-
-    // Most brazen
-    if (wasArrested) {
-      this.addEntry('mostBrazen', { ...entry, score: stats.maxNetWorth, display: formatMoney(stats.maxNetWorth) }, (a, b) => b.score - a.score);
-    }
-
-    // Speedrun to $1M
-    if (stats.maxNetWorth >= 1000000) {
-      let dayTo1M = hist.length;
-      for (let i = 0; i < hist.length; i++) {
-        if (hist[i] >= 1000000) { dayTo1M = i; break; }
-      }
-      this.addEntry('speedrun', { ...entry, score: dayTo1M, display: `${dayTo1M} days to $1M` }, (a, b) => a.score - b.score);
-    }
+    // Personal high score by net worth
+    this.addEntry('highScore', {
+      ...entry,
+      score: netWorth,
+      display: formatMoney(netWorth),
+      profit: formatMoney(profit),
+      days: currentDay,
+    }, (a, b) => b.score - a.score);
 
     this.save();
   }
@@ -100,32 +71,18 @@ class LeaderboardSystem {
 
   getBoardNames() {
     return {
-      riskAdjusted: 'Best Risk-Adjusted Return',
-      longestSurvival: 'Longest Survival',
-      cleanestRun: 'Cleanest Run (No Crime)',
-      mostBrazen: 'Most Brazen (Before Arrest)',
-      speedrun: 'Speedrun to $1M',
+      highScore: 'Personal High Scores',
     };
   }
 
   getRankForScore(score, boardName) {
-    const board = this.boards[boardName] || [];
+    const board = this.boards[boardName || 'highScore'] || [];
     if (board.length === 0) return { rank: null, isRanked: false };
 
-    // Bug Fix #13: Detect sort order based on board type
-    // Speedrun board sorts ascending (lower is better), others sort descending (higher is better)
-    const isAscending = (boardName === 'speedrun');
-
-    // Find position in sorted board
+    // Find position in sorted board (descending - higher is better)
     let rank = 1;
     for (const entry of board) {
-      if (isAscending) {
-        // For ascending boards (speedrun), break if our score is lower
-        if (score < entry.score) break;
-      } else {
-        // For descending boards, break if our score is higher
-        if (score > entry.score) break;
-      }
+      if (score > entry.score) break;
       rank++;
     }
 
