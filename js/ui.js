@@ -548,6 +548,19 @@ class GameUI {
     this.el.menuPP.textContent = prog.data.prestigePoints.toFixed(1);
     this.el.menuRunCount.textContent = prog.data.runCount;
 
+    // Billion progress bar
+    const GOAL = 1e9;
+    const bestNet = prog.data.runHistory.length > 0
+      ? Math.max(...prog.data.runHistory.map(r => r.netWorth))
+      : 0;
+    const pct = Math.min(100, (bestNet / GOAL) * 100);
+    const bestValueEl = document.getElementById('billion-best-value');
+    const pctEl = document.getElementById('billion-pct');
+    const fillEl = document.getElementById('billion-fill');
+    if (bestValueEl) bestValueEl.textContent = formatMoney(bestNet);
+    if (pctEl) pctEl.textContent = pct < 0.01 && bestNet > 0 ? '<0.01%' : pct.toFixed(2) + '%';
+    if (fillEl) fillEl.style.width = Math.max(pct, bestNet > 0 ? 0.5 : 0) + '%';
+
     // Update year display (may have changed from shop unlocks)
     if (this.el.startYearSlider) {
       const currentStart = parseInt(this.el.startYearSlider.value);
