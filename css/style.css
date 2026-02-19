@@ -346,7 +346,7 @@ input[type="range"]::-webkit-slider-thumb {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  min-height: 100vh;
+  height: 100vh;
   background: var(--rh-black);
   padding: var(--spacing-xl) 0;
   overflow-y: auto;
@@ -2408,6 +2408,13 @@ canvas {
   min-height: 0;
 }
 
+.quarterly-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 1px;
+}
+
 .quarterly-header {
   display: flex;
   align-items: center;
@@ -2457,6 +2464,12 @@ canvas {
 
 .quarterly-badge.locked {
   opacity: 0.3;
+}
+
+.quarterly-stage-label {
+  font-size: 14px;
+  color: var(--rh-text-secondary);
+  font-family: var(--font-mono);
 }
 
 .quarterly-label {
@@ -2529,18 +2542,20 @@ canvas {
 .quarterly-timer {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  font-size: 12px;
+  align-items: baseline;
 }
 
 .quarterly-timer-label {
-  color: var(--rh-text-tertiary);
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
 }
 
 .quarterly-timer-value {
+  font-size: 24px;
   font-family: var(--font-mono);
   font-weight: 700;
-  color: var(--rh-text);
+  color: #fff;
 }
 
 .quarterly-timer-value.urgent {

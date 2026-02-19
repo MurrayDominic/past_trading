@@ -450,6 +450,15 @@ class GameUI {
 
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
+      // F11 fullscreen toggle (works on any screen)
+      if (e.key === 'F11') {
+        e.preventDefault();
+        if (window.electronAPI && window.electronAPI.toggleFullscreen) {
+          window.electronAPI.toggleFullscreen();
+        }
+        return;
+      }
+
       if (this.game.state !== 'playing' && this.game.state !== 'paused') return;
 
       switch (e.key) {

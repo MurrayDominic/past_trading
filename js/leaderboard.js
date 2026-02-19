@@ -11,9 +11,8 @@ class LeaderboardSystem {
 
   load() {
     try {
-      const saved = localStorage.getItem('pastTrading_leaderboards');
-      if (saved) {
-        const parsed = JSON.parse(saved);
+      const parsed = saveManager.load('pastTrading_leaderboards');
+      if (parsed) {
         // Migration: if old format, keep highScore or convert longestSurvival
         if (parsed.highScore) {
           this.boards = { highScore: parsed.highScore };
@@ -29,7 +28,7 @@ class LeaderboardSystem {
 
   save() {
     try {
-      localStorage.setItem('pastTrading_leaderboards', JSON.stringify(this.boards));
+      saveManager.save('pastTrading_leaderboards', this.boards);
     } catch (e) {
       console.warn('Failed to save leaderboards:', e);
     }

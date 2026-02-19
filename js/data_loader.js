@@ -1,10 +1,12 @@
 // DataLoader - Loads and manages historical market data from JSON files
+// Supports both Electron (Node.js fs) and browser (fetch) modes
 class DataLoader {
   constructor() {
     this.cache = new Map();
     this.newsEvents = null;
     this.baseUrl = 'assets/market_data/';
     this.startDate = null;
+    this.isElectron = !!(window.electronAPI && window.electronAPI.isElectron);
   }
 
   async loadAssetData(ticker, category) {
@@ -14,12 +16,28 @@ class DataLoader {
     }
 
     try {
-      const response = await fetch(`${this.baseUrl}${category}/${ticker}.json`);
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: Failed to load ${ticker}`);
+      let data;
+      const relativePath = `${this.baseUrl}${category}/${ticker}.json`;
+
+      if (this.isElectron) {
+        // Try compressed first, then uncompressed fallback
+        const compressedPath = `${this.baseUrl}compressed/${category}/${ticker}.json.gz`;
+        const cachePath = window.electronAPI.getCachePath(category, `${ticker}.json`);
+        let raw = window.electronAPI.readCompressedFile(compressedPath, cachePath);
+        if (!raw) {
+          // Fallback to uncompressed (development mode)
+          raw = window.electronAPI.readFile(relativePath);
+        }
+        if (!raw) throw new Error(`File not found: ${relativePath}`);
+        data = JSON.parse(raw);
+      } else {
+        const response = await fetch(relativePath);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: Failed to load ${ticker}`);
+        }
+        data = await response.json();
       }
 
-      const data = await response.json();
       this.cache.set(ticker, data);
 
       // Set start date from first loaded asset's actual OHLC data
@@ -38,12 +56,21 @@ class DataLoader {
     if (this.newsEvents) return this.newsEvents;
 
     try {
-      const response = await fetch(`${this.baseUrl}news_events.json`);
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+      let data;
+      const relativePath = `${this.baseUrl}news_events.json`;
+
+      if (this.isElectron) {
+        const raw = window.electronAPI.readFile(relativePath);
+        if (!raw) throw new Error('News events file not found');
+        data = JSON.parse(raw);
+      } else {
+        const response = await fetch(relativePath);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        data = await response.json();
       }
 
-      const data = await response.json();
       this.newsEvents = data.market_events || [];
       return this.newsEvents;
     } catch (error) {

@@ -304,25 +304,26 @@
       <div class="chart-container" id="chart-container"></div>
       <!-- Quarterly Target Panel -->
       <div class="quarterly-target-panel" id="quarterly-panel">
+        <div class="quarterly-title">Target</div>
         <div class="quarterly-header">
           <div class="quarterly-level-badges" id="quarterly-badges"></div>
-          <div class="quarterly-label" id="quarterly-label">Q1 Y1</div>
+          <div class="quarterly-stage-label">Stage: <span class="quarterly-label" id="quarterly-label">Q1 Y1</span></div>
         </div>
         <div class="quarterly-target-info">
-          <div class="quarterly-target-amount">
-            <span class="quarterly-target-label">TARGET</span>
-            <span class="quarterly-target-value" id="quarterly-target-value">$2,000</span>
-          </div>
           <div class="quarterly-earnings-amount">
             <span class="quarterly-earnings-label">NET WORTH</span>
             <span class="quarterly-earnings-value" id="quarterly-earnings-value">$0</span>
+          </div>
+          <div class="quarterly-target-amount">
+            <span class="quarterly-target-label">TARGET</span>
+            <span class="quarterly-target-value" id="quarterly-target-value">$2,000</span>
           </div>
         </div>
         <div class="quarterly-progress-bar">
           <div class="quarterly-progress-fill" id="quarterly-progress-fill" style="width: 0%"></div>
         </div>
         <div class="quarterly-timer">
-          <span class="quarterly-timer-label">Days remaining:</span>
+          <span class="quarterly-timer-label">Days remaining</span>
           <span class="quarterly-timer-value" id="quarterly-timer-value">91</span>
         </div>
       </div>
@@ -493,6 +494,7 @@
   <!-- ============================================================ -->
   <script src="js/sp500_tickers.js"></script>
   <script src="js/config.js"></script>
+  <script src="js/save_manager.js"></script>
   <script src="js/data_loader.js"></script>
   <script src="js/market.js"></script>
   <script src="js/trading.js"></script>

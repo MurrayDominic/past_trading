@@ -1,0 +1,81 @@
+{
+  "name": "past-trading",
+  "productName": "Second Chance at a Billion",
+  "version": "1.0.0",
+  "description": "Travel back in time. Trade with foresight. Try not to get arrested.",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "start:dev": "cross-env ELECTRON_DEV=1 electron .",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "compress-data": "node scripts/compress_market_data.js"
+  },
+  "build": {
+    "appId": "com.pasttrading.game",
+    "productName": "Second Chance at a Billion",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "js/**/*",
+      "css/**/*",
+      "index.html",
+      "assets/music/**/*",
+      "assets/market_data/news_events.json",
+      "!assets/market_data/stocks/**",
+      "!assets/market_data/commodities/**",
+      "!assets/market_data/crypto/**",
+      "!assets/market_data/etfs/**",
+      "!assets/market_data/compressed/**",
+      "!scripts/**",
+      "!*.py",
+      "!*.bat",
+      "!*.md",
+      "!*.log"
+    ],
+    "extraResources": [
+      {
+        "from": "assets/market_data/compressed/",
+        "to": "market_data_archives",
+        "filter": [
+          "**/*.gz"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "dir"
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "assets/icon.icns"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "icon": "assets/icon.png"
+    }
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "electron": "^33.4.11",
+    "electron-builder": "^25.0.0"
+  },
+  "dependencies": {
+    "steamworks.js": "^0.3.0"
+  }
+}

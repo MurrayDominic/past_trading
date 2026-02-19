@@ -45,10 +45,20 @@ class AudioEngine {
 
   async preloadMusic() {
     try {
-      const response = await fetch('assets/music/background.mp3');
-      if (!response.ok) throw new Error('No music file found');
+      let arrayBuffer;
 
-      const arrayBuffer = await response.arrayBuffer();
+      if (window.electronAPI && window.electronAPI.isElectron) {
+        // Electron: read file via Node.js fs
+        const uint8 = window.electronAPI.readFileBuffer('assets/music/background.mp3');
+        if (!uint8) throw new Error('No music file found');
+        arrayBuffer = uint8.buffer;
+      } else {
+        // Browser: fetch as usual
+        const response = await fetch('assets/music/background.mp3');
+        if (!response.ok) throw new Error('No music file found');
+        arrayBuffer = await response.arrayBuffer();
+      }
+
       this.musicBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
       this.hasMusicFile = true;
       console.log('Background music loaded successfully');

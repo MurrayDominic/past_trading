@@ -33,11 +33,13 @@ class ProgressionSystem {
 
   load() {
     try {
-      const saved = localStorage.getItem('pastTrading_progression');
-      if (saved) {
+      // Migrate localStorage to file saves on first Electron launch
+      saveManager.migrateFromLocalStorage();
+
+      const savedData = saveManager.load('pastTrading_progression');
+      if (savedData) {
         // Bug Fix #34: Deep merge instead of shallow copy for nested objects
         const defaultData = this.getDefaultData();
-        const savedData = JSON.parse(saved);
 
         // Merge top-level properties
         this.data = { ...defaultData, ...savedData };
@@ -79,10 +81,10 @@ class ProgressionSystem {
         }
 
         // MIGRATION: Move old tutorial flag into progression data
-        const oldTutorialFlag = localStorage.getItem('pastTrading_hideTutorial');
+        const oldTutorialFlag = saveManager.load('pastTrading_hideTutorial');
         if (oldTutorialFlag) {
           this.data.hideTutorial = true;
-          localStorage.removeItem('pastTrading_hideTutorial');
+          saveManager.remove('pastTrading_hideTutorial');
           this.save();
         }
       }
@@ -92,26 +94,10 @@ class ProgressionSystem {
   }
 
   save() {
-    // Bug Fix #14: LocalStorage quota handling with compression fallback
     try {
-      localStorage.setItem('pastTrading_progression', JSON.stringify(this.data));
+      saveManager.save('pastTrading_progression', this.data);
     } catch (e) {
-      if (e.name === 'QuotaExceededError') {
-        console.warn('LocalStorage quota exceeded, attempting compression...');
-        try {
-          // Trim run history to last 20 entries
-          if (this.data.runHistory && this.data.runHistory.length > 20) {
-            this.data.runHistory = this.data.runHistory.slice(-20);
-          }
-          localStorage.setItem('pastTrading_progression', JSON.stringify(this.data));
-          console.log('Successfully saved with compressed data');
-        } catch (e2) {
-          console.error('Failed to save even with compression:', e2);
-          alert('Save failed: Storage quota exceeded. Some progress may be lost.');
-        }
-      } else {
-        console.warn('Failed to save progression:', e);
-      }
+      console.warn('Failed to save progression:', e);
     }
   }
 
@@ -207,6 +193,11 @@ class ProgressionSystem {
         if (achievement.check(stats)) {
           this.data.earnedAchievements[id] = true;
           newlyEarned.push({ id, ...achievement });
+
+          // Fire Steam achievement if available
+          if (window.electronAPI && window.electronAPI.steam) {
+            window.electronAPI.steam.unlockAchievement(id);
+          }
         }
       } catch (e) {
         // Bug Fix #20: Log achievement check failures for debugging
