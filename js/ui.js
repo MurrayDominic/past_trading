@@ -20,6 +20,7 @@ class GameUI {
     this.el = {
       menuScreen: document.getElementById('menu-screen'),
       shopScreen: document.getElementById('shop-screen'),
+      yearSelectScreen: document.getElementById('year-select-screen'),
       gameScreen: document.getElementById('game-screen'),
       runEndScreen: document.getElementById('run-end-screen'),
       loadingOverlay: document.getElementById('loading-overlay'),
@@ -83,7 +84,6 @@ class GameUI {
       startYearSlider: document.getElementById('start-year-slider'),
       startYearDisplay: document.getElementById('start-year-display'),
       endYearDisplay: document.getElementById('end-year-display'),
-      yearSpanDisplay: document.getElementById('year-span-display'),
 
       // Quarterly Target Panel
       quarterlyPanel: document.getElementById('quarterly-panel'),
@@ -128,15 +128,13 @@ class GameUI {
       this.el.backToMenuBtn.addEventListener('click', () => this.showMenu());
     }
 
-    // Year selection slider
+    // Year selection screen
     if (this.el.startYearSlider) {
       this.el.startYearSlider.addEventListener('input', (e) => {
         const startYear = parseInt(e.target.value);
         this.updateYearDisplay(startYear);
       });
     }
-
-    // Year preset buttons (single start year)
     document.querySelectorAll('.year-preset-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const startYear = parseInt(btn.dataset.start);
@@ -144,6 +142,18 @@ class GameUI {
         this.updateYearDisplay(startYear);
       });
     });
+    const yearSelectBackBtn = document.getElementById('year-select-back-btn');
+    if (yearSelectBackBtn) {
+      yearSelectBackBtn.addEventListener('click', () => this.showMenu());
+    }
+    const yearSelectStartBtn = document.getElementById('year-select-start-btn');
+    if (yearSelectStartBtn) {
+      yearSelectStartBtn.addEventListener('click', () => {
+        if (this._pendingMode) {
+          this.game.startRun(this._pendingMode);
+        }
+      });
+    }
 
     // Speed controls
     document.querySelectorAll('.speed-btn').forEach(btn => {
@@ -388,6 +398,7 @@ class GameUI {
 
   showMenu() {
     this.el.menuScreen.classList.remove('hidden');
+    this.el.yearSelectScreen.classList.add('hidden');
     this.el.gameScreen.classList.add('hidden');
     this.el.runEndScreen.classList.add('hidden');
     this.el.shopScreen.classList.add('hidden');
@@ -405,11 +416,21 @@ class GameUI {
 
   showLoading() {
     this.el.menuScreen.classList.add('hidden');
+    this.el.yearSelectScreen.classList.add('hidden');
     this.el.gameScreen.classList.add('hidden');
     this.el.runEndScreen.classList.add('hidden');
     if (this.el.loadingOverlay) {
       this.el.loadingOverlay.classList.remove('hidden');
     }
+  }
+
+  showYearSelect(mode) {
+    this._pendingMode = mode;
+    this.el.menuScreen.classList.add('hidden');
+    this.el.yearSelectScreen.classList.remove('hidden');
+    // Refresh the year display with current run length
+    const startYear = parseInt(this.el.startYearSlider.value);
+    this.updateYearDisplay(startYear);
   }
 
   getRunYears() {
@@ -430,8 +451,6 @@ class GameUI {
     this.el.startYearDisplay.textContent = startYear;
     this.el.endYearDisplay.textContent = endYear;
 
-    this.el.yearSpanDisplay.textContent = `${totalYears} years`;
-
     // Update subtitle text
     const subtitle = document.getElementById('year-section-subtitle');
     if (subtitle) {
@@ -444,6 +463,7 @@ class GameUI {
 
   showGame() {
     this.el.menuScreen.classList.add('hidden');
+    this.el.yearSelectScreen.classList.add('hidden');
     this.el.gameScreen.classList.remove('hidden');
     this.el.runEndScreen.classList.add('hidden');
     if (this.el.loadingOverlay) {
@@ -609,10 +629,10 @@ class GameUI {
       });
     });
 
-    // Bind start buttons
+    // Bind start buttons - go to year selection screen
     document.querySelectorAll('.start-run-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        this.game.startRun(btn.dataset.mode);
+        this.showYearSelect(btn.dataset.mode);
       });
     });
 
@@ -823,6 +843,7 @@ class GameUI {
 
   showShop() {
     this.el.menuScreen.classList.add('hidden');
+    this.el.yearSelectScreen.classList.add('hidden');
     this.el.shopScreen.classList.remove('hidden');
     this.renderShop();
   }
@@ -1780,6 +1801,7 @@ class GameUI {
 
   showRunEnd(game, result, ranking = null) {
     this.el.menuScreen.classList.add('hidden');
+    this.el.yearSelectScreen.classList.add('hidden');
     this.el.gameScreen.classList.add('hidden');
     this.el.runEndScreen.classList.remove('hidden');
 

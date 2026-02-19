@@ -286,6 +286,39 @@ input[type="range"]::-webkit-slider-thumb {
   text-align: center;
 }
 
+/* ======== YEAR SELECT SCREEN ======== */
+#year-select-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--rh-black);
+}
+
+.year-select-container {
+  max-width: 700px;
+  width: 90%;
+  padding: var(--spacing-xl);
+  text-align: center;
+}
+
+.year-select-container > #year-select-back-btn {
+  float: left;
+  margin-bottom: var(--spacing-lg);
+}
+
+.year-select-title {
+  font-size: 32px;
+  margin-bottom: var(--spacing-sm);
+  clear: both;
+}
+
+#year-select-start-btn {
+  margin-top: var(--spacing-xl);
+  padding: 16px 48px;
+  font-size: 18px;
+}
+
 .year-selection-container {
   width: 100%;
   background: var(--rh-panel);
@@ -332,21 +365,6 @@ input[type="range"]::-webkit-slider-thumb {
 .year-arrow {
   font-size: 32px;
   color: var(--rh-text-secondary);
-}
-
-.year-info {
-  background: var(--rh-darker);
-  border: 2px solid var(--rh-accent);
-  border-radius: 8px;
-  padding: var(--spacing-md);
-  text-align: center;
-  min-width: 150px;
-}
-
-.year-info span {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--rh-accent);
 }
 
 .year-slider-container {

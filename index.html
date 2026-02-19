@@ -32,38 +32,6 @@
         <button class="btn btn-accent" id="open-shop-btn">Shop</button>
       </div>
 
-      <!-- Year Selection -->
-      <div class="menu-section">
-        <h2>⏰ Select Starting Year</h2>
-        <p class="section-subtitle" id="year-section-subtitle">Choose when to start your 2-year run (2000-2023)</p>
-        <div class="year-selection-container">
-          <div class="year-range-display">
-            <div class="year-display-box">
-              <label>Start Year</label>
-              <div class="year-value" id="start-year-display">2008</div>
-            </div>
-            <div class="year-arrow">→</div>
-            <div class="year-display-box">
-              <label>End Year</label>
-              <div class="year-value" id="end-year-display">2009</div>
-            </div>
-            <div class="year-info">
-              <span id="year-span-display">2 years</span>
-            </div>
-          </div>
-          <div class="year-slider-container">
-            <input type="range" id="start-year-slider" min="2000" max="2023" value="2008" class="year-slider">
-          </div>
-          <div class="year-presets">
-            <button class="btn btn-small year-preset-btn" data-start="2007">2008 Crisis</button>
-            <button class="btn btn-small year-preset-btn" data-start="2020">2020 Pandemic</button>
-            <button class="btn btn-small year-preset-btn" data-start="2000">Dot-com Bubble</button>
-            <button class="btn btn-small year-preset-btn" data-start="2017">Crypto Boom</button>
-            <button class="btn btn-small year-preset-btn" data-start="2022">Recent Market</button>
-          </div>
-        </div>
-      </div>
-
       <!-- Trading Modes -->
       <div class="menu-section">
         <h2>Select Mode</h2>
@@ -126,6 +94,41 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- YEAR SELECTION SCREEN                                          -->
+  <!-- ============================================================ -->
+  <div id="year-select-screen" class="hidden">
+    <div class="year-select-container">
+      <button class="btn btn-small" id="year-select-back-btn">← Back to Menu</button>
+      <h1 class="year-select-title">Select Starting Year</h1>
+      <p class="section-subtitle" id="year-section-subtitle">Choose when to start your run (2000-2023)</p>
+      <div class="year-selection-container">
+        <div class="year-range-display">
+          <div class="year-display-box">
+            <label>Start Year</label>
+            <div class="year-value" id="start-year-display">2008</div>
+          </div>
+          <div class="year-arrow">→</div>
+          <div class="year-display-box">
+            <label>End Year</label>
+            <div class="year-value" id="end-year-display">2009</div>
+          </div>
+        </div>
+        <div class="year-slider-container">
+          <input type="range" id="start-year-slider" min="2000" max="2023" value="2008" class="year-slider">
+        </div>
+        <div class="year-presets">
+          <button class="btn btn-small year-preset-btn" data-start="2007">2008 Crisis</button>
+          <button class="btn btn-small year-preset-btn" data-start="2020">2020 Pandemic</button>
+          <button class="btn btn-small year-preset-btn" data-start="2000">Dot-com Bubble</button>
+          <button class="btn btn-small year-preset-btn" data-start="2017">Crypto Boom</button>
+          <button class="btn btn-small year-preset-btn" data-start="2022">Recent Market</button>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-large" id="year-select-start-btn">Start Run</button>
     </div>
   </div>
 

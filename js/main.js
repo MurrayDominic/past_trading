@@ -170,8 +170,7 @@ class Game {
       this.ui.update(this);
 
       // Show tutorial popup if user hasn't dismissed it
-      const hideTutorial = localStorage.getItem('pastTrading_hideTutorial');
-      if (!hideTutorial) {
+      if (!this.progression.data.hideTutorial) {
         this.showTutorial();
       } else {
         this.startTicker();
@@ -741,7 +740,8 @@ class Game {
 
     const dismiss = () => {
       if (dontShowCheckbox && dontShowCheckbox.checked) {
-        localStorage.setItem('pastTrading_hideTutorial', 'true');
+        this.progression.data.hideTutorial = true;
+        this.progression.save();
       }
       modal.classList.add('hidden');
       this.startTicker();

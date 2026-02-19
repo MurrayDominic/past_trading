@@ -18,6 +18,7 @@ class ProgressionSystem {
       ownedTools: [],
       equippedTool: null,
       equippedTitle: null,
+      hideTutorial: false,
       earnedAchievements: {},
       runHistory: [],
       bestScores: {
@@ -74,6 +75,14 @@ class ProgressionSystem {
           this.data.unlocks.financeStocks = true;
           this.data.unlocks.healthcareStocks = true;
           console.log('Migrated save: unlocked finance and healthcare sectors');
+          this.save();
+        }
+
+        // MIGRATION: Move old tutorial flag into progression data
+        const oldTutorialFlag = localStorage.getItem('pastTrading_hideTutorial');
+        if (oldTutorialFlag) {
+          this.data.hideTutorial = true;
+          localStorage.removeItem('pastTrading_hideTutorial');
           this.save();
         }
       }
