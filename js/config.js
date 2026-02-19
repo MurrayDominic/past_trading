@@ -356,9 +356,9 @@ const UNLOCKS = {
   ghostMode:     { name: 'Ghost Mode', cost: 35, description: 'SEC attention grows 60% slower', category: 'stealth', survReduction: 0.60, requires: 'lowerSurv2' },
 
   // --- Time Extension ---
-  timeInMarket1: { name: 'Time in the Market I', cost: 8, description: 'Run lasts 3 years instead of 2', category: 'time', extraYears: 1 },
-  timeInMarket2: { name: 'Time in the Market II', cost: 18, description: 'Run lasts 4 years instead of 2', category: 'time', extraYears: 2, requires: 'timeInMarket1' },
-  timeInMarket3: { name: 'Time in the Market III', cost: 35, description: 'Run lasts 5 years instead of 2', category: 'time', extraYears: 3, requires: 'timeInMarket2' },
+  timeInMarket1: { name: 'Time in the Market I', cost: 8, description: '1 year head start — 1 year and 1 quarter to hit your first target', category: 'time', extraYears: 1 },
+  timeInMarket2: { name: 'Time in the Market II', cost: 18, description: '2 year head start — 2 years and 1 quarter to hit your first target', category: 'time', extraYears: 2, requires: 'timeInMarket1' },
+  timeInMarket3: { name: 'Time in the Market III', cost: 35, description: '3 year head start — 3 years and 1 quarter to hit your first target', category: 'time', extraYears: 3, requires: 'timeInMarket2' },
 
   // --- Passive Income ---
   dividendPortfolio: { name: 'Dividend Portfolio', cost: 10, description: 'Earn 0.1% of net worth per day passively', category: 'passive', passivePercent: 0.001 },
@@ -375,7 +375,7 @@ const UNLOCKS = {
   lobbyistNetwork:   { name: 'Lobbyist Network', cost: 18, description: 'SEC attention decay rate doubled', category: 'connections', decayMultiplier: 2.0, requires: 'politicianRetainer' },
 
   // --- Survival ---
-  goldenParachute: { name: 'Golden Parachute', cost: 20, description: 'Earn 50% bonus PP when fired for missing targets', category: 'survival' },
+  goldenParachute: { name: 'Golden Parachute', cost: 20, description: 'Earn 50% bonus points when fired for missing targets', category: 'survival' },
   fallGuy:         { name: 'Fall Guy', cost: 30, description: 'Once per run: blame someone else (-40 SEC attention)', category: 'survival', secReduction: 40, requires: 'goldenParachute' },
   bailFund:        { name: 'Bail Fund', cost: 40, description: 'Survive one arrest per run (SEC resets to 60)', category: 'survival', requires: 'fallGuy' },
 };
@@ -498,7 +498,7 @@ const ACHIEVEMENTS = {
     check: (stats) => stats.illegalActions === 0 && stats.survived,
     title: true,
     titleBonus: { prestigeBonus: 0.50 },
-    titleDescription: '+50% prestige points'
+    titleDescription: '+50% points'
   },
   speedDemon: {
     name: 'Speed Demon',

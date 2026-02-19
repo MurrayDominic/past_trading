@@ -8,20 +8,27 @@ class QuarterlyTargetSystem {
     this.completedLevels = 0;
     this.ppEarned = 0;
     this.fired = false;
+    this.dayOffset = 0;
   }
 
-  init(startingNetWorth) {
+  init(startingNetWorth, dayOffset = 0) {
     this.currentQuarter = 0;
     this.completedLevels = 0;
     this.ppEarned = 0;
     this.fired = false;
+    this.dayOffset = dayOffset;  // Days before quarterly targets start counting
   }
 
   // Called every tick. Returns { fired, levelUp, levelUpInfo, failInfo }
   // Targets are total net worth thresholds - hit it at any point and you pass.
   // Remaining time carries over because quarter deadlines are fixed at multiples of 91.
+  // dayOffset shifts all quarter deadlines forward (head start period before targets begin).
   tick(currentDay, currentNetWorth) {
     if (this.fired || this.isAllComplete()) return { fired: false, levelUp: false };
+
+    // During head start period, no target checking
+    const adjustedDay = currentDay - this.dayOffset;
+    if (adjustedDay < 0) return { fired: false, levelUp: false };
 
     let leveledUp = false;
     let levelUpInfo = null;
@@ -67,8 +74,8 @@ class QuarterlyTargetSystem {
     }
 
     // Check if quarter time expired without meeting target
-    // Quarter deadlines are fixed at (n+1)*91, so early passes give bonus time on next level
-    const quarterEndDay = (this.currentQuarter + 1) * CONFIG.QUARTER_DAYS;
+    // Quarter deadlines are fixed at offset + (n+1)*91
+    const quarterEndDay = this.dayOffset + (this.currentQuarter + 1) * CONFIG.QUARTER_DAYS;
     if (currentDay >= quarterEndDay) {
       this.fired = true;
       const target = this.getCurrentTarget();
@@ -95,12 +102,12 @@ class QuarterlyTargetSystem {
   }
 
   getDaysRemainingInQuarter(currentDay) {
-    const quarterEndDay = (this.currentQuarter + 1) * CONFIG.QUARTER_DAYS;
+    const quarterEndDay = this.dayOffset + (this.currentQuarter + 1) * CONFIG.QUARTER_DAYS;
     return Math.max(0, quarterEndDay - currentDay);
   }
 
   getQuarterProgress(currentDay) {
-    const quarterStartDay = this.currentQuarter * CONFIG.QUARTER_DAYS;
+    const quarterStartDay = this.dayOffset + this.currentQuarter * CONFIG.QUARTER_DAYS;
     const daysIntoQuarter = currentDay - quarterStartDay;
     return Math.min(1, daysIntoQuarter / CONFIG.QUARTER_DAYS);
   }
@@ -123,5 +130,10 @@ class QuarterlyTargetSystem {
 
   isAllComplete() {
     return this.completedLevels >= CONFIG.TOTAL_QUARTERS;
+  }
+
+  // Whether still in head start period (before targets begin)
+  isInHeadStart(currentDay) {
+    return currentDay < this.dayOffset;
   }
 }

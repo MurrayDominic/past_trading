@@ -7,6 +7,7 @@ class ChartManager {
     this.tabBarEl = tabBarEl;
     this.nextId = 0;
     this.timeRange = 'max';  // Time range filter: 7, 30, 252, or 'max'
+    this.onTabChange = null;  // callback(ticker) when active tab changes
   }
 
   setTimeRange(range) {
@@ -60,6 +61,10 @@ class ChartManager {
     });
     this.activeTabId = id;
     this.renderTabBar();
+    const activeTab = this.tabs.find(t => t.id === id);
+    if (activeTab && this.onTabChange) {
+      this.onTabChange(activeTab.ticker);
+    }
   }
 
   renderTabBar() {

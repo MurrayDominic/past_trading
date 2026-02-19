@@ -281,7 +281,7 @@ class ProgressionSystem {
     }
 
     if (this.data.prestigePoints < unlock.cost) {
-      return { success: false, message: `Need ${unlock.cost} PP, have ${this.data.prestigePoints.toFixed(1)}` };
+      return { success: false, message: `Need ${unlock.cost} Pts, have ${this.data.prestigePoints.toFixed(1)}` };
     }
 
     this.data.prestigePoints -= unlock.cost;
@@ -326,7 +326,7 @@ class ProgressionSystem {
 
     const cost = mode.unlockCost || 0;
     if (this.data.prestigePoints < cost) {
-      return { success: false, message: `Need ${cost} PP, have ${this.data.prestigePoints.toFixed(1)}` };
+      return { success: false, message: `Need ${cost} Pts, have ${this.data.prestigePoints.toFixed(1)}` };
     }
 
     this.data.prestigePoints -= cost;
@@ -384,7 +384,7 @@ class ProgressionSystem {
     }
 
     if (this.data.prestigePoints < tool.cost) {
-      return { success: false, message: `Need ${tool.cost} PP, have ${this.data.prestigePoints.toFixed(1)}` };
+      return { success: false, message: `Need ${tool.cost} Pts, have ${this.data.prestigePoints.toFixed(1)}` };
     }
 
     this.data.prestigePoints -= tool.cost;

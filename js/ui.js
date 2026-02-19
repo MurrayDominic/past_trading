@@ -20,6 +20,7 @@ class GameUI {
     this.el = {
       menuScreen: document.getElementById('menu-screen'),
       shopScreen: document.getElementById('shop-screen'),
+      settingsScreen: document.getElementById('settings-screen'),
       yearSelectScreen: document.getElementById('year-select-screen'),
       gameScreen: document.getElementById('game-screen'),
       runEndScreen: document.getElementById('run-end-screen'),
@@ -128,11 +129,81 @@ class GameUI {
       this.el.backToMenuBtn.addEventListener('click', () => this.showMenu());
     }
 
+    // Settings navigation
+    const openSettingsBtn = document.getElementById('open-settings-btn');
+    if (openSettingsBtn) {
+      openSettingsBtn.addEventListener('click', () => this.showSettings());
+    }
+    const settingsBackBtn = document.getElementById('settings-back-btn');
+    if (settingsBackBtn) {
+      settingsBackBtn.addEventListener('click', () => this.showMenu());
+    }
+
+    // Settings controls
+    const settingsVolume = document.getElementById('settings-volume');
+    if (settingsVolume) {
+      settingsVolume.addEventListener('input', (e) => {
+        const val = e.target.value / 100;
+        this.game.audio.setVolume(val);
+        document.getElementById('settings-volume-value').textContent = e.target.value + '%';
+        // Sync in-game slider if it exists
+        if (this.el.volumeSlider) this.el.volumeSlider.value = e.target.value;
+      });
+    }
+    const settingsMuteBtn = document.getElementById('settings-mute-btn');
+    if (settingsMuteBtn) {
+      settingsMuteBtn.addEventListener('click', () => {
+        const muted = this.game.audio.toggleMute();
+        settingsMuteBtn.textContent = muted ? 'On' : 'Off';
+        settingsMuteBtn.classList.toggle('active', muted);
+        if (this.el.muteBtn) this.el.muteBtn.textContent = muted ? '🔇' : '🔊';
+      });
+    }
+    const settingsTutorialBtn = document.getElementById('settings-tutorial-btn');
+    if (settingsTutorialBtn) {
+      settingsTutorialBtn.addEventListener('click', () => {
+        this.game.progression.data.hideTutorial = !this.game.progression.data.hideTutorial;
+        this.game.progression.save();
+        this.renderSettingsState();
+      });
+    }
+    const settingsHowToPlayBtn = document.getElementById('settings-howtoplay-btn');
+    if (settingsHowToPlayBtn) {
+      settingsHowToPlayBtn.addEventListener('click', () => {
+        this.game.showTutorial();
+      });
+    }
+    const settingsResetBtn = document.getElementById('settings-reset-btn');
+    if (settingsResetBtn) {
+      settingsResetBtn.addEventListener('click', () => {
+        if (confirm('Reset ALL progress? This cannot be undone.')) {
+          this.game.progression.resetProgress();
+          this.showMenu();
+        }
+      });
+    }
+
     // Year selection screen
     if (this.el.startYearSlider) {
       this.el.startYearSlider.addEventListener('input', (e) => {
         const startYear = parseInt(e.target.value);
         this.updateYearDisplay(startYear);
+      });
+    }
+    if (this.el.startYearDisplay) {
+      this.el.startYearDisplay.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value);
+        if (val >= 2000 && val <= 2023) {
+          this.el.startYearSlider.value = val;
+          this.updateYearDisplay(val);
+        }
+      });
+      this.el.startYearDisplay.addEventListener('blur', (e) => {
+        let val = parseInt(e.target.value);
+        if (isNaN(val) || val < 2000) val = 2000;
+        if (val > 2023) val = 2023;
+        this.el.startYearSlider.value = val;
+        this.updateYearDisplay(val);
       });
     }
     document.querySelectorAll('.year-preset-btn').forEach(btn => {
@@ -399,6 +470,7 @@ class GameUI {
   showMenu() {
     this.el.menuScreen.classList.remove('hidden');
     this.el.yearSelectScreen.classList.add('hidden');
+    this.el.settingsScreen.classList.add('hidden');
     this.el.gameScreen.classList.add('hidden');
     this.el.runEndScreen.classList.add('hidden');
     this.el.shopScreen.classList.add('hidden');
@@ -417,6 +489,7 @@ class GameUI {
   showLoading() {
     this.el.menuScreen.classList.add('hidden');
     this.el.yearSelectScreen.classList.add('hidden');
+    this.el.settingsScreen.classList.add('hidden');
     this.el.gameScreen.classList.add('hidden');
     this.el.runEndScreen.classList.add('hidden');
     if (this.el.loadingOverlay) {
@@ -448,7 +521,7 @@ class GameUI {
     const totalYears = this.getRunYears();
     const endYear = startYear + totalYears - 1;
 
-    this.el.startYearDisplay.textContent = startYear;
+    this.el.startYearDisplay.value = startYear;
     this.el.endYearDisplay.textContent = endYear;
 
     // Update subtitle text
@@ -464,6 +537,7 @@ class GameUI {
   showGame() {
     this.el.menuScreen.classList.add('hidden');
     this.el.yearSelectScreen.classList.add('hidden');
+    this.el.settingsScreen.classList.add('hidden');
     this.el.gameScreen.classList.remove('hidden');
     this.el.runEndScreen.classList.add('hidden');
     if (this.el.loadingOverlay) {
@@ -485,6 +559,9 @@ class GameUI {
         this.el.chartContainer,
         this.el.chartTabsBar
       );
+      this.chartManager.onTabChange = (ticker) => {
+        this.game.selectedAsset = ticker;
+      };
 
       // Add default tab for first asset
       if (this.game.selectedAsset) {
@@ -607,13 +684,13 @@ class GameUI {
               <p>${mode.description}</p>
               <div class="mode-lock-info">
                 <span class="lock-icon">🔒</span>
-                <span class="mode-cost">${mode.unlockCost} PP Required</span>
+                <span class="mode-cost">${mode.unlockCost} Pts Required</span>
               </div>
             </div>
             <button class="btn ${canAfford ? 'btn-accent' : 'btn-disabled'} unlock-mode-btn"
                     data-unlock-mode="${mode.id}"
                     ${canAfford ? '' : 'disabled'}>
-              ${canAfford ? `Unlock (${mode.unlockCost} PP)` : 'Insufficient PP'}
+              ${canAfford ? `Unlock (${mode.unlockCost} Pts)` : 'Insufficient Pts'}
             </button>
           </div>
         `;
@@ -671,7 +748,7 @@ class GameUI {
           <div class="shop-tile ${stateClass}" data-unlock="${unlock.id}">
             <div class="shop-tile-header">
               <div class="shop-tile-name">${unlock.name}</div>
-              <div class="shop-tile-cost">${unlock.cost} PP</div>
+              <div class="shop-tile-cost">${unlock.cost} Pts</div>
             </div>
             <div class="shop-tile-description">${unlock.description}</div>
             <button class="btn btn-small ${canAfford ? 'btn-accent' : 'btn-disabled'}"
@@ -733,7 +810,7 @@ class GameUI {
           <div class="shop-tile ${canPurchase ? 'affordable' : 'locked'}">
             <div class="shop-tile-header">
               <div class="shop-tile-name">${tool.name}</div>
-              <div class="shop-tile-cost">${tool.cost} PP</div>
+              <div class="shop-tile-cost">${tool.cost} Pts</div>
             </div>
             <div class="shop-tile-description">${tool.description}</div>
             ${!hasRequirement ? `<div class="muted" style="font-size: 11px; margin-top: 4px;">Requires: ${UNLOCKS[tool.requires]?.name}</div>` : ''}
@@ -857,8 +934,37 @@ class GameUI {
   showShop() {
     this.el.menuScreen.classList.add('hidden');
     this.el.yearSelectScreen.classList.add('hidden');
+    this.el.settingsScreen.classList.add('hidden');
     this.el.shopScreen.classList.remove('hidden');
     this.renderShop();
+  }
+
+  showSettings() {
+    this.el.menuScreen.classList.add('hidden');
+    this.el.settingsScreen.classList.remove('hidden');
+    this.renderSettingsState();
+  }
+
+  renderSettingsState() {
+    const volumeSlider = document.getElementById('settings-volume');
+    const volumeValue = document.getElementById('settings-volume-value');
+    const muteBtn = document.getElementById('settings-mute-btn');
+    const tutorialBtn = document.getElementById('settings-tutorial-btn');
+
+    if (volumeSlider) {
+      const vol = Math.round(this.game.audio.volume * 100);
+      volumeSlider.value = vol;
+      if (volumeValue) volumeValue.textContent = vol + '%';
+    }
+    if (muteBtn) {
+      muteBtn.textContent = this.game.audio.muted ? 'On' : 'Off';
+      muteBtn.classList.toggle('active', this.game.audio.muted);
+    }
+    if (tutorialBtn) {
+      const showTutorial = !this.game.progression.data.hideTutorial;
+      tutorialBtn.textContent = showTutorial ? 'On' : 'Off';
+      tutorialBtn.classList.toggle('active', showTutorial);
+    }
   }
 
   renderShop() {
@@ -1053,7 +1159,7 @@ class GameUI {
         treeHtml += `
           <div class="tree-node ${statusClass}" data-node-id="${node.id}" ${!prereqsMet ? `data-blocked-reason="Requires: ${UNLOCKS[missingPrereq]?.name || missingPrereq}"` : ''}>
             <div class="node-name">${node.name}</div>
-            <div class="node-cost">${node.cost} PP</div>
+            <div class="node-cost">${node.cost} Pts</div>
             <div class="node-status ${statusClass}">${statusText}</div>
           </div>
         `;
@@ -1144,7 +1250,7 @@ class GameUI {
       <div class="detail-header">
         <div class="detail-icon">${nodeData.icon}</div>
         <div class="detail-name">${nodeData.name}</div>
-        <div class="detail-cost">${nodeData.cost} PP</div>
+        <div class="detail-cost">${nodeData.cost} Pts</div>
       </div>
 
       <div class="detail-section">
@@ -1169,9 +1275,9 @@ class GameUI {
     } else if (!prereqsMet) {
       detailHtml += `<button class="btn btn-disabled" disabled>Prerequisites Not Met</button>`;
     } else if (!canAfford) {
-      detailHtml += `<button class="btn btn-disabled" disabled>Cannot Afford (${nodeData.cost} PP)</button>`;
+      detailHtml += `<button class="btn btn-disabled" disabled>Cannot Afford (${nodeData.cost} Pts)</button>`;
     } else {
-      detailHtml += `<button class="btn btn-accent" data-unlock="${nodeId}">Unlock for ${nodeData.cost} PP</button>`;
+      detailHtml += `<button class="btn btn-accent" data-unlock="${nodeId}">Unlock for ${nodeData.cost} Pts</button>`;
     }
 
     detailHtml += `</div>`;
@@ -1741,6 +1847,9 @@ class GameUI {
     if (q.isAllComplete()) {
       this.el.quarterlyLabel.textContent = 'COMPLETE';
       this.el.quarterlyLabel.style.color = 'var(--rh-green)';
+    } else if (q.isInHeadStart(game.currentDay)) {
+      this.el.quarterlyLabel.textContent = 'HEAD START';
+      this.el.quarterlyLabel.style.color = 'var(--rh-accent)';
     } else {
       this.el.quarterlyLabel.textContent = q.getQuarterLabel();
       this.el.quarterlyLabel.style.color = '';
@@ -1815,6 +1924,7 @@ class GameUI {
   showRunEnd(game, result, ranking = null) {
     this.el.menuScreen.classList.add('hidden');
     this.el.yearSelectScreen.classList.add('hidden');
+    this.el.settingsScreen.classList.add('hidden');
     this.el.gameScreen.classList.add('hidden');
     this.el.runEndScreen.classList.remove('hidden');
 
@@ -1953,12 +2063,12 @@ class GameUI {
             <span class="stat-value text-accent">${game.quarterly.completedLevels} / ${CONFIG.TOTAL_QUARTERS}</span>
           </div>
           <div class="stat-item highlight">
-            <span class="stat-label">Prestige Earned</span>
-            <span class="stat-value text-accent">+${result.pp.toFixed(1)} PP</span>
+            <span class="stat-label">Points Earned</span>
+            <span class="stat-value text-accent">+${result.pp.toFixed(1)} Pts</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">Total Prestige</span>
-            <span class="stat-value">${game.progression.data.prestigePoints.toFixed(1)} PP</span>
+            <span class="stat-label">Total Points</span>
+            <span class="stat-value">${game.progression.data.prestigePoints.toFixed(1)} Pts</span>
           </div>
         </div>
       </div>

@@ -30,7 +30,7 @@
 
       <div class="menu-stats">
         <div class="stat-card">
-          <h3>Prestige Points</h3>
+          <h3>Points</h3>
           <div class="stat-value" id="menu-pp">0</div>
         </div>
         <div class="stat-card">
@@ -42,6 +42,7 @@
       <!-- Navigation Buttons -->
       <div class="menu-nav-buttons">
         <button class="btn btn-accent" id="open-shop-btn">Shop</button>
+        <button class="btn btn-secondary" id="open-settings-btn">Settings</button>
       </div>
 
       <!-- Trading Modes -->
@@ -68,12 +69,6 @@
         <div id="menu-leaderboards"></div>
       </div>
 
-      <!-- Reset -->
-      <div class="menu-section" style="text-align: center; padding: 20px 0;">
-        <button class="btn btn-danger" onclick="if(confirm('Reset ALL progress?')) { game.progression.resetProgress(); game.showMenu(); }">
-          Reset Progress
-        </button>
-      </div>
     </div>
   </div>
 
@@ -86,7 +81,7 @@
         <button class="btn btn-small" id="back-to-menu-btn">← Back to Menu</button>
         <h1>Progression Shop</h1>
         <div class="shop-pp-display">
-          <span class="pp-label">Prestige Points:</span>
+          <span class="pp-label">Points:</span>
           <span class="pp-value" id="shop-pp">0</span>
         </div>
       </div>
@@ -110,6 +105,67 @@
   </div>
 
   <!-- ============================================================ -->
+  <!-- SETTINGS SCREEN                                                -->
+  <!-- ============================================================ -->
+  <div id="settings-screen" class="hidden">
+    <div class="settings-container">
+      <button class="btn btn-small" id="settings-back-btn">← Back to Menu</button>
+      <h1 class="settings-title">Settings</h1>
+
+      <!-- Audio -->
+      <div class="settings-group">
+        <h2 class="settings-group-title">Audio</h2>
+        <div class="settings-row">
+          <span class="settings-label">Volume</span>
+          <div class="settings-control">
+            <input type="range" id="settings-volume" min="0" max="100" value="70" class="settings-slider">
+            <span class="settings-value" id="settings-volume-value">70%</span>
+          </div>
+        </div>
+        <div class="settings-row">
+          <span class="settings-label">Mute</span>
+          <div class="settings-control">
+            <button class="btn btn-small settings-toggle" id="settings-mute-btn">Off</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game -->
+      <div class="settings-group">
+        <h2 class="settings-group-title">Game</h2>
+        <div class="settings-row">
+          <span class="settings-label">Show tutorial on new run</span>
+          <div class="settings-control">
+            <button class="btn btn-small settings-toggle" id="settings-tutorial-btn">On</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Help -->
+      <div class="settings-group">
+        <h2 class="settings-group-title">Help</h2>
+        <div class="settings-row">
+          <span class="settings-label">Learn how to play the game</span>
+          <div class="settings-control">
+            <button class="btn btn-small btn-primary" id="settings-howtoplay-btn">How to Play</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data -->
+      <div class="settings-group">
+        <h2 class="settings-group-title">Data</h2>
+        <div class="settings-row">
+          <span class="settings-label">Erase all unlocks, run history, and achievements</span>
+          <div class="settings-control">
+            <button class="btn btn-small btn-danger" id="settings-reset-btn">Reset Progress</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
   <!-- YEAR SELECTION SCREEN                                          -->
   <!-- ============================================================ -->
   <div id="year-select-screen" class="hidden">
@@ -121,7 +177,7 @@
         <div class="year-range-display">
           <div class="year-display-box">
             <label>Start Year</label>
-            <div class="year-value" id="start-year-display">2008</div>
+            <input type="number" class="year-value year-input" id="start-year-display" min="2000" max="2023" value="2008">
           </div>
           <div class="year-arrow">→</div>
           <div class="year-display-box">
@@ -365,45 +421,6 @@
       </div>
     </div>
 
-    <!-- Tutorial Popup -->
-    <div id="tutorial-modal" class="tutorial-modal hidden">
-      <div class="tutorial-content">
-        <h2>How to Play</h2>
-        <div class="tutorial-body">
-          <p><strong>You're a time traveler with knowledge of the future.</strong> Use it to trade stocks and build your fortune - but don't attract too much attention from the SEC.</p>
-          <div class="tutorial-tips">
-            <div class="tutorial-tip">
-              <span class="tutorial-tip-icon">📈</span>
-              <span><strong>Buy & Sell:</strong> Select a stock from the left panel, enter a dollar amount, and click Buy. Close positions from the Positions panel.</span>
-            </div>
-            <div class="tutorial-tip">
-              <span class="tutorial-tip-icon">🎯</span>
-              <span><strong>Quarterly Targets:</strong> Hit net worth milestones each quarter or get fired. Early completion gives bonus time for the next target.</span>
-            </div>
-            <div class="tutorial-tip">
-              <span class="tutorial-tip-icon">🔍</span>
-              <span><strong>SEC Attention:</strong> Trading too well raises suspicion. If SEC Attention hits 100%, you get arrested and the run ends.</span>
-            </div>
-            <div class="tutorial-tip">
-              <span class="tutorial-tip-icon">⏱️</span>
-              <span><strong>Speed Controls:</strong> Use speed buttons (0.5x - 50x) or press Space to pause. Each tick = 1 trading day.</span>
-            </div>
-            <div class="tutorial-tip">
-              <span class="tutorial-tip-icon">🏆</span>
-              <span><strong>Prestige Points:</strong> Earned by hitting quarterly targets. Spend them in the Shop to unlock upgrades for future runs.</span>
-            </div>
-          </div>
-        </div>
-        <div class="tutorial-footer">
-          <label class="tutorial-checkbox-label">
-            <input type="checkbox" id="tutorial-dont-show">
-            Don't show this again
-          </label>
-          <button class="btn btn-primary" id="tutorial-start-btn">Start Trading</button>
-        </div>
-      </div>
-    </div>
-
     <!-- Loading Overlay -->
     <div id="loading-overlay" class="loading-overlay hidden">
       <div class="loading-spinner"></div>
@@ -427,6 +444,47 @@
       <div id="run-end-achievements"></div>
 
       <button class="btn btn-primary mt-2" id="back-to-menu">BACK TO MENU</button>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- TUTORIAL POPUP (global - accessible from any screen)           -->
+  <!-- ============================================================ -->
+  <div id="tutorial-modal" class="tutorial-modal hidden">
+    <div class="tutorial-content">
+      <h2>How to Play</h2>
+      <div class="tutorial-body">
+        <p><strong>You're a time traveler with knowledge of the future.</strong> Use it to trade stocks and build your fortune - but don't attract too much attention from the SEC.</p>
+        <div class="tutorial-tips">
+          <div class="tutorial-tip">
+            <span class="tutorial-tip-icon">📈</span>
+            <span><strong>Buy & Sell:</strong> Select a stock from the left panel, enter a dollar amount, and click Buy. Close positions from the Positions panel.</span>
+          </div>
+          <div class="tutorial-tip">
+            <span class="tutorial-tip-icon">🎯</span>
+            <span><strong>Quarterly Targets:</strong> Hit net worth milestones each quarter or get fired. Early completion gives bonus time for the next target.</span>
+          </div>
+          <div class="tutorial-tip">
+            <span class="tutorial-tip-icon">🔍</span>
+            <span><strong>SEC Attention:</strong> Trading too well raises suspicion. If SEC Attention hits 100%, you get arrested and the run ends.</span>
+          </div>
+          <div class="tutorial-tip">
+            <span class="tutorial-tip-icon">⏱️</span>
+            <span><strong>Speed Controls:</strong> Use speed buttons (0.5x - 50x) or press Space to pause. Each tick = 1 trading day.</span>
+          </div>
+          <div class="tutorial-tip">
+            <span class="tutorial-tip-icon">🏆</span>
+            <span><strong>Points:</strong> Earned by hitting quarterly targets. Spend them in the Shop to unlock upgrades for future runs.</span>
+          </div>
+        </div>
+      </div>
+      <div class="tutorial-footer">
+        <label class="tutorial-checkbox-label">
+          <input type="checkbox" id="tutorial-dont-show">
+          Don't show this again
+        </label>
+        <button class="btn btn-primary" id="tutorial-start-btn">Start Trading</button>
+      </div>
     </div>
   </div>
 

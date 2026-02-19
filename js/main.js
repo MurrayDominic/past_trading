@@ -146,7 +146,12 @@ class Game {
         timeoutPromise
       ]);
       this.trading.init(CONFIG.STARTING_CASH, this.progression.data);
-      this.quarterly.init(CONFIG.STARTING_CASH);
+      // Extra years are added at the START as a head start before targets begin
+      let extraYearDays = 0;
+      if (this.progression.data.unlocks.timeInMarket3) extraYearDays = 3 * 365;
+      else if (this.progression.data.unlocks.timeInMarket2) extraYearDays = 2 * 365;
+      else if (this.progression.data.unlocks.timeInMarket1) extraYearDays = 1 * 365;
+      this.quarterly.init(CONFIG.STARTING_CASH, extraYearDays);
       this.sec.init();
       this.news.init(this.dataLoader);
 
@@ -285,10 +290,10 @@ class Game {
     if (quarterResult.levelUp) {
       const info = quarterResult.levelUpInfo;
       if (info.allComplete) {
-        this.news.addNews(`ALL 8 QUARTERLY TARGETS COMPLETE! Bonus: +${info.bonusPP} PP`, 'milestone', this.currentDay);
+        this.news.addNews(`ALL 8 QUARTERLY TARGETS COMPLETE! Bonus: +${info.bonusPP} Pts`, 'milestone', this.currentDay);
       } else {
         this.news.addNews(
-          `NET WORTH TARGET HIT! Level ${info.level} complete (+${info.pp} PP). Next: reach ${formatMoney(this.quarterly.getCurrentTarget().target)}`,
+          `NET WORTH TARGET HIT! Level ${info.level} complete (+${info.pp} Pts). Next: reach ${formatMoney(this.quarterly.getCurrentTarget().target)}`,
           'milestone', this.currentDay
         );
       }
