@@ -322,7 +322,7 @@ class GameUI {
         if (this.chartManager) {
           this.chartManager.setTimeRange(range);
           // Trigger re-render
-          if (this.game.state === 'playing') {
+          if (this.game.isPlayingOrPaused()) {
             this.chartManager.renderActiveChart(
               this.game.market,
               this.game.currentDay,
@@ -347,7 +347,7 @@ class GameUI {
         this.netWorthTimeRange = range;
 
         // Trigger re-render
-        if (this.game.state === 'playing') {
+        if (this.game.isPlayingOrPaused()) {
           this.renderGraph(this.game);
         }
       });
@@ -357,7 +357,7 @@ class GameUI {
     const maxQtyBtn = document.getElementById('max-qty-btn');
     if (maxQtyBtn) {
       maxQtyBtn.addEventListener('click', () => {
-        if (this.game.state !== 'playing' || !this.game.selectedAsset) return;
+        if (!this.game.isPlayingOrPaused() || !this.game.selectedAsset) return;
 
         const asset = this.game.market.getAsset(this.game.selectedAsset);
         if (!asset) return;
@@ -377,7 +377,7 @@ class GameUI {
     // Quick buy percentage buttons
     document.querySelectorAll('.quick-buy-buttons .btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        if (this.game.state !== 'playing' || !this.game.selectedAsset) return;
+        if (!this.game.isPlayingOrPaused() || !this.game.selectedAsset) return;
 
         const asset = this.game.market.getAsset(this.game.selectedAsset);
         if (!asset) return;
@@ -1506,7 +1506,7 @@ class GameUI {
   }
 
   filterAssets(searchTerm) {
-    if (!this.game || this.game.state !== 'playing') return;
+    if (!this.game || !this.game.isPlayingOrPaused()) return;
 
     // Only show stocks that are live (publicly traded) at the current game date
     const assets = this.game.market.getLiveAssets();

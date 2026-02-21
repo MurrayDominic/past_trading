@@ -511,7 +511,7 @@ class Game {
   // --- Player Actions ---
 
   buyAsset(dollarAmount) {
-    if (!this.isPlaying() || !this.selectedAsset) return;  // Bug Fix #37
+    if (!this.isPlayingOrPaused() || !this.selectedAsset) return;
     if (this.sec.tradeRestricted) {
       this.news.addSecNews('Trade blocked: Under investigation', this.currentDay);
       return;
@@ -541,7 +541,7 @@ class Game {
   }
 
   sellPosition(index) {
-    if (!this.isPlaying()) return;  // Bug Fix #37
+    if (!this.isPlayingOrPaused()) return;
     if (this.sec.tradeRestricted) {
       this.news.addSecNews('Trade blocked: Under investigation', this.currentDay);
       return;
@@ -567,7 +567,7 @@ class Game {
   }
 
   sellPositionByIdentifier(ticker, type, entryDay) {
-    if (!this.isPlaying()) return;  // Bug Fix #37
+    if (!this.isPlayingOrPaused()) return;
     if (this.sec.tradeRestricted) {
       this.news.addSecNews('Trade blocked: Under investigation', this.currentDay);
       return;
@@ -608,7 +608,7 @@ class Game {
   }
 
   shortAsset(dollarAmount) {
-    if (!this.isPlaying() || !this.selectedAsset) return;  // Bug Fix #37
+    if (!this.isPlayingOrPaused() || !this.selectedAsset) return;
     if (this.sec.tradeRestricted) {
       this.news.addSecNews('Trade blocked: Under investigation', this.currentDay);
       return;
@@ -629,7 +629,7 @@ class Game {
   }
 
   doInsiderTrade() {
-    if (!this.isPlaying()) return;  // Bug Fix #37
+    if (!this.isPlayingOrPaused()) return;
     if (!this.sec.canDoIllegalAction('insiderTrading', this.progression.data, this.progression.data.runCount)) {
       return;
     }
@@ -652,7 +652,8 @@ class Game {
       text: `${asset.ticker} will move ${direction} ${magnitude.toFixed(0)}% in ${daysUntil} days`
     };
 
-    // Pause game and show modal
+    // Pause game and show modal (track if we were already paused)
+    this._wasPausedBeforeInsider = this.state === 'paused';
     if (this.isPlaying()) {
       this.togglePause();
     }
@@ -673,8 +674,8 @@ class Game {
 
     this.news.addSecNews(`INSIDER TIP: ${tip.text}`, this.currentDay);
 
-    // Resume game
-    if (this.state === 'paused') {
+    // Resume game only if it wasn't already paused before the modal
+    if (this.state === 'paused' && !this._wasPausedBeforeInsider) {
       this.togglePause();
     }
 
@@ -683,8 +684,8 @@ class Game {
   }
 
   ignoreInsiderTip() {
-    // Just resume game
-    if (this.state === 'paused') {
+    // Resume game only if it wasn't already paused before the modal
+    if (this.state === 'paused' && !this._wasPausedBeforeInsider) {
       this.togglePause();
     }
 
@@ -692,7 +693,7 @@ class Game {
   }
 
   doFrontRun() {
-    if (!this.isPlaying()) return;  // Bug Fix #37
+    if (!this.isPlayingOrPaused()) return;
     if (!this.sec.canDoIllegalAction('frontRunning', this.progression.data, this.progression.data.runCount)) return;
 
     this.audio.playIllegalAction();
@@ -702,7 +703,7 @@ class Game {
   }
 
   useFallGuy() {
-    if (!this.isPlaying()) return;
+    if (!this.isPlayingOrPaused()) return;
     const result = this.sec.useFallGuy();
     if (result.success) {
       this.audio.playIllegalAction();
@@ -713,7 +714,7 @@ class Game {
   }
 
   makeDonation() {
-    if (!this.isPlaying()) return;  // Bug Fix #37
+    if (!this.isPlayingOrPaused()) return;
     if (!this.progression.data.unlocks.politicalDonations) return;
 
     const result = this.sec.makeDonation(this.trading, this.progression.data);
@@ -806,7 +807,7 @@ class Game {
     }
 
     // Auto-manage chart tabs when asset is selected
-    if (this.isPlaying()) {
+    if (this.isPlayingOrPaused()) {
       // Prevent chart creation at high speeds
       if (this.speed > 5) {
         // Don't show error, just silently skip chart tab creation

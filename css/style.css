@@ -2168,28 +2168,41 @@ canvas {
   font-size: 14px;
 }
 
-/* Pause Overlay */
+/* Pause Overlay - non-blocking banner */
 .pause-overlay {
   position: fixed;
   top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 1000;
-  backdrop-filter: blur(4px);
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+  padding-top: 8px;
 }
 
 .pause-content {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  background: rgba(0, 0, 0, 0.85);
+  border: 1px solid var(--accent-primary);
+  border-radius: 8px;
+  padding: 8px 24px;
+  pointer-events: auto;
+  box-shadow: 0 4px 20px rgba(0, 200, 255, 0.3);
 }
 
 .pause-content h2 {
-  font-size: 48px;
-  margin-bottom: var(--spacing-lg);
+  font-size: 18px;
+  margin: 0;
+  color: var(--accent-primary);
+}
+
+.pause-content .btn {
+  margin: 0;
+  padding: 4px 16px;
+  font-size: 13px;
 }
 
 /* Insider Modal */
