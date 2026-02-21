@@ -1195,12 +1195,12 @@ input[type="range"].year-slider {
 /* ======== GAME SCREEN ======== */
 #game-screen {
   display: grid;
-  grid-template-rows: var(--header-height) 1fr var(--footer-height);
-  grid-template-columns: 1fr 1fr 1fr 2fr 1fr;
+  grid-template-rows: var(--header-height) auto 1fr;
+  grid-template-columns: 1fr;
   grid-template-areas:
-    "header header header header header"
-    "assets trade positions center right"
-    "footer footer footer footer footer";
+    "header"
+    "quarterly"
+    "content";
   height: 100vh;
   background: var(--rh-black);
   gap: 0;
@@ -1278,63 +1278,286 @@ input[type="range"].year-slider {
   width: 80px;
 }
 
-/* --- Left Panel: Assets & Positions --- */
-.assets-panel {
-  grid-area: assets;
-  background: var(--rh-darker);
-  border-right: 1px solid var(--rh-border);
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
+/* --- Main Content: 3-Column Layout --- */
+.main-content {
+  grid-area: content;
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr;
+  height: 100%;
+  overflow: hidden;
 }
 
-.trade-panel {
-  grid-area: trade;
+/* Column 1: Assets + News */
+.col-assets-news {
   background: var(--rh-darker);
   border-right: 1px solid var(--rh-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.asset-section {
+  flex: 3;
   display: flex;
   flex-direction: column;
   padding: var(--spacing-md);
+  overflow: hidden;
+}
+
+.asset-section .asset-list {
+  flex: 1;
   overflow-y: auto;
 }
 
-.positions-panel {
-  grid-area: positions;
-  background: var(--rh-darker);
-  border-right: 1px solid var(--rh-border);
-  overflow-y: auto;
+.asset-section .asset-search-input {
+  margin-bottom: var(--spacing-sm);
+}
+
+.news-section {
+  flex: 1;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  border-top: 1px solid var(--rh-border);
 }
 
-.asset-filter-controls {
-  display: grid;
-  grid-template-rows: auto auto;
-  gap: 8px;
-  margin-bottom: var(--spacing-md);
+.news-section h3 {
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--rh-text-secondary);
 }
 
-.category-dropdown {
-  width: 100%;
-  padding: 8px 12px;
-  background: var(--rh-darker);
+.news-section .news-feed {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 var(--spacing-md) var(--spacing-md);
+}
+
+/* Category Pill Buttons */
+.category-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: var(--spacing-sm);
+}
+
+.category-pill {
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 12px;
   border: 1px solid var(--rh-border);
-  border-radius: 8px;
-  color: var(--rh-text);
-  font-size: 14px;
-  font-family: var(--font-primary);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.category-dropdown:hover {
   background: var(--rh-panel);
-  border-color: var(--rh-border-strong);
+  color: var(--rh-text-secondary);
+  cursor: pointer;
+  transition: all 150ms;
+  white-space: nowrap;
+  font-family: var(--font-primary);
 }
 
-.category-dropdown:focus {
-  outline: none;
+.category-pill:hover {
+  border-color: var(--rh-border-strong);
+  color: var(--rh-text);
+}
+
+.category-pill.active {
+  background: var(--rh-accent);
   border-color: var(--rh-accent);
+  color: #000;
+  font-weight: 700;
+}
+
+/* Column 2: Chart + Trade */
+.col-chart-trade {
+  background: var(--rh-black);
+  border-right: 1px solid var(--rh-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.chart-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.trade-section {
+  flex: 1;
+  border-top: 1px solid var(--rh-border);
+  padding: var(--spacing-md);
+  background: var(--rh-darker);
+  overflow-y: auto;
+}
+
+/* Column 3: Net Worth + Meters + Positions */
+.col-networth-positions {
+  background: var(--rh-darker);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.networth-section {
+  flex: 1;
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--rh-border);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.networth-section canvas {
+  flex: 1;
+  min-height: 0;
+}
+
+.networth-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.networth-values {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-sm);
+}
+
+.networth-label {
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.networth-amount {
+  font-size: 28px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: #fff;
+  margin-right: var(--spacing-lg);
+}
+
+.positions-section {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-md);
+}
+
+/* Help Button */
+#help-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 16px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--rh-panel);
+  border: 1px solid var(--rh-border);
+  color: var(--rh-text-secondary);
+  cursor: pointer;
+  transition: all 200ms;
+}
+
+#help-btn:hover {
+  border-color: var(--rh-accent);
+  color: var(--rh-text);
+}
+
+/* --- Quarterly Target Bar --- */
+.quarterly-target-bar {
+  grid-area: quarterly;
+  background: var(--rh-dark);
+  border-bottom: 1px solid var(--rh-border);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xl);
+}
+
+.quarterly-bar-left {
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.quarterly-info-line {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: baseline;
+}
+
+.quarterly-info-label {
+  font-size: 11px;
+  color: var(--rh-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.quarterly-info-value {
+  font-size: 18px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--rh-green);
+}
+
+.quarterly-info-value.behind {
+  color: var(--rh-red);
+}
+
+.quarterly-bar-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.quarterly-bar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+}
+
+.quarterly-countdown-bar {
+  height: 10px;
+  background: var(--rh-darker);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.quarterly-countdown-fill {
+  height: 100%;
+  border-radius: 5px;
+  background: linear-gradient(90deg, var(--rh-green), var(--rh-accent));
+  transition: width 300ms;
+}
+
+.quarterly-countdown-fill.urgent {
+  background: linear-gradient(90deg, var(--rh-red), var(--rh-yellow));
+}
+
+.quarterly-countdown-text {
+  display: flex;
+  justify-content: flex-end;
+  font-size: 12px;
+}
+
+.quarterly-days-remaining {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--rh-text-secondary);
 }
 
 .asset-search-input {
@@ -1607,14 +1830,7 @@ input[type="range"].year-slider {
   font-weight: 600;
 }
 
-/* --- Center Panel: Charts --- */
-.center-panel {
-  grid-area: center;
-  background: var(--rh-black);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
+/* --- Chart Components --- */
 
 .chart-tabs-bar {
   display: flex;
@@ -1710,29 +1926,7 @@ input[type="range"].year-slider {
   display: block;
 }
 
-/* --- Right Panel: Stats & News --- */
-.right-panel {
-  grid-area: right;
-  background: var(--rh-darker);
-  border-left: 1px solid var(--rh-border);
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-}
-
-.stat-card {
-  padding: var(--spacing-md);
-  border-bottom: 1px solid var(--rh-border);
-}
-
-.stat-card h3 {
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--rh-text-secondary);
-  margin-bottom: var(--spacing-md);
-}
+/* --- Stat Values --- */
 
 .stat-value {
   font-size: 28px;
@@ -1754,7 +1948,7 @@ canvas {
 }
 
 #net-worth-graph {
-  height: 180px;
+  height: auto;
 }
 
 #asset-mini-graph {
@@ -1840,18 +2034,6 @@ canvas {
 }
 
 /* News Feed */
-.news-feed-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.news-feed-container h3 {
-  padding: var(--spacing-md);
-  padding-bottom: 0;
-}
-
 .news-feed {
   flex: 1;
   overflow-y: auto;
@@ -1921,50 +2103,7 @@ canvas {
   margin-right: var(--spacing-sm);
 }
 
-/* --- Bottom Bar --- */
-.bottom-bar {
-  grid-area: footer;
-  background: var(--rh-dark);
-  border-top: 1px solid var(--rh-border);
-  display: flex;
-  align-items: center;
-  padding: 0 var(--spacing-lg);
-  justify-content: space-between;
-}
-
-.bottom-stat {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-}
-
-.bottom-stat-item {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
-
-.bottom-stat-label {
-  font-size: 12px;
-  color: var(--rh-text-secondary);
-}
-
-.bottom-stat-value {
-  font-family: var(--font-mono);
-  font-weight: 600;
-  font-size: 14px;
-}
-
-/* Actions Bar (formerly news feed bottom area) */
-.actions-bar {
-  display: flex;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-md);
-  background: var(--rh-darker);
-  border-top: 1px solid var(--rh-border);
-  flex-wrap: wrap;
-  margin-top: var(--spacing-sm);
-}
+/* (bottom bar and actions bar removed) */
 
 /* ======== RUN END SCREEN ======== */
 #run-end-screen {
@@ -2409,31 +2548,7 @@ canvas {
   margin-bottom: var(--spacing-sm);
 }
 
-/* ======== QUARTERLY TARGET PANEL ======== */
-.quarterly-target-panel {
-  flex: 1;
-  background: var(--rh-dark);
-  border-top: 1px solid var(--rh-border);
-  padding: var(--spacing-md);
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-  min-height: 0;
-}
-
-.quarterly-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: 1px;
-}
-
-.quarterly-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--spacing-sm);
-}
+/* ======== QUARTERLY TARGET COMPONENTS ======== */
 
 .quarterly-level-badges {
   display: flex;
@@ -2492,94 +2607,7 @@ canvas {
   font-family: var(--font-mono);
 }
 
-.quarterly-target-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: var(--spacing-md);
-}
-
-.quarterly-target-amount,
-.quarterly-earnings-amount {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.quarterly-target-label,
-.quarterly-earnings-label {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--rh-text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.quarterly-target-value {
-  font-size: 20px;
-  font-weight: 700;
-  font-family: var(--font-mono);
-  color: var(--rh-text);
-}
-
-.quarterly-earnings-value {
-  font-size: 20px;
-  font-weight: 700;
-  font-family: var(--font-mono);
-  color: var(--rh-green);
-}
-
-.quarterly-earnings-value.behind {
-  color: var(--rh-red);
-}
-
-.quarterly-progress-bar {
-  height: 10px;
-  background: var(--rh-darker);
-  border-radius: 5px;
-  overflow: hidden;
-  position: relative;
-}
-
-.quarterly-progress-fill {
-  height: 100%;
-  border-radius: 5px;
-  background: linear-gradient(90deg, var(--rh-green), var(--rh-accent));
-  transition: width 300ms;
-}
-
-.quarterly-progress-fill.behind {
-  background: linear-gradient(90deg, var(--rh-red), var(--rh-yellow));
-}
-
-.quarterly-timer {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-}
-
-.quarterly-timer-label {
-  font-size: 16px;
-  font-weight: 600;
-  color: #fff;
-}
-
-.quarterly-timer-value {
-  font-size: 24px;
-  font-family: var(--font-mono);
-  font-weight: 700;
-  color: #fff;
-}
-
-.quarterly-timer-value.urgent {
-  color: var(--rh-red);
-  animation: pulse-timer 1s infinite;
-}
-
-@keyframes pulse-timer {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
+/* (old quarterly target info styles replaced by quarterly-target-bar above) */
 
 /* ======== TUTORIAL POPUP ======== */
 .tutorial-modal {

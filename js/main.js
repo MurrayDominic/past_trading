@@ -730,7 +730,8 @@ class Game {
   }
 
   showTutorial() {
-    // Pause the game while tutorial is shown
+    // Track if we were already paused so we don't auto-resume
+    const wasPaused = this.state === 'paused';
     this.stopTicker();
 
     const modal = document.getElementById('tutorial-modal');
@@ -738,7 +739,7 @@ class Game {
     const dontShowCheckbox = document.getElementById('tutorial-dont-show');
 
     if (!modal || !startBtn) {
-      this.startTicker();
+      if (!wasPaused) this.startTicker();
       return;
     }
 
@@ -750,7 +751,7 @@ class Game {
         this.progression.save();
       }
       modal.classList.add('hidden');
-      this.startTicker();
+      if (!wasPaused) this.startTicker();
     };
 
     startBtn.onclick = dismiss;

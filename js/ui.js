@@ -34,7 +34,7 @@ class GameUI {
       volumeSlider: document.getElementById('volume-slider'),
 
       // Trading panel
-      categoryFilter: document.getElementById('category-filter'),
+      categoryPills: document.getElementById('category-pills'),
       assetSearch: document.getElementById('asset-search'),
       assetSelector: document.getElementById('asset-selector'),
       tradeQuantity: document.getElementById('trade-quantity'),
@@ -61,15 +61,12 @@ class GameUI {
       portfolioList: document.getElementById('portfolio-list'),
       cashDisplay: document.getElementById('cash-display'),
       netWorthDisplay: document.getElementById('net-worth-display'),
-      pnlDisplay: document.getElementById('pnl-display'),
-      modeDisplay: document.getElementById('mode-display'),
-      toolDisplay: document.getElementById('tool-display'),
 
       // News
       newsFeed: document.getElementById('news-feed'),
 
-      // Actions
-      actionsPanel: document.getElementById('actions-panel'),
+      // Help
+      helpBtn: document.getElementById('help-btn'),
 
       // Menu
       menuPP: document.getElementById('menu-pp'),
@@ -273,11 +270,10 @@ class GameUI {
       });
     }
 
-    // Category filter dropdown
-    if (this.el.categoryFilter) {
-      this.el.categoryFilter.addEventListener('change', (e) => {
-        this.currentCategoryFilter = e.target.value;
-        this.filterAssets(this.currentSearchTerm);
+    // Help button
+    if (this.el.helpBtn) {
+      this.el.helpBtn.addEventListener('click', () => {
+        this.game.showTutorial();
       });
     }
 
@@ -559,8 +555,8 @@ class GameUI {
       this.el.assetSearch.value = '';
     }
 
-    // Populate category dropdown
-    this.renderCategoryDropdown();
+    // Populate category pills
+    this.renderCategoryPills();
 
     // Initialize chart manager
     if (!this.chartManager && this.el.chartContainer && this.el.chartTabsBar) {
@@ -579,14 +575,11 @@ class GameUI {
     }
   }
 
-  renderCategoryDropdown() {
-    if (!this.el.categoryFilter) return;
+  renderCategoryPills() {
+    if (!this.el.categoryPills) return;
 
     const unlockedCategories = this.game.progression.getUnlockedCategories();
 
-    let html = '<option value="all">All Categories</option>';
-
-    // Sort by sortOrder
     const sortedCategories = Object.entries(STOCK_CATEGORIES)
       .filter(([key]) => unlockedCategories.includes(key))
       .sort((a, b) => a[1].sortOrder - b[1].sortOrder);
@@ -595,25 +588,29 @@ class GameUI {
     const hasAnalyst = this.game.progression.data.unlocks.analystReports;
     const momentum = hasAnalyst ? this.game.market.getSectorMomentum() : {};
 
+    let html = `<button class="category-pill ${this.currentCategoryFilter === 'all' ? 'active' : ''}" data-category="all">All</button>`;
+
     for (const [key, config] of sortedCategories) {
-      const stockCount = SP500_ASSETS.filter(a => (a.category || 'consumer') === key).length;
+      const isActive = this.currentCategoryFilter === key ? 'active' : '';
       let momentumTag = '';
       if (hasAnalyst && momentum[key]) {
         const m = momentum[key];
         momentumTag = m.label === 'HOT' ? ' \u25B2' : m.label === 'COLD' ? ' \u25BC' : '';
       }
-      html += `<option value="${key}">${config.icon} ${config.name} (${stockCount})${momentumTag}</option>`;
+      html += `<button class="category-pill ${isActive}" data-category="${key}">${config.icon} ${config.name}${momentumTag}</button>`;
     }
 
-    this.el.categoryFilter.innerHTML = html;
+    this.el.categoryPills.innerHTML = html;
 
-    // Preserve category selection - only reset if current category is no longer available
-    if (Array.from(this.el.categoryFilter.options).some(opt => opt.value === this.currentCategoryFilter)) {
-      this.el.categoryFilter.value = this.currentCategoryFilter;
-    } else {
-      this.currentCategoryFilter = 'all';
-      this.el.categoryFilter.value = 'all';
-    }
+    // Bind pill click events
+    this.el.categoryPills.querySelectorAll('.category-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        this.currentCategoryFilter = pill.dataset.category;
+        this.el.categoryPills.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        this.filterAssets(this.currentSearchTerm);
+      });
+    });
   }
 
   showPauseOverlay(show) {
@@ -1424,34 +1421,9 @@ class GameUI {
     // News
     this.renderNews(game);
 
-    // Actions panel
-    this.renderActions(game);
-
-    // Bottom bar
+    // Cash and net worth displays
     this.el.cashDisplay.textContent = formatMoney(game.trading.cash);
     this.el.netWorthDisplay.textContent = formatMoney(game.trading.netWorth);
-
-    if (this.el.pnlDisplay) {
-      const pnl = game.trading.netWorth - CONFIG.STARTING_CASH;
-      const pnlClass = pnl >= 0 ? 'positive' : 'negative';
-      this.el.pnlDisplay.innerHTML = `<span class="${pnlClass}">${formatMoney(pnl)}</span>`;
-    }
-
-    if (this.el.modeDisplay) {
-      const modeName = TRADING_MODES[game.selectedMode]?.name || game.selectedMode;
-      this.el.modeDisplay.textContent = modeName;
-    }
-
-    if (this.el.toolDisplay) {
-      const equippedTool = game.progression.data.equippedTool;
-      if (equippedTool && EQUIPABLE_TOOLS[equippedTool]) {
-        this.el.toolDisplay.textContent = EQUIPABLE_TOOLS[equippedTool].name;
-        this.el.toolDisplay.style.color = 'var(--rh-purple)';
-      } else {
-        this.el.toolDisplay.textContent = 'None';
-        this.el.toolDisplay.style.color = 'var(--rh-text-secondary)';
-      }
-    }
   }
 
   renderAssetSelector(game, filteredAssets = null) {
@@ -1473,6 +1445,11 @@ class GameUI {
       const impacted = game.news.isTickerImpacted(asset.ticker);
       const impactClass = impacted ? 'asset-impacted' : '';
 
+      // Category emoji
+      const assetDef = SP500_ASSETS.find(a => a.ticker === asset.ticker);
+      const category = assetDef ? (assetDef.category || 'consumer') : 'consumer';
+      const categoryIcon = STOCK_CATEGORIES[category] ? STOCK_CATEGORIES[category].icon : '';
+
       // Bloomberg Terminal: 5-day trend arrow
       let trendHtml = '';
       if (hasBloomberg) {
@@ -1484,7 +1461,7 @@ class GameUI {
         <button class="asset-btn ${selected} ${impactClass}" data-ticker="${asset.ticker}">
           <div class="asset-btn-left">
             ${impacted ? '<span class="impact-indicator">📰</span>' : ''}
-            <span class="asset-ticker">${asset.ticker}</span>
+            <span class="asset-ticker">${categoryIcon} ${asset.ticker}</span>
             <span class="asset-name">${asset.name}</span>
           </div>
           <div class="asset-btn-right">
@@ -1593,7 +1570,7 @@ class GameUI {
       const h = canvas.height;
       ctx.clearRect(0, 0, w, h);
       ctx.fillStyle = '#888';
-      ctx.font = '14px var(--font-primary)';
+      ctx.font = '18px var(--font-primary)';
       ctx.textAlign = 'center';
       ctx.fillText('No data in this time range', w / 2, h / 2);
       return;
@@ -1601,16 +1578,21 @@ class GameUI {
 
     const w = canvas.width;
     const h = canvas.height;
-    const padding = 40;
+    const padding = 55;
 
     // Clear
     ctx.clearRect(0, 0, w, h);
 
-    // Find min/max
+    // Find min/max (include quarterly target in range so it's always visible)
     let min = Infinity, max = -Infinity;
     for (const v of data) {
       min = Math.min(min, v);
       max = Math.max(max, v);
+    }
+    if (game.quarterly && !game.quarterly.isAllComplete()) {
+      const targetVal = game.quarterly.getCurrentTarget().target;
+      min = Math.min(min, targetVal);
+      max = Math.max(max, targetVal);
     }
     if (min === max) { min -= 1; max += 1; }
 
@@ -1629,9 +1611,9 @@ class GameUI {
       // Label
       const value = max - (range * i / 4);
       ctx.fillStyle = '#666';
-      ctx.font = '10px monospace';
+      ctx.font = '14px monospace';
       ctx.textAlign = 'right';
-      ctx.fillText(formatMoney(value), padding - 4, y + 3);
+      ctx.fillText(formatMoney(value), padding - 4, y + 4);
     }
 
     // Draw line
@@ -1661,14 +1643,35 @@ class GameUI {
 
     // Current value label
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 12px monospace';
-    ctx.textAlign = 'left';
-    ctx.fillText(formatMoney(data[data.length - 1]), lastX + 4, lastY - 4);
+    ctx.font = 'bold 18px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(formatMoney(data[data.length - 1]), w - 10, lastY - 6);
+
+    // Quarterly target line
+    if (game.quarterly && !game.quarterly.isAllComplete()) {
+      const targetValue = game.quarterly.getCurrentTarget().target;
+      if (targetValue >= min && targetValue <= max) {
+        const targetY = padding + (1 - (targetValue - min) / range) * (h - padding * 2);
+        ctx.beginPath();
+        ctx.setLineDash([6, 4]);
+        ctx.strokeStyle = 'rgba(255, 214, 10, 0.6)';
+        ctx.lineWidth = 1.5;
+        ctx.moveTo(padding, targetY);
+        ctx.lineTo(w - 10, targetY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = 'rgba(255, 214, 10, 0.8)';
+        ctx.font = '14px monospace';
+        ctx.textAlign = 'right';
+        ctx.fillText('Target: ' + formatMoney(targetValue), w - 14, targetY - 8);
+      }
+    }
 
     // X-axis date labels
     if (game.market && game.market.startDate) {
       ctx.fillStyle = '#888';
-      ctx.font = '11px monospace';
+      ctx.font = '14px monospace';
       ctx.textAlign = 'center';
 
       const totalDays = data.length;
@@ -1784,48 +1787,7 @@ class GameUI {
   }
 
   renderActions(game) {
-    const prog = game.progression.data;
-    let html = '';
-
-    // Insider trading
-    if (game.sec.canDoIllegalAction('insiderTrading', prog, prog.runCount)) {
-      html += `<button class="btn btn-danger action-btn" id="action-insider">Insider Tip</button>`;
-    }
-
-    // Front running
-    if (game.sec.canDoIllegalAction('frontRunning', prog, prog.runCount)) {
-      html += `<button class="btn btn-danger action-btn" id="action-front">Front Run</button>`;
-    }
-
-    // Political donations
-    if (prog.unlocks.politicalDonations) {
-      const cost = CONFIG.DONATION_BASE_COST * Math.pow(CONFIG.DONATION_COST_MULTIPLIER, game.sec.donationCount);
-      html += `<button class="btn btn-accent action-btn" id="action-donate">Donate to PAC (${formatMoney(cost)})</button>`;
-    }
-
-    // Fall Guy (one-time use per run)
-    if (prog.unlocks.fallGuy && !game.sec.fallGuyUsed) {
-      html += `<button class="btn btn-accent action-btn" id="action-fallguy">Use Fall Guy (-40 SEC)</button>`;
-    }
-
-    // Insider tip display
-    if (game.activeInsiderTip) {
-      const tip = game.activeInsiderTip;
-      html += `<div class="insider-tip">INSIDER: ${tip.text} (${tip.daysUntil}d)</div>`;
-    }
-
-    this.el.actionsPanel.innerHTML = html;
-
-    // Bind action buttons
-    const bind = (id, fn) => {
-      const el = document.getElementById(id);
-      if (el) el.addEventListener('click', fn);
-    };
-
-    bind('action-insider', () => game.doInsiderTrade());
-    bind('action-front', () => game.doFrontRun());
-    bind('action-donate', () => game.makeDonation());
-    bind('action-fallguy', () => game.useFallGuy());
+    // Illegal actions removed from UI
   }
 
   renderQuarterlyTarget(game) {
@@ -1835,7 +1797,6 @@ class GameUI {
     const target = q.getCurrentTarget();
     const netWorth = game.trading.netWorth;
     const daysRemaining = q.getDaysRemainingInQuarter(game.currentDay);
-    const progress = q.getEarningsProgress(netWorth);
 
     // Level badges (1-8)
     let badgesHtml = '';
@@ -1867,7 +1828,7 @@ class GameUI {
     // Target value
     this.el.quarterlyTargetValue.textContent = formatMoney(target.target);
 
-    // Net worth value (compared against target)
+    // Balance value (compared against target)
     this.el.quarterlyEarningsValue.textContent = formatMoney(netWorth);
     if (netWorth < target.target) {
       this.el.quarterlyEarningsValue.classList.add('behind');
@@ -1875,21 +1836,19 @@ class GameUI {
       this.el.quarterlyEarningsValue.classList.remove('behind');
     }
 
-    // Progress bar
-    this.el.quarterlyProgressFill.style.width = Math.min(100, progress * 100) + '%';
-    if (netWorth < target.target) {
-      this.el.quarterlyProgressFill.classList.add('behind');
+    // Countdown bar - shows days remaining (counts down)
+    const daysInQuarter = CONFIG.QUARTER_DAYS || 91;
+    const percentRemaining = (daysRemaining / daysInQuarter) * 100;
+    this.el.quarterlyProgressFill.style.width = percentRemaining + '%';
+
+    if (daysRemaining <= 14) {
+      this.el.quarterlyProgressFill.classList.add('urgent');
     } else {
-      this.el.quarterlyProgressFill.classList.remove('behind');
+      this.el.quarterlyProgressFill.classList.remove('urgent');
     }
 
     // Timer
     this.el.quarterlyTimerValue.textContent = daysRemaining;
-    if (daysRemaining <= 14) {
-      this.el.quarterlyTimerValue.classList.add('urgent');
-    } else {
-      this.el.quarterlyTimerValue.classList.remove('urgent');
-    }
   }
 
   showTradeResult(result) {

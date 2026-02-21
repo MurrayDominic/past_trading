@@ -205,7 +205,7 @@
   <!-- ============================================================ -->
   <div id="game-screen" class="hidden">
 
-    <!-- Header -->
+    <!-- Row 1: Header -->
     <div class="game-header">
       <div class="header-left">
         <span class="day-counter" id="day-counter">Day 0 / 365</span>
@@ -224,181 +224,146 @@
       <div class="audio-controls">
         <button id="mute-btn" class="icon-btn" title="Mute">🔊</button>
         <input type="range" id="volume-slider" min="0" max="100" value="70" class="volume-slider">
+        <button class="btn btn-small" id="help-btn" title="How to Play">?</button>
         <button class="btn btn-small" id="pause-btn">Pause</button>
         <button class="btn btn-small btn-danger" id="exit-btn">Exit</button>
       </div>
     </div>
 
-    <!-- Assets Panel (left) -->
-    <div class="assets-panel">
-      <!-- Asset Selector -->
-      <div class="panel-section">
-        <div class="section-title">Assets</div>
-        <div class="asset-filter-controls">
-          <select id="category-filter" class="category-dropdown">
-            <option value="all">All Categories</option>
-            <!-- Options populated dynamically -->
-          </select>
-          <input type="text"
-                 id="asset-search"
-                 class="asset-search-input"
-                 placeholder="Search ticker or name...">
+    <!-- Row 2: Quarterly Target Bar -->
+    <div class="quarterly-target-bar" id="quarterly-panel">
+      <div class="quarterly-bar-left">
+        <div class="quarterly-info-line">
+          <span class="quarterly-info-label">Current Balance:</span>
+          <span class="quarterly-info-value" id="quarterly-earnings-value">$10,000</span>
         </div>
-        <div id="asset-selector" class="asset-list"></div>
-      </div>
-    </div>
-
-    <!-- Trade Panel (center-left) -->
-    <div class="trade-panel">
-      <div class="panel-section">
-        <div class="section-title">Trade</div>
-        <div class="trade-controls">
-          <div class="quantity-input-group">
-            <label>Amount</label>
-            <div class="quantity-input-wrapper">
-              <input type="number" id="trade-quantity" value="1000" min="1" step="100" placeholder="$ Amount">
-              <button class="btn btn-small btn-max" id="max-qty-btn">Max</button>
-            </div>
-            <div class="quick-buy-buttons">
-              <button class="btn btn-tiny" data-percent="10">10%</button>
-              <button class="btn btn-tiny" data-percent="20">20%</button>
-              <button class="btn btn-tiny" data-percent="50">50%</button>
-              <button class="btn btn-tiny" data-percent="80">80%</button>
-              <button class="btn btn-tiny" data-percent="100">100%</button>
-            </div>
-            <div id="shares-preview" class="shares-preview">~0 shares</div>
-          </div>
-          <div class="trade-button-column">
-            <button class="btn btn-primary" id="buy-btn">Buy</button>
-            <button class="btn btn-accent" id="sell-btn">Sell</button>
-            <button class="btn btn-danger" id="short-btn">Short</button>
-          </div>
-          <div id="trade-result"></div>
+        <div class="quarterly-info-line">
+          <span class="quarterly-info-label">Quarterly Target:</span>
+          <span class="quarterly-info-value quarterly-target-val" id="quarterly-target-value">$2,000</span>
         </div>
       </div>
-
-      <!-- Actions -->
-      <div class="actions-bar" id="actions-panel"></div>
-    </div>
-
-    <!-- Positions Panel (center-center) -->
-    <div class="positions-panel">
-      <div class="panel-section" style="flex: 1; overflow-y: auto;">
-        <div class="section-title">Positions</div>
-        <div id="portfolio-list" class="positions-list"></div>
-      </div>
-    </div>
-
-    <!-- Center: Chart Area -->
-    <div class="center-panel">
-      <div class="chart-tabs-bar" id="chart-tabs-bar">
-        <div class="tabs-scroll-container" id="tabs-scroll"></div>
-        <div class="chart-timeframe-buttons">
-          <button class="timeframe-btn" data-range="7">1W</button>
-          <button class="timeframe-btn" data-range="30">1M</button>
-          <button class="timeframe-btn" data-range="252">1Y</button>
-          <button class="timeframe-btn active" data-range="max">Max</button>
-        </div>
-        <button class="tab-add-btn" id="add-chart-btn" title="Add chart">+</button>
-      </div>
-      <div class="chart-container" id="chart-container"></div>
-      <!-- Quarterly Target Panel -->
-      <div class="quarterly-target-panel" id="quarterly-panel">
-        <div class="quarterly-title">Target</div>
-        <div class="quarterly-header">
+      <div class="quarterly-bar-right">
+        <div class="quarterly-bar-top">
           <div class="quarterly-level-badges" id="quarterly-badges"></div>
-          <div class="quarterly-stage-label">Stage: <span class="quarterly-label" id="quarterly-label">Q1 Y1</span></div>
+          <div class="quarterly-stage-label">Stage: <span id="quarterly-label">Q1 Y1</span></div>
         </div>
-        <div class="quarterly-target-info">
-          <div class="quarterly-earnings-amount">
-            <span class="quarterly-earnings-label">NET WORTH</span>
-            <span class="quarterly-earnings-value" id="quarterly-earnings-value">$0</span>
-          </div>
-          <div class="quarterly-target-amount">
-            <span class="quarterly-target-label">TARGET</span>
-            <span class="quarterly-target-value" id="quarterly-target-value">$2,000</span>
-          </div>
+        <div class="quarterly-countdown-bar">
+          <div class="quarterly-countdown-fill" id="quarterly-progress-fill" style="width: 100%"></div>
         </div>
-        <div class="quarterly-progress-bar">
-          <div class="quarterly-progress-fill" id="quarterly-progress-fill" style="width: 0%"></div>
-        </div>
-        <div class="quarterly-timer">
-          <span class="quarterly-timer-label">Days remaining</span>
-          <span class="quarterly-timer-value" id="quarterly-timer-value">91</span>
+        <div class="quarterly-countdown-text">
+          <span class="quarterly-days-remaining"><span id="quarterly-timer-value">91</span> days remaining</span>
         </div>
       </div>
     </div>
 
-    <!-- Right: Stats & News -->
-    <div class="right-panel">
-      <!-- Net Worth -->
-      <div class="stat-card">
-        <h3>Net Worth</h3>
-        <div class="chart-timeframe-buttons">
-          <button class="nw-timeframe-btn" data-range="7">1W</button>
-          <button class="nw-timeframe-btn" data-range="30">1M</button>
-          <button class="nw-timeframe-btn" data-range="252">1Y</button>
-          <button class="nw-timeframe-btn active" data-range="max">Max</button>
-        </div>
-        <div class="stat-value" id="net-worth-display">$10,000</div>
-        <div class="stat-subvalue">
-          Cash: <span id="cash-display">$10,000</span>
-        </div>
-        <canvas id="net-worth-graph"></canvas>
-      </div>
+    <!-- Row 3: Main Content (3 columns) -->
+    <div class="main-content">
 
-      <!-- Meters -->
-      <div class="meters-row">
-        <div class="meter">
-          <div class="meter-label">
-            <span class="meter-name">Internal Risk</span>
-            <span class="meter-value" id="risk-value">0%</span>
-          </div>
-          <div class="meter-bar">
-            <div class="meter-fill risk" id="risk-fill" style="width: 0%"></div>
-          </div>
+      <!-- Column 1: Assets + News (1/4) -->
+      <div class="col-assets-news">
+        <div class="asset-section">
+          <div class="section-title">Assets</div>
+          <input type="text" id="asset-search" class="asset-search-input" placeholder="Search ticker or name...">
+          <div class="category-pills" id="category-pills"></div>
+          <div id="asset-selector" class="asset-list"></div>
         </div>
-        <div class="meter">
-          <div class="meter-label">
-            <span class="meter-name">SEC Attention</span>
-            <span class="meter-value" id="sec-value">0%</span>
-          </div>
-          <div class="meter-bar">
-            <div class="meter-fill sec" id="sec-fill" style="width: 0%"></div>
-          </div>
-          <div class="meter-subtext">
-            <span class="sec-label" id="sec-label">Off the radar</span>
-          </div>
+        <div class="news-section">
+          <h3>Market News</h3>
+          <div id="news-feed" class="news-feed"></div>
         </div>
       </div>
 
-      <!-- News Feed -->
-      <div class="news-feed-container">
-        <h3>Market News</h3>
-        <div id="news-feed" class="news-feed"></div>
+      <!-- Column 2: Chart + Trade Controls (1/4) -->
+      <div class="col-chart-trade">
+        <div class="chart-area">
+          <div class="chart-tabs-bar" id="chart-tabs-bar">
+            <div class="tabs-scroll-container" id="tabs-scroll"></div>
+            <div class="chart-timeframe-buttons">
+              <button class="timeframe-btn" data-range="7">1W</button>
+              <button class="timeframe-btn" data-range="30">1M</button>
+              <button class="timeframe-btn" data-range="252">1Y</button>
+              <button class="timeframe-btn active" data-range="max">Max</button>
+            </div>
+            <button class="tab-add-btn" id="add-chart-btn" title="Add chart">+</button>
+          </div>
+          <div class="chart-container" id="chart-container"></div>
+        </div>
+        <div class="trade-section">
+          <div class="section-title">Trade</div>
+          <div class="trade-controls">
+            <div class="quantity-input-group">
+              <label>Amount</label>
+              <div class="quantity-input-wrapper">
+                <input type="number" id="trade-quantity" value="1000" min="1" step="100" placeholder="$ Amount">
+                <button class="btn btn-small btn-max" id="max-qty-btn">Max</button>
+              </div>
+              <div class="quick-buy-buttons">
+                <button class="btn btn-tiny" data-percent="10">10%</button>
+                <button class="btn btn-tiny" data-percent="20">20%</button>
+                <button class="btn btn-tiny" data-percent="50">50%</button>
+                <button class="btn btn-tiny" data-percent="80">80%</button>
+                <button class="btn btn-tiny" data-percent="100">100%</button>
+              </div>
+              <div id="shares-preview" class="shares-preview">~0 shares</div>
+            </div>
+            <div class="trade-button-column">
+              <button class="btn btn-primary" id="buy-btn">Buy</button>
+              <button class="btn btn-accent" id="sell-btn">Sell</button>
+              <button class="btn btn-danger" id="short-btn">Short</button>
+            </div>
+            <div id="trade-result"></div>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <!-- Bottom Bar -->
-    <div class="bottom-bar">
-      <div class="bottom-stat">
-        <div class="bottom-stat-item">
-          <span class="bottom-stat-label">Mode:</span>
-          <span class="bottom-stat-value" id="mode-display">Stocks</span>
+      <!-- Column 3: Net Worth + Meters + Positions (1/2) -->
+      <div class="col-networth-positions">
+        <div class="networth-section">
+          <div class="networth-header">
+            <div class="networth-values">
+              <span class="networth-label">Net Worth:</span>
+              <span class="networth-amount" id="net-worth-display">$10,000</span>
+              <span class="networth-label">Cash:</span>
+              <span class="networth-amount" id="cash-display">$10,000</span>
+            </div>
+            <div class="chart-timeframe-buttons">
+              <button class="nw-timeframe-btn" data-range="7">1W</button>
+              <button class="nw-timeframe-btn" data-range="30">1M</button>
+              <button class="nw-timeframe-btn" data-range="252">1Y</button>
+              <button class="nw-timeframe-btn active" data-range="max">Max</button>
+            </div>
+          </div>
+          <canvas id="net-worth-graph"></canvas>
+        </div>
+        <div class="meters-row">
+          <div class="meter">
+            <div class="meter-label">
+              <span class="meter-name">Internal Risk</span>
+              <span class="meter-value" id="risk-value">0%</span>
+            </div>
+            <div class="meter-bar">
+              <div class="meter-fill risk" id="risk-fill" style="width: 0%"></div>
+            </div>
+          </div>
+          <div class="meter">
+            <div class="meter-label">
+              <span class="meter-name">SEC Attention</span>
+              <span class="meter-value" id="sec-value">0%</span>
+            </div>
+            <div class="meter-bar">
+              <div class="meter-fill sec" id="sec-fill" style="width: 0%"></div>
+            </div>
+            <div class="meter-subtext">
+              <span class="sec-label" id="sec-label">Off the radar</span>
+            </div>
+          </div>
+        </div>
+        <div class="positions-section">
+          <div class="section-title">Positions</div>
+          <div id="portfolio-list" class="positions-list"></div>
         </div>
       </div>
-      <div class="bottom-stat">
-        <div class="bottom-stat-item">
-          <span class="bottom-stat-label">Tool:</span>
-          <span class="bottom-stat-value" id="tool-display">None</span>
-        </div>
-      </div>
-      <div class="bottom-stat">
-        <div class="bottom-stat-item">
-          <span class="bottom-stat-label">P&L:</span>
-          <span class="bottom-stat-value" id="pnl-display">$0</span>
-        </div>
-      </div>
+
     </div>
 
     <!-- Pause Overlay -->
