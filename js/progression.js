@@ -139,6 +139,11 @@ class ProgressionSystem {
       pp *= 1.5;
     }
 
+    // Dead Man's Switch: 50% bonus PP when arrested
+    if (wasArrested && this.data.unlocks.deadMansSwitch) {
+      pp *= (1 + UNLOCKS.deadMansSwitch.ppBonus);
+    }
+
     // Title bonus still applies on top of quarterly PP
     if (this.data.equippedTitle) {
       const achievement = ACHIEVEMENTS[this.data.equippedTitle];

@@ -1088,6 +1088,8 @@ class GameUI {
           { id: 'bloombergTerminal', name: 'Bloomberg', icon: '', cost: UNLOCKS.bloombergTerminal.cost },
           { id: 'analystReports', name: 'Analyst Reports', icon: '', cost: UNLOCKS.analystReports.cost, requires: [UNLOCKS.analystReports.requires] },
           { id: 'timeTravelersAlmanac', name: "Almanac", icon: '', cost: UNLOCKS.timeTravelersAlmanac.cost, requires: [UNLOCKS.timeTravelersAlmanac.requires] },
+          { id: 'earningsCalendar', name: 'Earnings Calendar', icon: '', cost: UNLOCKS.earningsCalendar.cost, requires: [UNLOCKS.earningsCalendar.requires] },
+          { id: 'volatilityScanner', name: 'Volatility Scanner', icon: '', cost: UNLOCKS.volatilityScanner.cost, requires: [UNLOCKS.volatilityScanner.requires] },
         ]
       },
       {
@@ -1114,6 +1116,9 @@ class GameUI {
           { id: 'insiderNetwork', name: 'Insider Network', icon: '', cost: UNLOCKS.insiderNetwork.cost },
           { id: 'burnerPhone', name: 'Burner Phone', icon: '', cost: UNLOCKS.burnerPhone.cost, requires: [UNLOCKS.burnerPhone.requires] },
           { id: 'caymanShellCorp', name: 'Cayman Shell Corp', icon: '', cost: UNLOCKS.caymanShellCorp.cost, requires: [UNLOCKS.caymanShellCorp.requires] },
+          { id: 'fakeNewsBot', name: 'Fake News Bot', icon: '', cost: UNLOCKS.fakeNewsBot.cost, requires: [UNLOCKS.fakeNewsBot.requires] },
+          { id: 'moneyLaundering', name: 'Money Laundering', icon: '', cost: UNLOCKS.moneyLaundering.cost, requires: [UNLOCKS.moneyLaundering.requires] },
+          { id: 'ponziScheme', name: 'Ponzi Scheme', icon: '', cost: UNLOCKS.ponziScheme.cost, requires: [UNLOCKS.ponziScheme.requires] },
         ]
       },
       {
@@ -1131,6 +1136,9 @@ class GameUI {
           { id: 'offshoreAccounts', name: 'Offshore Accounts', icon: '', cost: UNLOCKS.offshoreAccounts.cost, requires: [UNLOCKS.offshoreAccounts.requires] },
           { id: 'politicianRetainer', name: 'Politician', icon: '', cost: UNLOCKS.politicianRetainer.cost, requires: [UNLOCKS.politicianRetainer.requires] },
           { id: 'lobbyistNetwork', name: 'Lobbyist Network', icon: '', cost: UNLOCKS.lobbyistNetwork.cost, requires: [UNLOCKS.lobbyistNetwork.requires] },
+          { id: 'mediaContact', name: 'Media Contact', icon: '', cost: UNLOCKS.mediaContact.cost, requires: [UNLOCKS.mediaContact.requires] },
+          { id: 'secMole', name: 'SEC Mole', icon: '', cost: UNLOCKS.secMole.cost, requires: [UNLOCKS.secMole.requires] },
+          { id: 'judgeOnRetainer', name: 'Judge on Retainer', icon: '', cost: UNLOCKS.judgeOnRetainer.cost, requires: [UNLOCKS.judgeOnRetainer.requires] },
         ]
       },
       {
@@ -1140,6 +1148,46 @@ class GameUI {
           { id: 'goldenParachute', name: 'Golden Parachute', icon: '', cost: UNLOCKS.goldenParachute.cost },
           { id: 'fallGuy', name: 'Fall Guy', icon: '', cost: UNLOCKS.fallGuy.cost, requires: [UNLOCKS.fallGuy.requires] },
           { id: 'bailFund', name: 'Bail Fund', icon: '', cost: UNLOCKS.bailFund.cost, requires: [UNLOCKS.bailFund.requires] },
+          { id: 'deadMansSwitch', name: "Dead Man's Switch", icon: '', cost: UNLOCKS.deadMansSwitch.cost, requires: [UNLOCKS.deadMansSwitch.requires] },
+          { id: 'offshoreEscape', name: 'Offshore Escape', icon: '', cost: UNLOCKS.offshoreEscape.cost, requires: [UNLOCKS.offshoreEscape.requires] },
+        ]
+      },
+      {
+        category: 'Automation',
+        icon: '',
+        nodes: [
+          { id: 'stopLoss', name: 'Stop Loss', icon: '', cost: UNLOCKS.stopLoss.cost },
+          { id: 'takeProfit', name: 'Take Profit', icon: '', cost: UNLOCKS.takeProfit.cost, requires: [UNLOCKS.takeProfit.requires] },
+          { id: 'dollarCostAverage', name: 'DCA Bot', icon: '', cost: UNLOCKS.dollarCostAverage.cost, requires: [UNLOCKS.dollarCostAverage.requires] },
+        ]
+      },
+      {
+        category: 'Time Travel',
+        icon: '',
+        nodes: [
+          { id: 'dejaVu', name: 'Deja Vu', icon: '', cost: UNLOCKS.dejaVu.cost },
+          { id: 'butterflyEffect', name: 'Butterfly Effect', icon: '', cost: UNLOCKS.butterflyEffect.cost, requires: [UNLOCKS.butterflyEffect.requires] },
+          { id: 'temporalArbitrage', name: 'Temporal Arbitrage', icon: '', cost: UNLOCKS.temporalArbitrage.cost, requires: [UNLOCKS.temporalArbitrage.requires] },
+          { id: 'groundhogDay', name: 'Groundhog Day', icon: '', cost: UNLOCKS.groundhogDay.cost, requires: [UNLOCKS.groundhogDay.requires] },
+        ]
+      },
+      {
+        category: 'Reputation',
+        icon: '',
+        nodes: [
+          { id: 'charityFoundation', name: 'Charity Foundation', icon: '', cost: UNLOCKS.charityFoundation.cost },
+          { id: 'tedTalk', name: 'TED Talk', icon: '', cost: UNLOCKS.tedTalk.cost, requires: [UNLOCKS.tedTalk.requires] },
+          { id: 'bookDeal', name: 'Book Deal', icon: '', cost: UNLOCKS.bookDeal.cost, requires: [UNLOCKS.bookDeal.requires] },
+          { id: 'cnbcRegular', name: 'CNBC Regular', icon: '', cost: UNLOCKS.cnbcRegular.cost, requires: [UNLOCKS.cnbcRegular.requires] },
+        ]
+      },
+      {
+        category: 'Portfolio Bonuses',
+        icon: '',
+        nodes: [
+          { id: 'diversificationBonus', name: 'Diversification', icon: '', cost: UNLOCKS.diversificationBonus.cost },
+          { id: 'sectorRotation', name: 'Sector Rotation', icon: '', cost: UNLOCKS.sectorRotation.cost, requires: [UNLOCKS.sectorRotation.requires] },
+          { id: 'whaleStatus', name: 'Whale Status', icon: '', cost: UNLOCKS.whaleStatus.cost, requires: [UNLOCKS.whaleStatus.requires] },
         ]
       },
       {
@@ -1505,11 +1553,20 @@ class GameUI {
     this.el.riskFill.className = `meter-fill risk ${riskClass}`;
 
     this.el.secFill.style.width = game.sec.attention + '%';
-    this.el.secValue.textContent = Math.round(game.sec.attention) + '%';
-    this.el.secLabel.textContent = game.sec.getLabel();
+    // SEC Mole: show exact attention and hidden arrest threshold
+    if (game.progression.data.unlocks.secMole) {
+      this.el.secValue.textContent = game.sec.attention.toFixed(1) + '%';
+      this.el.secLabel.textContent = `${game.sec.getLabel()} (arrest: ${Math.round(game.sec.arrestThreshold)}%)`;
+    } else {
+      this.el.secValue.textContent = Math.round(game.sec.attention) + '%';
+      this.el.secLabel.textContent = game.sec.getLabel();
+    }
 
     // Portfolio
     this.renderPortfolio(game);
+
+    // Actions (illegal actions, donations, etc.)
+    this.renderActions(game);
 
     // News
     this.renderNews(game);
@@ -1550,6 +1607,35 @@ class GameUI {
         trendHtml = `<span class="asset-trend trend-${trend.className}">${trend.arrow}</span>`;
       }
 
+      // Deja Vu: 10-day price change %
+      let dejaVuHtml = '';
+      if (game.progression.data.unlocks.dejaVu && asset.history.length >= 10) {
+        const priceNow = asset.price;
+        const price10Ago = asset.history[asset.history.length - 10];
+        if (price10Ago > 0) {
+          const pctChange = ((priceNow - price10Ago) / price10Ago) * 100;
+          const dvClass = pctChange >= 0 ? 'positive' : 'negative';
+          dejaVuHtml = `<span class="deja-vu-indicator ${dvClass}" title="10-day change">${pctChange >= 0 ? '+' : ''}${pctChange.toFixed(1)}%</span>`;
+        }
+      }
+
+      // Volatility Scanner: show volatility rating
+      let volHtml = '';
+      if (game.progression.data.unlocks.volatilityScanner && asset.history.length >= 5) {
+        const recentPrices = asset.history.slice(-20);
+        let sumSqReturns = 0;
+        for (let j = 1; j < recentPrices.length; j++) {
+          const ret = (recentPrices[j] - recentPrices[j-1]) / recentPrices[j-1];
+          sumSqReturns += ret * ret;
+        }
+        const vol = Math.sqrt(sumSqReturns / (recentPrices.length - 1)) * 100;
+        let volLabel, volClass;
+        if (vol < 1.5) { volLabel = 'LOW'; volClass = 'vol-low'; }
+        else if (vol < 3.5) { volLabel = 'MED'; volClass = 'vol-med'; }
+        else { volLabel = 'HIGH'; volClass = 'vol-high'; }
+        volHtml = `<span class="vol-indicator ${volClass}" title="Volatility: ${vol.toFixed(1)}%">${volLabel}</span>`;
+      }
+
       html += `
         <button class="asset-btn ${selected} ${impactClass}" data-ticker="${asset.ticker}">
           <div class="asset-btn-left">
@@ -1558,6 +1644,8 @@ class GameUI {
             <span class="asset-name">${asset.name}</span>
           </div>
           <div class="asset-btn-right">
+            ${dejaVuHtml}
+            ${volHtml}
             ${trendHtml}
             <span class="asset-price">${formatPrice(asset.price)}</span>
             <span class="asset-change ${changeClass}">${(change >= 0 ? '+' : '')}${(change * 100).toFixed(1)}%</span>
@@ -1857,9 +1945,12 @@ class GameUI {
   renderNews(game) {
     let html = '';
 
-    // Time Traveler's Almanac: show upcoming events at the top
+    // Time Traveler's Almanac / Earnings Calendar: show upcoming events
     if (game.progression.data.unlocks.timeTravelersAlmanac) {
-      const upcoming = game.news.getUpcomingEvents(game.currentDay, 3);
+      // Earnings Calendar extends preview to 5 days (from 3)
+      const previewDays = game.progression.data.unlocks.earningsCalendar
+        ? UNLOCKS.earningsCalendar.previewDays : 3;
+      const upcoming = game.news.getUpcomingEvents(game.currentDay, previewDays);
       for (const event of upcoming) {
         const daysAway = event.day - game.currentDay;
         html += `<div class="news-item almanac">
@@ -1880,7 +1971,68 @@ class GameUI {
   }
 
   renderActions(game) {
-    // Illegal actions removed from UI
+    const panel = document.getElementById('actions-section');
+    if (!panel) return;
+
+    const prog = game.progression.data;
+    const sec = game.sec;
+    let btns = '';
+
+    // Political Donations
+    if (prog.unlocks.politicalDonations) {
+      const cost = CONFIG.DONATION_BASE_COST * Math.pow(CONFIG.DONATION_COST_MULTIPLIER, sec.donationCount);
+      btns += `<button class="btn btn-small btn-action" data-action="donate" title="Donate to PAC (-SEC)">💰 Donate (${formatMoney(cost)})</button>`;
+    }
+
+    // Fall Guy
+    if (prog.unlocks.fallGuy && !sec.fallGuyUsed) {
+      btns += `<button class="btn btn-small btn-action" data-action="fallGuy" title="Blame someone (-40 SEC)">🎭 Fall Guy</button>`;
+    }
+
+    // Insider Trading
+    if (sec.canDoIllegalAction('insiderTrading', prog, prog.runCount)) {
+      btns += `<button class="btn btn-small btn-action btn-illegal" data-action="insider" title="Get insider tip (+${ILLEGAL_ACTIONS.insiderTrading.secHit} SEC)">🤫 Insider Tip</button>`;
+    }
+
+    // Front Running
+    if (sec.canDoIllegalAction('frontRunning', prog, prog.runCount)) {
+      btns += `<button class="btn btn-small btn-action btn-illegal" data-action="frontRun" title="Front run (+${ILLEGAL_ACTIONS.frontRunning.secHit} SEC)">⚡ Front Run</button>`;
+    }
+
+    // Fake News Bot
+    if (sec.canDoIllegalAction('fakeNews', prog, prog.runCount)) {
+      btns += `<button class="btn btn-small btn-action btn-illegal" data-action="fakeNews" title="Plant fake news (+${ILLEGAL_ACTIONS.fakeNews.secHit} SEC)">📰 Fake News</button>`;
+    }
+
+    // Money Laundering
+    if (sec.canDoIllegalAction('moneyLaunder', prog, prog.runCount)) {
+      btns += `<button class="btn btn-small btn-action btn-illegal" data-action="moneyLaunder" title="Launder money (+${ILLEGAL_ACTIONS.moneyLaunder.secHit} SEC, -5 SEC)">🧹 Launder</button>`;
+    }
+
+    // Ponzi Scheme
+    if (sec.canDoIllegalAction('ponzi', prog, prog.runCount)) {
+      btns += `<button class="btn btn-small btn-action btn-illegal" data-action="ponzi" title="Run ponzi scheme (+${ILLEGAL_ACTIONS.ponzi.secHit} SEC)">🔺 Ponzi</button>`;
+    }
+
+    if (btns) {
+      panel.innerHTML = `<div class="section-title">Actions</div><div class="action-buttons">${btns}</div>`;
+
+      // Bind action buttons
+      panel.querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const action = btn.dataset.action;
+          if (action === 'donate') game.makeDonation();
+          else if (action === 'fallGuy') game.useFallGuy();
+          else if (action === 'insider') game.doInsiderTrade();
+          else if (action === 'frontRun') game.doFrontRun();
+          else if (action === 'fakeNews') game.doFakeNews();
+          else if (action === 'moneyLaunder') game.doMoneyLaunder();
+          else if (action === 'ponzi') game.doPonzi();
+        });
+      });
+    } else {
+      panel.innerHTML = '';
+    }
   }
 
   renderQuarterlyTarget(game) {

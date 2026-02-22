@@ -115,6 +115,12 @@ class Game {
 
       const runYears = CONFIG.FIXED_RUN_YEARS + extraYears;
       this.totalDays = runYears * 365;
+
+      // Groundhog Day: add extra days to run
+      if (this.progression.data.unlocks.groundhogDay) {
+        this.totalDays += UNLOCKS.groundhogDay.extraDays;
+      }
+
       this.currentTime = null;
 
       // Update end year to match actual run length
@@ -153,6 +159,12 @@ class Game {
       else if (this.progression.data.unlocks.timeInMarket1) extraYearDays = 1 * 365;
       this.quarterly.init(CONFIG.STARTING_CASH, extraYearDays);
       this.sec.init();
+
+      // TED Talk: start with reduced SEC attention
+      if (this.progression.data.unlocks.tedTalk) {
+        this.sec.attention = Math.max(0, this.sec.attention - UNLOCKS.tedTalk.secReduction);
+      }
+
       this.news.init(this.dataLoader);
 
       // Bug Fix #25: Validate assets loaded before selecting
@@ -261,14 +273,21 @@ class Game {
       this.news.addTradeNews(`Passive income: +${formatMoney(passiveIncome)}`, this.currentDay);
     }
 
-    // Update positions
-    this.trading.updatePositions(this.market, this.currentDay);
+    // Update positions (pass metaProgression for stop loss / take profit)
+    this.trading.updatePositions(this.market, this.currentDay, this.progression.data);
 
     // Bug Fix #43: Show liquidation notifications
     if (this.trading.recentLiquidations && this.trading.recentLiquidations.length > 0) {
       for (const liq of this.trading.recentLiquidations) {
-        this.news.addSecNews(`MARGIN CALL: ${liq.ticker} ${liq.type} position liquidated (-${formatMoney(liq.loss)})`, this.currentDay);
+        const reason = liq.reason || 'MARGIN CALL';
+        this.news.addSecNews(`${reason}: ${liq.ticker} ${liq.type} position liquidated (-${formatMoney(liq.loss)})`, this.currentDay);
       }
+    }
+
+    // Dollar Cost Average: auto-invest periodically
+    const dcaResult = this.trading.processDCA(this.market, this.progression.data, this.currentDay);
+    if (dcaResult) {
+      this.news.addTradeNews(`DCA: Auto-bought ${dcaResult.ticker} for ${formatMoney(dcaResult.amount)}`, this.currentDay);
     }
 
     // Check risk limit (pass metaProgression for Risk Immunity)
@@ -345,6 +364,12 @@ class Game {
     // SEC tick
     const arrested = this.sec.tick(this.trading, this.market, this.progression.data);
 
+    // Offshore Escape notification
+    if (this.sec._offshoreEscapeTriggered) {
+      this.sec._offshoreEscapeTriggered = false;
+      this.news.addSecNews('OFFSHORE ESCAPE ACTIVATED! You fled to the Caymans. SEC attention reset to 50%.', this.currentDay);
+    }
+
     // News tick
     this.news.tick(this.currentDay, this.market, this.sec);
 
@@ -394,8 +419,8 @@ class Game {
       this.news.addTradeNews(`Passive: +${formatMoney(passiveIncome)}`, this.currentMinute);
     }
 
-    // Update positions
-    this.trading.updatePositions(this.market, this.currentMinute);
+    // Update positions (pass metaProgression for stop loss / take profit)
+    this.trading.updatePositions(this.market, this.currentMinute, this.progression.data);
 
     // Bug Fix #43: Show liquidation notifications (intraday)
     if (this.trading.recentLiquidations && this.trading.recentLiquidations.length > 0) {
@@ -526,13 +551,15 @@ class Game {
       this.audio.playTradeClick();
       this.news.addTradeNews(result.message, this.currentDay);
 
-      // SEC watches large trades (Dark Pool Access reduces this)
+      // SEC watches large trades (Whale Status eliminates, Dark Pool Access reduces)
       if (dollarAmount > this.trading.netWorth * 0.3) {
-        let secHit = 1;
-        if (this.progression.data.unlocks.darkPoolAccess) {
-          secHit *= (1 - UNLOCKS.darkPoolAccess.largeTradeSECReduction);
+        if (!this.progression.data.unlocks.whaleStatus) {
+          let secHit = 1;
+          if (this.progression.data.unlocks.darkPoolAccess) {
+            secHit *= (1 - UNLOCKS.darkPoolAccess.largeTradeSECReduction);
+          }
+          this.sec.addAttention(secHit, 'Large position opened');
         }
-        this.sec.addAttention(secHit, 'Large position opened');
       }
     }
 
@@ -698,6 +725,38 @@ class Game {
 
     this.audio.playIllegalAction();
     const result = this.sec.doFrontRun(this.trading);
+    this.news.addSecNews(result.message, this.currentDay);
+    this.ui.update(this);
+  }
+
+  doFakeNews() {
+    if (!this.isPlayingOrPaused()) return;
+    if (!this.sec.canDoIllegalAction('fakeNews', this.progression.data, this.progression.data.runCount)) return;
+
+    this.audio.playIllegalAction();
+    const result = this.sec.doFakeNews(this.market, this.trading);
+    if (result) {
+      this.news.addSecNews(result.message, this.currentDay);
+    }
+    this.ui.update(this);
+  }
+
+  doMoneyLaunder() {
+    if (!this.isPlayingOrPaused()) return;
+    if (!this.sec.canDoIllegalAction('moneyLaunder', this.progression.data, this.progression.data.runCount)) return;
+
+    this.audio.playIllegalAction();
+    const result = this.sec.doMoneyLaunder(this.trading);
+    this.news.addSecNews(result.message, this.currentDay);
+    this.ui.update(this);
+  }
+
+  doPonzi() {
+    if (!this.isPlayingOrPaused()) return;
+    if (!this.sec.canDoIllegalAction('ponzi', this.progression.data, this.progression.data.runCount)) return;
+
+    this.audio.playIllegalAction();
+    const result = this.sec.doPonzi(this.trading);
     this.news.addSecNews(result.message, this.currentDay);
     this.ui.update(this);
   }

@@ -378,6 +378,44 @@ const UNLOCKS = {
   goldenParachute: { name: 'Golden Parachute', cost: 20, description: 'Earn 50% bonus points when fired for missing targets', category: 'survival' },
   fallGuy:         { name: 'Fall Guy', cost: 30, description: 'Once per run: blame someone else (-40 SEC attention)', category: 'survival', secReduction: 40, requires: 'goldenParachute' },
   bailFund:        { name: 'Bail Fund', cost: 40, description: 'Survive one arrest per run (SEC resets to 60)', category: 'survival', requires: 'fallGuy' },
+  deadMansSwitch:  { name: "Dead Man's Switch", cost: 50, description: 'Earn 50% bonus points when arrested', category: 'survival', ppBonus: 0.50, requires: 'bailFund' },
+  offshoreEscape:  { name: 'Offshore Escape', cost: 65, description: 'Auto-escape at 95+ SEC once per run (resets to 50)', category: 'survival', escapeThreshold: 95, resetTo: 50, requires: 'deadMansSwitch' },
+
+  // --- Automation ---
+  stopLoss:          { name: 'Stop Loss', cost: 5, description: 'Auto-sell positions at -20% loss', category: 'automation', lossThreshold: -0.20 },
+  takeProfit:        { name: 'Take Profit', cost: 8, description: 'Auto-sell positions at +50% gain', category: 'automation', gainThreshold: 0.50, requires: 'stopLoss' },
+  dollarCostAverage: { name: 'Dollar Cost Average', cost: 12, description: 'Auto-invest $500 in random asset every 10 days', category: 'automation', investAmount: 500, investInterval: 10, requires: 'takeProfit' },
+
+  // --- Time Travel ---
+  dejaVu:            { name: 'Deja Vu', cost: 10, description: 'See 10-day price change % for each asset', category: 'timeTravel' },
+  butterflyEffect:   { name: 'Butterfly Effect', cost: 15, description: 'Trading P&L amplified by 50% (gains AND losses)', category: 'timeTravel', pnlMultiplier: 1.5, requires: 'dejaVu' },
+  temporalArbitrage: { name: 'Temporal Arbitrage', cost: 25, description: '20% chance of perfect trade timing (+20% bonus)', category: 'timeTravel', perfectTradeChance: 0.20, perfectTradeBonus: 0.20, requires: 'butterflyEffect' },
+  groundhogDay:      { name: 'Groundhog Day', cost: 40, description: 'Add 90 extra days to your run', category: 'timeTravel', extraDays: 90, requires: 'temporalArbitrage' },
+
+  // --- Reputation ---
+  charityFoundation: { name: 'Charity Foundation', cost: 6, description: 'Extra SEC decay +0.05/day', category: 'reputation', extraDecay: 0.05 },
+  tedTalk:           { name: 'TED Talk', cost: 10, description: 'Start runs with 5 less SEC attention', category: 'reputation', secReduction: 5, requires: 'charityFoundation' },
+  bookDeal:          { name: 'Book Deal', cost: 15, description: 'Earn $100/day passive income from royalties', category: 'reputation', passivePerDay: 100, requires: 'tedTalk' },
+  cnbcRegular:       { name: 'CNBC Regular', cost: 25, description: '+10% profit on all trades', category: 'reputation', profitBonus: 0.10, requires: 'bookDeal' },
+
+  // --- Portfolio Bonuses ---
+  diversificationBonus: { name: 'Diversification Bonus', cost: 8, description: '+5% passive income per unique asset held', category: 'portfolio', bonusPerAsset: 0.05 },
+  sectorRotation:       { name: 'Sector Rotation', cost: 15, description: '+15% profit when trading different assets consecutively', category: 'portfolio', rotationBonus: 0.15, requires: 'diversificationBonus' },
+  whaleStatus:          { name: 'Whale Status', cost: 25, description: 'No SEC attention from large trades', category: 'portfolio', requires: 'sectorRotation' },
+
+  // --- Naughty Activities Extensions ---
+  fakeNewsBot:    { name: 'Fake News Bot', cost: 30, description: 'Plant fake news to pump stocks for profit', category: 'illegal', requires: 'caymanShellCorp' },
+  moneyLaundering:{ name: 'Money Laundering', cost: 40, description: 'Clean your dirty money for cash and reduced heat', category: 'illegal', requires: 'fakeNewsBot' },
+  ponziScheme:    { name: 'Ponzi Scheme', cost: 50, description: 'Run a pyramid scheme for massive profits', category: 'illegal', requires: 'moneyLaundering' },
+
+  // --- Connections Extensions ---
+  mediaContact:     { name: 'Media Contact', cost: 22, description: 'Suspicious return SEC hits reduced 30%', category: 'connections', suspiciousReturnReduction: 0.30, requires: 'lobbyistNetwork' },
+  secMole:          { name: 'SEC Mole', cost: 30, description: 'See exact SEC attention value at all levels', category: 'connections', requires: 'mediaContact' },
+  judgeOnRetainer:  { name: 'Judge on Retainer', cost: 40, description: 'Bail fund resets SEC to 40 instead of 60', category: 'connections', bailResetLevel: 40, requires: 'secMole' },
+
+  // --- Market Intel Extensions ---
+  earningsCalendar:  { name: 'Earnings Calendar', cost: 30, description: 'See upcoming market events 5 days ahead', category: 'intel', previewDays: 5, requires: 'timeTravelersAlmanac' },
+  volatilityScanner: { name: 'Volatility Scanner', cost: 40, description: 'See volatility rating for each asset', category: 'intel', requires: 'earningsCalendar' },
 };
 
 // ============================================================================
@@ -556,6 +594,28 @@ const ILLEGAL_ACTIONS = {
     secHit: CONFIG.FRONT_RUN_SEC_HIT,
     profitMultiplier: 1.3,
     requires: 'hedgeFund'
+  },
+  fakeNews: {
+    name: 'Fake News Bot',
+    description: 'Plant fake stories to pump a stock. Risky but profitable.',
+    secHit: 18,
+    profitMultiplier: 1.15,
+    requires: 'fakeNewsBot'
+  },
+  moneyLaunder: {
+    name: 'Money Laundering',
+    description: 'Clean your profits through shell companies. Flat cash + reduced heat.',
+    secHit: 8,
+    flatProfit: 10000,
+    secReduction: 5,
+    requires: 'moneyLaundering'
+  },
+  ponzi: {
+    name: 'Ponzi Scheme',
+    description: 'Run a pyramid scheme. Massive profits, massive risk.',
+    secHit: 25,
+    profitMultiplier: 2.0,
+    requires: 'ponziScheme'
   },
 };
 

@@ -2979,3 +2979,95 @@ canvas {
   max-height: 400px;
   overflow-y: auto;
 }
+
+/* ============================================================================
+   NEW SHOP ITEMS - UI Styles
+   ============================================================================ */
+
+/* Actions section (illegal actions, donations) */
+.actions-section {
+  border-top: 1px solid var(--rh-border);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--rh-darker);
+}
+
+.actions-section .section-title {
+  font-size: 12px;
+  margin-bottom: var(--spacing-xs);
+}
+
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.btn-action {
+  font-size: 11px;
+  padding: 4px 8px;
+  background: var(--rh-panel);
+  border: 1px solid var(--rh-border);
+  color: var(--rh-text);
+  cursor: pointer;
+  transition: all 150ms;
+  white-space: nowrap;
+}
+
+.btn-action:hover {
+  background: var(--rh-panel-hover);
+  border-color: var(--rh-border-strong);
+}
+
+.btn-action.btn-illegal {
+  border-color: rgba(255, 59, 48, 0.3);
+  color: var(--rh-red);
+}
+
+.btn-action.btn-illegal:hover {
+  border-color: var(--rh-red);
+  background: rgba(255, 59, 48, 0.1);
+}
+
+/* Deja Vu: 10-day price change indicator */
+.deja-vu-indicator {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 4px;
+  border-radius: 3px;
+  margin-right: 4px;
+}
+
+.deja-vu-indicator.positive {
+  color: var(--rh-green);
+  background: rgba(0, 200, 5, 0.1);
+}
+
+.deja-vu-indicator.negative {
+  color: var(--rh-red);
+  background: rgba(255, 59, 48, 0.1);
+}
+
+/* Volatility Scanner: volatility rating badge */
+.vol-indicator {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+  margin-right: 4px;
+  letter-spacing: 0.5px;
+}
+
+.vol-low {
+  color: var(--rh-green);
+  background: rgba(0, 200, 5, 0.1);
+}
+
+.vol-med {
+  color: var(--rh-yellow);
+  background: rgba(255, 214, 10, 0.1);
+}
+
+.vol-high {
+  color: var(--rh-red);
+  background: rgba(255, 59, 48, 0.1);
+}

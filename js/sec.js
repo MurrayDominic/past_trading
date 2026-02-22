@@ -32,6 +32,7 @@ class SECSystem {
     // Survival unlock tracking
     this.fallGuyUsed = false;
     this.bailFundUsed = false;
+    this.offshoreEscapeUsed = false;
   }
 
   tick(tradingEngine, market, metaProgression) {
@@ -58,6 +59,10 @@ class SECSystem {
       if (metaProgression.equippedTitle === 'teflonDon') {
         decay *= 1.25;
       }
+      // Charity Foundation: extra SEC decay per day
+      if (metaProgression.unlocks.charityFoundation) {
+        decay += UNLOCKS.charityFoundation.extraDecay;
+      }
     }
 
     this.attention = Math.max(0, this.attention - decay);
@@ -75,7 +80,12 @@ class SECSystem {
       const dailyReturn = prev > 0 ? (curr - prev) / prev : 0;
 
       if (Math.abs(dailyReturn) > CONFIG.SUSPICIOUS_RETURN_THRESHOLD) {
-        this.addAttention(CONFIG.SUSPICIOUS_RETURN_SEC_HIT, 'Unusual returns flagged');
+        let suspiciousHit = CONFIG.SUSPICIOUS_RETURN_SEC_HIT;
+        // Media Contact: reduce suspicious return SEC hits by 30%
+        if (metaProgression && metaProgression.unlocks.mediaContact) {
+          suspiciousHit *= (1 - UNLOCKS.mediaContact.suspiciousReturnReduction);
+        }
+        this.addAttention(suspiciousHit, 'Unusual returns flagged');
       }
     }
 
@@ -103,6 +113,18 @@ class SECSystem {
     } else if (this.attention < CONFIG.SEC_THRESHOLDS.INVESTIGATION) {
       this.frozenAssets = false;
       this.tradeRestricted = false;
+    }
+
+    // Offshore Escape: auto-escape at 95+ SEC, once per run
+    if (metaProgression && metaProgression.unlocks.offshoreEscape
+        && !this.offshoreEscapeUsed
+        && this.attention >= UNLOCKS.offshoreEscape.escapeThreshold) {
+      this.offshoreEscapeUsed = true;
+      this.attention = UNLOCKS.offshoreEscape.resetTo;
+      this.frozenAssets = false;
+      this.tradeRestricted = false;
+      this.updateStage();
+      this._offshoreEscapeTriggered = true; // flag for UI notification
     }
 
     // Track max attention in stats
@@ -290,11 +312,56 @@ class SECSystem {
     if (!this._meta || !this._meta.unlocks.bailFund) return false;
 
     this.bailFundUsed = true;
-    this.attention = 60;
+    // Judge on Retainer: resets to 40 instead of 60
+    const resetLevel = (this._meta && this._meta.unlocks.judgeOnRetainer)
+      ? UNLOCKS.judgeOnRetainer.bailResetLevel : 60;
+    this.attention = resetLevel;
     this.frozenAssets = false;
     this.tradeRestricted = false;
     this.updateStage();
     return true;
+  }
+
+  doFakeNews(market, tradingEngine) {
+    this.addAttention(this.getIllegalSecHit(ILLEGAL_ACTIONS.fakeNews.secHit), 'Fake news campaign detected');
+    tradingEngine.stats.illegalActions++;
+
+    // Pump a random asset by 15%
+    const assets = market.assets.filter(a => market.isAssetLive(a));
+    if (assets.length === 0) return null;
+    const asset = assets[Math.floor(Math.random() * assets.length)];
+    const pumpAmount = ILLEGAL_ACTIONS.fakeNews.profitMultiplier - 1; // 0.15 = 15%
+    asset.price *= (1 + pumpAmount);
+
+    const profit = tradingEngine.netWorth * 0.03 * this.getIllegalProfitMult();
+    tradingEngine.cash += profit;
+
+    return { profit, message: `Planted fake news about ${asset.ticker}. +${formatMoney(profit)}`, ticker: asset.ticker };
+  }
+
+  doMoneyLaunder(tradingEngine) {
+    const action = ILLEGAL_ACTIONS.moneyLaunder;
+    this.addAttention(this.getIllegalSecHit(action.secHit), 'Money laundering detected');
+    tradingEngine.stats.illegalActions++;
+
+    // Flat cash bonus
+    const profit = action.flatProfit * this.getIllegalProfitMult();
+    tradingEngine.cash += profit;
+
+    // Also reduces SEC attention
+    this.attention = Math.max(0, this.attention - action.secReduction);
+
+    return { profit, message: `Laundered funds through shell companies. +${formatMoney(profit)}, SEC -${action.secReduction}` };
+  }
+
+  doPonzi(tradingEngine) {
+    this.addAttention(this.getIllegalSecHit(ILLEGAL_ACTIONS.ponzi.secHit), 'Ponzi scheme uncovered');
+    tradingEngine.stats.illegalActions++;
+
+    const profit = tradingEngine.netWorth * 0.15 * this.getIllegalProfitMult();
+    tradingEngine.cash += profit;
+
+    return { profit, message: `Ponzi scheme paid out. +${formatMoney(profit)}. Investors are getting suspicious...` };
   }
 
   canDoIllegalAction(actionId, metaProgression, runCount) {

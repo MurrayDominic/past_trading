@@ -66,6 +66,8 @@ class TradingEngine {
     this.positions = [];
     this.tradeHistory = [];
     this.lastTradeTime = 0;
+    this.lastTradedTicker = null;  // For sector rotation tracking
+    this.dcaDayCounter = 0;        // For DCA auto-invest timing
     this.stats = this.freshStats();
     this.stats.totalArrests = metaProgression ? (metaProgression.totalArrests || 0) : 0;
   }
@@ -200,6 +202,8 @@ class TradingEngine {
       this.stats.boughtAtBottom = true;
     }
 
+    this.lastTradedTicker = ticker;
+
     const trade = { action: 'BUY', ticker, quantity, price: asset.price, fee, day: currentDay };
     this.tradeHistory.push(trade);
 
@@ -230,15 +234,38 @@ class TradingEngine {
     let profit;
     if (pos.type === 'long') {
       profit = (asset.price - pos.entryPrice) * pos.quantity - fee;
-      // Return the collateral + profit
-      const collateral = this.getCollateral(pos);
-      this.cash += collateral + profit;
     } else {
       // Short
       profit = (pos.entryPrice - asset.price) * pos.quantity - fee;
-      const collateral = this.getCollateral(pos);
-      this.cash += collateral + profit;
     }
+
+    // Apply trade profit bonuses from unlocks
+    if (metaProgression) {
+      // Butterfly Effect: amplify P&L by 50% (gains AND losses)
+      if (metaProgression.unlocks.butterflyEffect) {
+        profit *= UNLOCKS.butterflyEffect.pnlMultiplier;
+      }
+
+      if (profit > 0) {
+        // CNBC Regular: +10% profit on all trades
+        if (metaProgression.unlocks.cnbcRegular) {
+          profit *= (1 + UNLOCKS.cnbcRegular.profitBonus);
+        }
+        // Temporal Arbitrage: 20% chance of perfect timing (+20% bonus)
+        if (metaProgression.unlocks.temporalArbitrage && Math.random() < UNLOCKS.temporalArbitrage.perfectTradeChance) {
+          profit *= (1 + UNLOCKS.temporalArbitrage.perfectTradeBonus);
+        }
+        // Sector Rotation: +15% profit when trading different assets consecutively
+        if (metaProgression.unlocks.sectorRotation && this.lastTradedTicker && this.lastTradedTicker !== pos.ticker) {
+          profit *= (1 + UNLOCKS.sectorRotation.rotationBonus);
+        }
+      }
+    }
+    this.lastTradedTicker = pos.ticker;
+
+    // Return collateral + profit
+    const collateral = this.getCollateral(pos);
+    this.cash += collateral + profit;
 
     this.lastTradeTime = Date.now();
     this.stats.totalTrades++;
@@ -360,7 +387,7 @@ class TradingEngine {
     return { success: true, message: `Shorted ${quantity.toFixed(4)} ${ticker} @ ${formatPrice(asset.price)} (${formatMoney(dollarAmount)})`, trade };
   }
 
-  updatePositions(market, currentDay) {
+  updatePositions(market, currentDay, metaProgression) {
     // Update P&L, check margin calls, track stats
     let totalPositionValue = 0;
 
@@ -414,6 +441,41 @@ class TradingEngine {
         this.stats.hadMarginCall = true;
         console.log(`Position liquidated: ${pos.ticker} (${pos.type})`);
         continue;
+      }
+
+      // Stop Loss / Take Profit auto-sell
+      if (metaProgression) {
+        const pnlPct = collateral > 0 ? (posValue - collateral) / collateral : 0;
+
+        if (metaProgression.unlocks.stopLoss && pnlPct <= UNLOCKS.stopLoss.lossThreshold) {
+          // Auto-sell at stop loss
+          const autoProfit = posValue - collateral;
+          this.cash += Math.max(0, posValue);
+          this.recentLiquidations.push({
+            ticker: pos.ticker, type: pos.type, quantity: pos.quantity,
+            loss: Math.abs(autoProfit), reason: 'Stop Loss'
+          });
+          this.positions.splice(i, 1);
+          this.stats.totalTrades++;
+          continue;
+        }
+
+        if (metaProgression.unlocks.takeProfit && pnlPct >= UNLOCKS.takeProfit.gainThreshold) {
+          // Auto-sell at take profit
+          const autoProfit = posValue - collateral;
+          this.cash += posValue;
+          this.recentLiquidations.push({
+            ticker: pos.ticker, type: pos.type, quantity: pos.quantity,
+            loss: -autoProfit, reason: 'Take Profit'
+          });
+          this.positions.splice(i, 1);
+          this.stats.totalTrades++;
+          if (autoProfit > 0) {
+            this.stats.totalProfit += autoProfit;
+            this.stats.winningTrades++;
+          }
+          continue;
+        }
       }
 
       totalPositionValue += posValue; // Allow negative values to show true insolvency
@@ -558,6 +620,17 @@ class TradingEngine {
       } else if (metaProgression.unlocks.dividendPortfolio) {
         income += this.netWorth * UNLOCKS.dividendPortfolio.passivePercent;
       }
+
+      // Book Deal: flat passive income per day
+      if (metaProgression.unlocks.bookDeal) {
+        income += UNLOCKS.bookDeal.passivePerDay;
+      }
+
+      // Diversification Bonus: +5% passive income per unique asset held
+      if (metaProgression.unlocks.diversificationBonus && income > 0) {
+        const uniqueAssets = new Set(this.positions.map(p => p.ticker)).size;
+        income *= (1 + uniqueAssets * UNLOCKS.diversificationBonus.bonusPerAsset);
+      }
     }
 
     if (income > 0) {
@@ -575,5 +648,28 @@ class TradingEngine {
     }
 
     return income;
+  }
+
+  // Dollar Cost Average: auto-invest in a random asset every N days
+  processDCA(market, metaProgression, currentDay) {
+    if (!metaProgression || !metaProgression.unlocks.dollarCostAverage) return null;
+
+    this.dcaDayCounter++;
+    if (this.dcaDayCounter < UNLOCKS.dollarCostAverage.investInterval) return null;
+    this.dcaDayCounter = 0;
+
+    const amount = UNLOCKS.dollarCostAverage.investAmount;
+    if (this.cash < amount) return null;
+
+    // Pick a random available asset
+    const assets = market.assets.filter(a => market.isAssetLive(a));
+    if (assets.length === 0) return null;
+
+    const asset = assets[Math.floor(Math.random() * assets.length)];
+    const result = this.buy(asset.ticker, amount, market, metaProgression, currentDay);
+    if (result.success) {
+      return { ticker: asset.ticker, amount, price: asset.price };
+    }
+    return null;
   }
 }
