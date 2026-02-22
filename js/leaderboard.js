@@ -51,9 +51,19 @@ class LeaderboardSystem {
       display: formatMoney(netWorth),
       profit: formatMoney(profit),
       days: currentDay,
+      name: '',
     }, (a, b) => b.score - a.score);
 
+    // Store direct reference to the entry (if it made the board)
+    this._lastEntry = this.boards.highScore.find(e => e.run === runNumber) || null;
     this.save();
+  }
+
+  nameLastRun(name) {
+    if (this._lastEntry) {
+      this._lastEntry.name = name.trim().substring(0, 30);
+      this.save();
+    }
   }
 
   addEntry(board, entry, sortFn) {
@@ -72,6 +82,11 @@ class LeaderboardSystem {
     return {
       highScore: 'Personal High Scores',
     };
+  }
+
+  clearAll() {
+    this.boards = { highScore: [] };
+    this.save();
   }
 
   getRankForScore(score, boardName) {

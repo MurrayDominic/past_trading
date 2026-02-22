@@ -39,128 +39,147 @@
         </div>
       </div>
 
-      <!-- Navigation Buttons -->
-      <div class="menu-nav-buttons">
-        <button class="btn btn-accent" id="open-shop-btn">Shop</button>
-        <button class="btn btn-secondary" id="open-settings-btn">Settings</button>
+      <!-- Navigation Tabs -->
+      <div class="menu-tab-bar">
+        <button class="menu-tab active" data-menu-tab="modes" id="tab-modes-btn">Play</button>
+        <button class="menu-tab" data-menu-tab="shop" id="open-shop-btn">Shop</button>
+        <button class="menu-tab" data-menu-tab="titles" id="tab-titles-btn">Titles</button>
+        <button class="menu-tab" data-menu-tab="leaderboard" id="tab-leaderboard-btn">Leaderboard</button>
+        <button class="menu-tab" data-menu-tab="achievements" id="tab-achievements-btn">Achievements</button>
+        <div class="menu-tab-spacer"></div>
+        <button class="menu-tab" data-menu-tab="settings" id="open-settings-btn">Settings</button>
       </div>
 
-      <!-- Trading Modes -->
-      <div class="menu-section">
-        <h2>Select Mode</h2>
-        <div id="mode-selector" class="mode-grid"></div>
+      <!-- Tab Content: Modes (default) -->
+      <div class="menu-tab-content active" data-menu-tab-content="modes">
+        <div class="menu-section">
+          <h2>Select Mode</h2>
+          <div id="mode-selector" class="mode-grid"></div>
+        </div>
       </div>
 
-      <!-- Titles -->
-      <div class="menu-section">
-        <h2>Titles</h2>
-        <div id="title-selector"></div>
+      <!-- Tab Content: Titles -->
+      <div class="menu-tab-content" data-menu-tab-content="titles">
+        <div class="menu-section">
+          <h2>Titles</h2>
+          <div id="title-selector"></div>
+        </div>
       </div>
 
-      <!-- Achievements -->
-      <div class="menu-section">
-        <h2>Achievements</h2>
-        <div id="menu-achievements"></div>
+      <!-- Tab Content: Leaderboard -->
+      <div class="menu-tab-content" data-menu-tab-content="leaderboard">
+        <div class="menu-section">
+          <h2>Leaderboards</h2>
+          <div id="menu-leaderboards"></div>
+        </div>
       </div>
 
-      <!-- Leaderboards -->
-      <div class="menu-section">
-        <h2>Leaderboards</h2>
-        <div id="menu-leaderboards"></div>
+      <!-- Tab Content: Achievements -->
+      <div class="menu-tab-content" data-menu-tab-content="achievements">
+        <div class="menu-section">
+          <h2>Achievements</h2>
+          <div id="menu-achievements"></div>
+        </div>
+      </div>
+
+      <!-- Tab Content: Shop -->
+      <div class="menu-tab-content" data-menu-tab-content="shop">
+        <div class="shop-inline-header">
+          <h2>Progression Shop</h2>
+          <div class="shop-pp-display">
+            <span class="pp-label">Points:</span>
+            <span class="pp-value" id="shop-pp">0</span>
+          </div>
+        </div>
+        <div class="shop-content">
+          <div class="shop-tree-area">
+            <h2>Unlock Tree</h2>
+            <div id="progression-tree" class="progression-tree"></div>
+          </div>
+          <div class="shop-detail-sidebar">
+            <h2>Selected Item</h2>
+            <div id="shop-item-detail" class="shop-item-detail">
+              <p class="detail-placeholder">Select an item to view details</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content: Settings -->
+      <div class="menu-tab-content" data-menu-tab-content="settings">
+        <div class="menu-section">
+          <h2>Settings</h2>
+
+          <!-- Audio -->
+          <div class="settings-group">
+            <h3 class="settings-group-title">Audio</h3>
+            <div class="settings-row">
+              <span class="settings-label">Volume</span>
+              <div class="settings-control">
+                <input type="range" id="settings-volume" min="0" max="100" value="70" class="settings-slider">
+                <span class="settings-value" id="settings-volume-value">70%</span>
+              </div>
+            </div>
+            <div class="settings-row">
+              <span class="settings-label">Mute</span>
+              <div class="settings-control">
+                <button class="btn btn-small settings-toggle" id="settings-mute-btn">Off</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Game -->
+          <div class="settings-group">
+            <h3 class="settings-group-title">Game</h3>
+            <div class="settings-row">
+              <span class="settings-label">Show tutorial on new run</span>
+              <div class="settings-control">
+                <button class="btn btn-small settings-toggle" id="settings-tutorial-btn">On</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Help -->
+          <div class="settings-group">
+            <h3 class="settings-group-title">Help</h3>
+            <div class="settings-row">
+              <span class="settings-label">Learn how to play the game</span>
+              <div class="settings-control">
+                <button class="btn btn-small btn-primary" id="settings-howtoplay-btn">How to Play</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Data -->
+          <div class="settings-group">
+            <h3 class="settings-group-title">Data</h3>
+            <div class="settings-row">
+              <span class="settings-label">Erase all unlocks, run history, and achievements</span>
+              <div class="settings-control">
+                <button class="btn btn-small btn-danger" id="settings-reset-btn">Reset Progress</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-exit-section">
+        <button class="btn btn-small btn-muted" id="exit-game-btn">Exit Game</button>
       </div>
 
     </div>
   </div>
 
   <!-- ============================================================ -->
-  <!-- SHOP SCREEN                                                    -->
+  <!-- CONFIRM MODAL (replaces browser confirm/alert)                 -->
   <!-- ============================================================ -->
-  <div id="shop-screen" class="hidden">
-    <div class="shop-container">
-      <div class="shop-header">
-        <button class="btn btn-small" id="back-to-menu-btn">← Back to Menu</button>
-        <h1>Progression Shop</h1>
-        <div class="shop-pp-display">
-          <span class="pp-label">Points:</span>
-          <span class="pp-value" id="shop-pp">0</span>
-        </div>
-      </div>
-
-      <div class="shop-content">
-        <!-- Tree visualization -->
-        <div class="shop-tree-area">
-          <h2>Unlock Tree</h2>
-          <div id="progression-tree" class="progression-tree"></div>
-        </div>
-
-        <!-- Detail sidebar -->
-        <div class="shop-detail-sidebar">
-          <h2>Selected Item</h2>
-          <div id="shop-item-detail" class="shop-item-detail">
-            <p class="detail-placeholder">Select an item to view details</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============================================================ -->
-  <!-- SETTINGS SCREEN                                                -->
-  <!-- ============================================================ -->
-  <div id="settings-screen" class="hidden">
-    <div class="settings-container">
-      <button class="btn btn-small" id="settings-back-btn">← Back to Menu</button>
-      <h1 class="settings-title">Settings</h1>
-
-      <!-- Audio -->
-      <div class="settings-group">
-        <h2 class="settings-group-title">Audio</h2>
-        <div class="settings-row">
-          <span class="settings-label">Volume</span>
-          <div class="settings-control">
-            <input type="range" id="settings-volume" min="0" max="100" value="70" class="settings-slider">
-            <span class="settings-value" id="settings-volume-value">70%</span>
-          </div>
-        </div>
-        <div class="settings-row">
-          <span class="settings-label">Mute</span>
-          <div class="settings-control">
-            <button class="btn btn-small settings-toggle" id="settings-mute-btn">Off</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Game -->
-      <div class="settings-group">
-        <h2 class="settings-group-title">Game</h2>
-        <div class="settings-row">
-          <span class="settings-label">Show tutorial on new run</span>
-          <div class="settings-control">
-            <button class="btn btn-small settings-toggle" id="settings-tutorial-btn">On</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Help -->
-      <div class="settings-group">
-        <h2 class="settings-group-title">Help</h2>
-        <div class="settings-row">
-          <span class="settings-label">Learn how to play the game</span>
-          <div class="settings-control">
-            <button class="btn btn-small btn-primary" id="settings-howtoplay-btn">How to Play</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Data -->
-      <div class="settings-group">
-        <h2 class="settings-group-title">Data</h2>
-        <div class="settings-row">
-          <span class="settings-label">Erase all unlocks, run history, and achievements</span>
-          <div class="settings-control">
-            <button class="btn btn-small btn-danger" id="settings-reset-btn">Reset Progress</button>
-          </div>
-        </div>
+  <div id="confirm-modal" class="confirm-modal hidden">
+    <div class="confirm-content">
+      <h3 id="confirm-title">Confirm</h3>
+      <p id="confirm-message"></p>
+      <div class="confirm-buttons">
+        <button class="btn btn-muted" id="confirm-cancel-btn">Cancel</button>
+        <button class="btn btn-danger" id="confirm-ok-btn">Confirm</button>
       </div>
     </div>
   </div>
@@ -408,6 +427,11 @@
 
       <h3 style="margin-top: 20px;">NEW ACHIEVEMENTS</h3>
       <div id="run-end-achievements"></div>
+
+      <div class="run-name-section" style="margin-top: 20px;">
+        <label for="run-name-input" style="color: var(--rh-text-secondary); font-size: 14px;">Name this run for the leaderboard:</label>
+        <input type="text" id="run-name-input" class="run-name-input" placeholder="e.g. YOLO Tesla Shorts" maxlength="30">
+      </div>
 
       <button class="btn btn-primary mt-2" id="back-to-menu">BACK TO MENU</button>
     </div>

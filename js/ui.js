@@ -19,8 +19,6 @@ class GameUI {
     // Cache DOM elements
     this.el = {
       menuScreen: document.getElementById('menu-screen'),
-      shopScreen: document.getElementById('shop-screen'),
-      settingsScreen: document.getElementById('settings-screen'),
       yearSelectScreen: document.getElementById('year-select-screen'),
       gameScreen: document.getElementById('game-screen'),
       runEndScreen: document.getElementById('run-end-screen'),
@@ -75,8 +73,6 @@ class GameUI {
       menuAchievements: document.getElementById('menu-achievements'),
       menuLeaderboards: document.getElementById('menu-leaderboards'),
       titleSelector: document.getElementById('title-selector'),
-      openShopBtn: document.getElementById('open-shop-btn'),
-      backToMenuBtn: document.getElementById('back-to-menu-btn'),
 
       // Year Selection
       startYearSlider: document.getElementById('start-year-slider'),
@@ -115,26 +111,44 @@ class GameUI {
     }
 
     this.bindEvents();
+
+    // Resize handler for canvas scaling
+    window.addEventListener('resize', () => {
+      if (this.game && this.game.isPlayingOrPaused()) {
+        this.renderGraph(this.game);
+        if (this.chartManager) {
+          this.chartManager.renderActiveChart(
+            this.game.market, this.game.currentDay,
+            this.game.selectedMode, this.game.trading.positions
+          );
+        }
+      }
+    });
   }
 
   bindEvents() {
-    // Shop navigation
-    if (this.el.openShopBtn) {
-      this.el.openShopBtn.addEventListener('click', () => this.showShop());
-    }
-    if (this.el.backToMenuBtn) {
-      this.el.backToMenuBtn.addEventListener('click', () => this.showMenu());
-    }
+    // Menu tab bar navigation
+    document.querySelectorAll('.menu-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const tabName = tab.dataset.menuTab;
 
-    // Settings navigation
-    const openSettingsBtn = document.getElementById('open-settings-btn');
-    if (openSettingsBtn) {
-      openSettingsBtn.addEventListener('click', () => this.showSettings());
-    }
-    const settingsBackBtn = document.getElementById('settings-back-btn');
-    if (settingsBackBtn) {
-      settingsBackBtn.addEventListener('click', () => this.showMenu());
-    }
+        // Switch active tab
+        document.querySelectorAll('.menu-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        // Switch content
+        document.querySelectorAll('.menu-tab-content').forEach(c => c.classList.remove('active'));
+        const content = document.querySelector(`[data-menu-tab-content="${tabName}"]`);
+        if (content) content.classList.add('active');
+
+        // Render content when switching to specific tabs
+        if (tabName === 'shop') {
+          this.renderShop();
+        } else if (tabName === 'settings') {
+          this.renderSettingsState();
+        }
+      });
+    });
 
     // Settings controls
     const settingsVolume = document.getElementById('settings-volume');
@@ -173,10 +187,10 @@ class GameUI {
     const settingsResetBtn = document.getElementById('settings-reset-btn');
     if (settingsResetBtn) {
       settingsResetBtn.addEventListener('click', () => {
-        if (confirm('Reset ALL progress? This cannot be undone.')) {
+        this.showConfirm('Reset Progress', 'Reset ALL progress? This cannot be undone.', () => {
           this.game.progression.resetProgress();
           this.showMenu();
-        }
+        }, 'Reset');
       });
     }
 
@@ -244,10 +258,25 @@ class GameUI {
       pauseBtnAlt.addEventListener('click', () => this.game.togglePause());
     }
 
-    // Exit
+    // Exit run (in-game)
     const exitBtn = document.getElementById('exit-btn');
     if (exitBtn) {
       exitBtn.addEventListener('click', () => this.game.exitToMenu());
+    }
+
+    // Exit game (home screen - close the app, Electron only)
+    const exitGameBtn = document.getElementById('exit-game-btn');
+    if (exitGameBtn) {
+      if (window.electronAPI && window.electronAPI.quitApp) {
+        exitGameBtn.addEventListener('click', () => {
+          this.showConfirm('Exit Game', 'Are you sure you want to close the game?', () => {
+            window.electronAPI.quitApp();
+          }, 'Exit', true);
+        });
+      } else {
+        // Hide in browser - can't close tabs programmatically
+        exitGameBtn.style.display = 'none';
+      }
     }
 
     // Unpause button in overlay
@@ -455,6 +484,9 @@ class GameUI {
         return;
       }
 
+      // Don't intercept keys when user is typing in an input field
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
       if (this.game.state !== 'playing' && this.game.state !== 'paused') return;
 
       switch (e.key) {
@@ -475,10 +507,8 @@ class GameUI {
   showMenu() {
     this.el.menuScreen.classList.remove('hidden');
     this.el.yearSelectScreen.classList.add('hidden');
-    this.el.settingsScreen.classList.add('hidden');
     this.el.gameScreen.classList.add('hidden');
     this.el.runEndScreen.classList.add('hidden');
-    this.el.shopScreen.classList.add('hidden');
     if (this.el.loadingOverlay) {
       this.el.loadingOverlay.classList.add('hidden');
     }
@@ -494,7 +524,6 @@ class GameUI {
   showLoading() {
     this.el.menuScreen.classList.add('hidden');
     this.el.yearSelectScreen.classList.add('hidden');
-    this.el.settingsScreen.classList.add('hidden');
     this.el.gameScreen.classList.add('hidden');
     this.el.runEndScreen.classList.add('hidden');
     if (this.el.loadingOverlay) {
@@ -542,7 +571,6 @@ class GameUI {
   showGame() {
     this.el.menuScreen.classList.add('hidden');
     this.el.yearSelectScreen.classList.add('hidden');
-    this.el.settingsScreen.classList.add('hidden');
     this.el.gameScreen.classList.remove('hidden');
     this.el.runEndScreen.classList.add('hidden');
     if (this.el.loadingOverlay) {
@@ -719,8 +747,7 @@ class GameUI {
           this.renderMenu();
           console.log('[Mode Unlock] renderMenu completed');
         } else {
-          // Show error notification
-          alert(result.message);
+          this.showAlert('Cannot Unlock', result.message);
         }
       });
     });
@@ -915,6 +942,10 @@ class GameUI {
 
     // Leaderboards
     this.renderLeaderboards();
+
+    // Pre-render for tab switching
+    this.renderShop();
+    this.renderSettingsState();
   }
 
   renderLeaderboards() {
@@ -927,27 +958,33 @@ class GameUI {
     } else {
       html += '<ol class="leaderboard-list">';
       for (const e of entries.slice(0, 10)) {
-        html += `<li>${e.display} <span class="muted">Run #${e.run} (${e.date})</span></li>`;
+        const nameLabel = e.name ? `<strong>${e.name}</strong> - ` : '';
+        html += `<li>${nameLabel}${e.display} <span class="muted">Run #${e.run} (${e.date})</span></li>`;
       }
       html += '</ol>';
+      html += '<button class="btn btn-danger" id="clear-leaderboard-btn" style="margin-top: 16px;">Clear Leaderboard</button>';
     }
 
     this.el.menuLeaderboards.innerHTML = html;
+
+    const clearBtn = document.getElementById('clear-leaderboard-btn');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        this.showConfirm('Clear Leaderboard', 'Are you sure you want to clear the leaderboard? This cannot be undone.', () => {
+          lb.clearAll();
+          this.renderLeaderboards();
+        }, 'Clear');
+      });
+    }
   }
 
-  // ---- Shop Screen ----
+  // ---- Shop ----
 
   showShop() {
-    this.el.menuScreen.classList.add('hidden');
-    this.el.yearSelectScreen.classList.add('hidden');
-    this.el.settingsScreen.classList.add('hidden');
-    this.el.shopScreen.classList.remove('hidden');
     this.renderShop();
   }
 
   showSettings() {
-    this.el.menuScreen.classList.add('hidden');
-    this.el.settingsScreen.classList.remove('hidden');
     this.renderSettingsState();
   }
 
@@ -1105,6 +1142,16 @@ class GameUI {
           { id: 'bailFund', name: 'Bail Fund', icon: '', cost: UNLOCKS.bailFund.cost, requires: [UNLOCKS.bailFund.requires] },
         ]
       },
+      {
+        category: 'Algo Tools',
+        icon: '',
+        nodes: [
+          { id: 'scalping', name: 'Scalping Bot', icon: '', cost: EQUIPABLE_TOOLS.scalping.cost, requires: ['algoEngine'], isTool: true },
+          { id: 'arbitrage', name: 'Arbitrage Scanner', icon: '', cost: EQUIPABLE_TOOLS.arbitrage.cost, isTool: true },
+          { id: 'marketMaking', name: 'Market Making', icon: '', cost: EQUIPABLE_TOOLS.marketMaking.cost, isTool: true },
+          { id: 'algoTrading', name: 'Algo Trading', icon: '', cost: EQUIPABLE_TOOLS.algoTrading.cost, isTool: true },
+        ]
+      },
     ];
 
     // Render tree
@@ -1116,38 +1163,49 @@ class GameUI {
 
       for (let i = 0; i < category.nodes.length; i++) {
         const node = category.nodes[i];
-        const unlocked = prog.data.unlocks[node.id] || false;
+        const owned = node.isTool
+          ? prog.data.ownedTools.includes(node.id)
+          : (prog.data.ownedUnlocks[node.id] || false);
+        const equipped = node.isTool
+          ? prog.data.equippedTool === node.id
+          : (prog.data.unlocks[node.id] || false);
         const canAfford = prog.data.prestigePoints >= node.cost;
 
-        // Check if prerequisites are met (explicit requires + implicit left-to-right chain)
+        // Check if prerequisites are met
         let prereqsMet = true;
         let missingPrereq = null;
 
         // Explicit requires from config
         if (node.requires) {
-          prereqsMet = node.requires.every(req => prog.data.unlocks[req]);
+          prereqsMet = node.requires.every(req => prog.data.ownedUnlocks[req]);
           if (!prereqsMet) {
-            missingPrereq = node.requires.find(req => !prog.data.unlocks[req]);
+            missingPrereq = node.requires.find(req => !prog.data.ownedUnlocks[req]);
           }
         }
 
-        // Implicit: each node requires the previous node in the row to be unlocked
+        // Implicit: each node requires the previous node in the row to be owned
         if (prereqsMet && i > 0) {
           const prevNode = category.nodes[i - 1];
-          if (!prog.data.unlocks[prevNode.id]) {
+          const prevOwned = prevNode.isTool
+            ? prog.data.ownedTools.includes(prevNode.id)
+            : (prog.data.ownedUnlocks[prevNode.id] || false);
+          if (!prevOwned) {
             prereqsMet = false;
             missingPrereq = prevNode.id;
           }
         }
 
-        // Determine node state: unlocked, available, blocked (missing prereqs), or locked (can't afford)
+        // Determine node state
         let statusClass, statusText;
-        if (unlocked) {
+        if (owned && equipped) {
           statusClass = 'unlocked';
-          statusText = 'Unlocked';
+          statusText = 'Equipped';
+        } else if (owned && !equipped) {
+          statusClass = 'unequipped';
+          statusText = 'Unequipped';
         } else if (!prereqsMet) {
           statusClass = 'blocked';
-          const prereqName = UNLOCKS[missingPrereq]?.name || missingPrereq;
+          const prereqName = UNLOCKS[missingPrereq]?.name || EQUIPABLE_TOOLS[missingPrereq]?.name || missingPrereq;
           statusText = `Requires: ${prereqName}`;
         } else if (!canAfford) {
           statusClass = 'locked';
@@ -1157,11 +1215,6 @@ class GameUI {
           statusText = 'Available';
         }
 
-        // Debug logging for each node
-        if (prog.data.unlocks[node.id]) {
-          console.log(`Node ${node.id}: unlocked=${unlocked}, statusClass=${statusClass}, statusText=${statusText}`);
-        }
-
         treeHtml += `
           <div class="tree-node ${statusClass}" data-node-id="${node.id}" ${!prereqsMet ? `data-blocked-reason="Requires: ${UNLOCKS[missingPrereq]?.name || missingPrereq}"` : ''}>
             <div class="node-name">${node.name}</div>
@@ -1169,8 +1222,6 @@ class GameUI {
             <div class="node-status ${statusClass}">${statusText}</div>
           </div>
         `;
-
-        // Arrows removed - prerequisite chain shown via "Requires:" text
       }
 
       treeHtml += `</div></div>`;
@@ -1215,22 +1266,27 @@ class GameUI {
       return;
     }
 
-    const unlocked = prog.data.unlocks[nodeId] || false;
-    console.log('Unlock status for', nodeId, ':', unlocked);
+    const isTool = nodeData.isTool || false;
+    const owned = isTool
+      ? prog.data.ownedTools.includes(nodeId)
+      : (prog.data.ownedUnlocks[nodeId] || false);
+    const equipped = isTool
+      ? prog.data.equippedTool === nodeId
+      : (prog.data.unlocks[nodeId] || false);
     const canAfford = prog.data.prestigePoints >= nodeData.cost;
 
     let prereqsMet = true;
     let prereqText = 'None';
     if (nodeData.requires) {
-      prereqsMet = nodeData.requires.every(req => prog.data.unlocks[req]);
+      prereqsMet = nodeData.requires.every(req => prog.data.ownedUnlocks[req]);
       if (!prereqsMet) {
-        const missing = nodeData.requires.filter(req => !prog.data.unlocks[req]);
+        const missing = nodeData.requires.filter(req => !prog.data.ownedUnlocks[req]);
         prereqText = `Requires: ${missing.map(r => {
           for (const cat of this.treeStructure) {
             const n = cat.nodes.find(node => node.id === r);
             if (n) return n.name;
           }
-          return r;
+          return UNLOCKS[r]?.name || r;
         }).join(', ')}`;
       }
     }
@@ -1241,7 +1297,10 @@ class GameUI {
         const idx = cat.nodes.findIndex(n => n.id === nodeId);
         if (idx > 0) {
           const prevNode = cat.nodes[idx - 1];
-          if (!prog.data.unlocks[prevNode.id]) {
+          const prevOwned = prevNode.isTool
+            ? prog.data.ownedTools.includes(prevNode.id)
+            : (prog.data.ownedUnlocks[prevNode.id] || false);
+          if (!prevOwned) {
             prereqsMet = false;
             prereqText = `Requires: ${prevNode.name}`;
           }
@@ -1249,8 +1308,6 @@ class GameUI {
         }
       }
     }
-
-    const available = !unlocked && prereqsMet && canAfford;
 
     let detailHtml = `
       <div class="detail-header">
@@ -1265,6 +1322,16 @@ class GameUI {
       </div>
     `;
 
+    // Show passive income for tools
+    if (isTool && unlock.passiveIncomePerDay) {
+      detailHtml += `
+        <div class="detail-section">
+          <div class="detail-section-title">Passive Income</div>
+          <div class="detail-description" style="color: var(--rh-green); font-family: var(--font-mono);">+${formatMoney(unlock.passiveIncomePerDay)}/day</div>
+        </div>
+      `;
+    }
+
     if (nodeData.requires) {
       detailHtml += `
         <div class="detail-section">
@@ -1276,36 +1343,62 @@ class GameUI {
 
     detailHtml += `<div class="detail-action">`;
 
-    if (unlocked) {
-      detailHtml += `<button class="btn btn-disabled" disabled>Already Unlocked</button>`;
+    if (owned && equipped) {
+      detailHtml += `<button class="btn btn-equip equipped" data-toggle-equip="${nodeId}">Unequip</button>`;
+    } else if (owned && !equipped) {
+      detailHtml += `<button class="btn btn-equip" data-toggle-equip="${nodeId}">Equip</button>`;
     } else if (!prereqsMet) {
       detailHtml += `<button class="btn btn-disabled" disabled>Prerequisites Not Met</button>`;
     } else if (!canAfford) {
       detailHtml += `<button class="btn btn-disabled" disabled>Cannot Afford (${nodeData.cost} Pts)</button>`;
     } else {
-      detailHtml += `<button class="btn btn-accent" data-unlock="${nodeId}">Unlock for ${nodeData.cost} Pts</button>`;
+      detailHtml += `<button class="btn btn-accent" data-unlock="${nodeId}">Purchase for ${nodeData.cost} Pts</button>`;
     }
 
     detailHtml += `</div>`;
 
     this.el.shopItemDetail.innerHTML = detailHtml;
 
-    // Bind unlock button
+    // Bind purchase button
     const unlockBtn = this.el.shopItemDetail.querySelector('[data-unlock]');
     if (unlockBtn) {
       unlockBtn.addEventListener('click', () => {
-        console.log('Unlock button clicked for:', nodeId);
-        console.log('Before purchase - unlocks:', prog.data.unlocks);
-        const result = prog.purchaseUnlock(nodeId);
-        console.log('Purchase result:', result);
+        const result = isTool ? prog.purchaseTool(nodeId) : prog.purchaseUnlock(nodeId);
         if (result.success) {
-          console.log('After purchase - unlocks:', prog.data.unlocks);
-          this.renderShop(); // Refresh shop display
-          console.log('After renderShop - tree structure exists:', !!this.treeStructure);
-          this.showNodeDetail(nodeId); // Refresh detail view
-          console.log('After showNodeDetail - should be updated');
+          this.renderShop();
+          this.showNodeDetail(nodeId);
         } else {
-          alert(result.message);
+          this.showAlert('Cannot Purchase', result.message);
+        }
+      });
+    }
+
+    // Bind equip/unequip toggle button
+    const toggleBtn = this.el.shopItemDetail.querySelector('[data-toggle-equip]');
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', () => {
+        if (isTool) {
+          if (equipped) {
+            prog.unequipTool();
+            this.renderShop();
+            this.showNodeDetail(nodeId);
+          } else {
+            const result = prog.equipTool(nodeId);
+            if (result.success) {
+              this.renderShop();
+              this.showNodeDetail(nodeId);
+            } else {
+              this.showAlert('Cannot Equip', result.message);
+            }
+          }
+        } else {
+          const result = prog.toggleEquip(nodeId);
+          if (result.success) {
+            this.renderShop();
+            this.showNodeDetail(nodeId);
+          } else {
+            this.showAlert('Cannot Equip', result.message);
+          }
         }
       });
     }
@@ -1610,7 +1703,7 @@ class GameUI {
 
       // Label
       const value = max - (range * i / 4);
-      ctx.fillStyle = '#666';
+      ctx.fillStyle = '#fff';
       ctx.font = '14px monospace';
       ctx.textAlign = 'right';
       ctx.fillText(formatMoney(value), padding - 4, y + 4);
@@ -1670,7 +1763,7 @@ class GameUI {
 
     // X-axis date labels
     if (game.market && game.market.startDate) {
-      ctx.fillStyle = '#888';
+      ctx.fillStyle = '#fff';
       ctx.font = '14px monospace';
       ctx.textAlign = 'center';
 
@@ -1892,7 +1985,6 @@ class GameUI {
   showRunEnd(game, result, ranking = null) {
     this.el.menuScreen.classList.add('hidden');
     this.el.yearSelectScreen.classList.add('hidden');
-    this.el.settingsScreen.classList.add('hidden');
     this.el.gameScreen.classList.add('hidden');
     this.el.runEndScreen.classList.remove('hidden');
 
@@ -2010,6 +2102,15 @@ class GameUI {
             <span class="stat-label">Win Rate</span>
             <span class="stat-value text-accent">${rec.winRate || '0.0%'}</span>
           </div>
+          <div class="stat-item highlight">
+            <span class="stat-label">IRR (Annualized)</span>
+            <span class="stat-value text-accent">${(() => {
+              const days = rec.days || 1;
+              const irr = Math.pow(rec.netWorth / CONFIG.STARTING_CASH, 365 / days) - 1;
+              const irrPct = (irr * 100).toFixed(1);
+              return (irr >= 0 ? '+' : '') + irrPct + '%';
+            })()}</span>
+          </div>
           <div class="stat-item">
             <span class="stat-label">Winning Trades</span>
             <span class="stat-value text-success">${rec.winningTrades || 0}</span>
@@ -2079,10 +2180,20 @@ class GameUI {
     }
     this.el.runEndAchievements.innerHTML = achHtml;
 
-    // Back to menu button
+    // Clear run name input
+    const runNameInput = document.getElementById('run-name-input');
+    if (runNameInput) runNameInput.value = '';
+
+    // Back to menu button - save run name before navigating
     const backBtn = document.getElementById('back-to-menu');
     if (backBtn) {
-      backBtn.onclick = () => this.game.showMenu();
+      backBtn.onclick = () => {
+        const nameInput = document.getElementById('run-name-input');
+        if (nameInput && nameInput.value.trim()) {
+          this.game.leaderboard.nameLastRun(nameInput.value);
+        }
+        this.game.showMenu();
+      };
     }
   }
 
@@ -2116,5 +2227,55 @@ class GameUI {
 
     // Bug Fix #23: Clear pending insider decision when modal closes
     this.game.pendingInsiderDecision = null;
+  }
+
+  showConfirm(title, message, onConfirm, confirmLabel = 'Confirm', isDanger = true) {
+    const modal = document.getElementById('confirm-modal');
+    const titleEl = document.getElementById('confirm-title');
+    const msgEl = document.getElementById('confirm-message');
+    const okBtn = document.getElementById('confirm-ok-btn');
+    const cancelBtn = document.getElementById('confirm-cancel-btn');
+
+    titleEl.textContent = title;
+    msgEl.textContent = message;
+    okBtn.textContent = confirmLabel;
+    okBtn.className = isDanger ? 'btn btn-danger' : 'btn btn-primary';
+    modal.classList.remove('hidden');
+
+    const cleanup = () => {
+      modal.classList.add('hidden');
+      okBtn.onclick = null;
+      cancelBtn.onclick = null;
+    };
+
+    okBtn.onclick = () => {
+      cleanup();
+      onConfirm();
+    };
+
+    cancelBtn.onclick = () => {
+      cleanup();
+    };
+  }
+
+  showAlert(title, message) {
+    const modal = document.getElementById('confirm-modal');
+    const titleEl = document.getElementById('confirm-title');
+    const msgEl = document.getElementById('confirm-message');
+    const okBtn = document.getElementById('confirm-ok-btn');
+    const cancelBtn = document.getElementById('confirm-cancel-btn');
+
+    titleEl.textContent = title;
+    msgEl.textContent = message;
+    okBtn.textContent = 'OK';
+    okBtn.className = 'btn btn-primary';
+    cancelBtn.style.display = 'none';
+    modal.classList.remove('hidden');
+
+    okBtn.onclick = () => {
+      modal.classList.add('hidden');
+      cancelBtn.style.display = '';
+      okBtn.onclick = null;
+    };
   }
 }

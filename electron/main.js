@@ -70,6 +70,10 @@ app.whenReady().then(() => {
     }
   });
 
+  ipcMain.handle('quit-app', () => {
+    app.quit();
+  });
+
   // Steam IPC handlers
   ipcMain.handle('steam-unlock-achievement', (event, achievementId) => {
     if (steam) return steam.unlockAchievement(achievementId);

@@ -14,6 +14,7 @@ class ProgressionSystem {
       runCount: 0,
       totalArrests: 0,
       unlocks: {},
+      ownedUnlocks: {},
       unlockedModes: ['stocks'],  // Always start with stocks unlocked
       ownedTools: [],
       equippedTool: null,
@@ -48,8 +49,17 @@ class ProgressionSystem {
         if (savedData.unlocks) {
           this.data.unlocks = { ...defaultData.unlocks, ...savedData.unlocks };
         }
+        if (savedData.ownedUnlocks) {
+          this.data.ownedUnlocks = { ...defaultData.ownedUnlocks, ...savedData.ownedUnlocks };
+        }
         if (savedData.bestScores) {
           this.data.bestScores = { ...defaultData.bestScores, ...savedData.bestScores };
+        }
+
+        // MIGRATION: Backfill ownedUnlocks from unlocks for existing saves
+        if (!savedData.ownedUnlocks && savedData.unlocks) {
+          this.data.ownedUnlocks = { ...savedData.unlocks };
+          this.save();
         }
 
         // Bug Fix #12: bestScores migration already handled by deep merge above
@@ -263,11 +273,11 @@ class ProgressionSystem {
     const unlock = UNLOCKS[unlockId];
     if (!unlock) return { success: false, message: 'Unknown unlock' };
 
-    if (this.data.unlocks[unlockId]) {
-      return { success: false, message: 'Already unlocked' };
+    if (this.data.ownedUnlocks[unlockId]) {
+      return { success: false, message: 'Already owned' };
     }
 
-    if (unlock.requires && !this.data.unlocks[unlock.requires]) {
+    if (unlock.requires && !this.data.ownedUnlocks[unlock.requires]) {
       return { success: false, message: `Requires: ${UNLOCKS[unlock.requires].name}` };
     }
 
@@ -276,10 +286,33 @@ class ProgressionSystem {
     }
 
     this.data.prestigePoints -= unlock.cost;
+    this.data.ownedUnlocks[unlockId] = true;
     this.data.unlocks[unlockId] = true;
     this.save();
 
     return { success: true, message: `Unlocked: ${unlock.name}!` };
+  }
+
+  toggleEquip(unlockId) {
+    if (!this.data.ownedUnlocks[unlockId]) {
+      return { success: false, message: 'Not owned' };
+    }
+
+    if (this.data.unlocks[unlockId]) {
+      // Unequip
+      delete this.data.unlocks[unlockId];
+      this.save();
+      return { success: true, equipped: false };
+    } else {
+      // Equip - check that prerequisites are still equipped
+      const unlock = UNLOCKS[unlockId];
+      if (unlock && unlock.requires && !this.data.unlocks[unlock.requires]) {
+        return { success: false, message: `Requires ${UNLOCKS[unlock.requires].name} to be equipped` };
+      }
+      this.data.unlocks[unlockId] = true;
+      this.save();
+      return { success: true, equipped: true };
+    }
   }
 
   equipTitle(titleId) {

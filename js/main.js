@@ -182,7 +182,7 @@ class Game {
       }
     } catch (error) {
       console.error('Failed to start run:', error);
-      alert('Failed to load game data. Please refresh and try again.');
+      this.ui.showAlert('Error', 'Failed to load game data. Please refresh and try again.');
       this.showMenu();
     }
   }
@@ -843,11 +843,11 @@ class Game {
   exitToMenu() {
     if (!this.isPlayingOrPaused()) return;  // Bug Fix #37
 
-    if (confirm('Exit to menu? Current progress will be lost.')) {
+    this.ui.showConfirm('Exit Run', 'Exit to menu? Current progress will be lost.', () => {
       this.stopTicker();
       this.audio.stopMusic();
       this.showMenu();
-    }
+    }, 'Exit');
   }
 }
 
