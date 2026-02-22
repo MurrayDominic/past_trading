@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; connect-src 'self';">
   <title>Second Chance at a Billion</title>
   <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
   <link rel="stylesheet" href="css/style.css">
@@ -126,6 +127,23 @@
               <span class="settings-label">Mute</span>
               <div class="settings-control">
                 <button class="btn btn-small settings-toggle" id="settings-mute-btn">Off</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Display (Electron only) -->
+          <div class="settings-group electron-only" id="settings-display-group" style="display:none;">
+            <h3 class="settings-group-title">Display</h3>
+            <div class="settings-row">
+              <span class="settings-label">Fullscreen (F11)</span>
+              <div class="settings-control">
+                <button class="btn btn-small settings-toggle" id="settings-fullscreen-btn">Off</button>
+              </div>
+            </div>
+            <div class="settings-row">
+              <span class="settings-label">Borderless Fullscreen</span>
+              <div class="settings-control">
+                <button class="btn btn-small settings-toggle" id="settings-borderless-btn">Off</button>
               </div>
             </div>
           </div>

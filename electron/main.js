@@ -1,6 +1,8 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 
+const isDev = !!process.env.ELECTRON_DEV;
+
 // Steam integration (loaded lazily after app is ready)
 let steam = null;
 let mainWindow = null;
@@ -16,7 +18,8 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false
+      sandbox: false,
+      devTools: isDev
     },
     icon: path.join(__dirname, '..', 'assets', 'icon.png'),
     backgroundColor: '#000000',
@@ -25,6 +28,7 @@ function createWindow() {
 
   // Hide menu bar
   mainWindow.setMenuBarVisibility(false);
+  mainWindow.setAutoHideMenuBar(true);
 
   // Show when ready to avoid white flash
   mainWindow.once('ready-to-show', () => {
@@ -35,9 +39,33 @@ function createWindow() {
   mainWindow.loadFile('index.html');
 
   // Open DevTools in dev mode
-  if (process.env.ELECTRON_DEV) {
+  if (isDev) {
     mainWindow.webContents.openDevTools();
   }
+
+  // F11 fullscreen toggle, Escape to exit fullscreen
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    if (input.key === 'F11' && input.type === 'keyDown') {
+      mainWindow.setFullScreen(!mainWindow.isFullScreen());
+      event.preventDefault();
+    }
+    if (input.key === 'Escape' && input.type === 'keyDown' && mainWindow.isFullScreen()) {
+      mainWindow.setFullScreen(false);
+      event.preventDefault();
+    }
+  });
+
+  // Throttle when window loses focus (reduce CPU in background)
+  mainWindow.on('blur', () => {
+    if (mainWindow.webContents) {
+      mainWindow.webContents.setFrameRate(15);
+    }
+  });
+  mainWindow.on('focus', () => {
+    if (mainWindow.webContents) {
+      mainWindow.webContents.setFrameRate(60);
+    }
+  });
 
   return mainWindow;
 }
@@ -46,7 +74,7 @@ function createWindow() {
 
 app.whenReady().then(() => {
   // Suppress console.log in production
-  if (!process.env.ELECTRON_DEV) {
+  if (!isDev) {
     const noop = () => {};
     console.log = noop;
     console.debug = noop;
@@ -69,6 +97,22 @@ app.whenReady().then(() => {
     if (mainWindow) {
       mainWindow.setFullScreen(!mainWindow.isFullScreen());
     }
+  });
+
+  ipcMain.handle('toggle-borderless', () => {
+    if (mainWindow) {
+      mainWindow.setSimpleFullScreen(!mainWindow.isSimpleFullScreen());
+    }
+  });
+
+  ipcMain.handle('get-fullscreen-state', () => {
+    if (mainWindow) {
+      return {
+        fullscreen: mainWindow.isFullScreen(),
+        borderless: mainWindow.isSimpleFullScreen()
+      };
+    }
+    return { fullscreen: false, borderless: false };
   });
 
   ipcMain.handle('quit-app', () => {

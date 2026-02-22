@@ -24,6 +24,8 @@
       "js/**/*",
       "css/**/*",
       "index.html",
+      "assets/icon.*",
+      "assets/logo.svg",
       "assets/music/**/*",
       "assets/market_data/news_events.json",
       "!assets/market_data/stocks/**",
@@ -48,14 +50,12 @@
     ],
     "win": {
       "target": [
-        "nsis",
-        "dir"
+        "nsis"
       ],
       "icon": "assets/icon.ico"
     },
     "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "oneClick": true
     },
     "mac": {
       "target": [

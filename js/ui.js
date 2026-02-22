@@ -178,6 +178,30 @@ class GameUI {
         this.renderSettingsState();
       });
     }
+    // Display settings (Electron only)
+    const displayGroup = document.getElementById('settings-display-group');
+    if (displayGroup && window.electronAPI) {
+      displayGroup.style.display = '';
+    }
+    const fullscreenBtn = document.getElementById('settings-fullscreen-btn');
+    if (fullscreenBtn && window.electronAPI) {
+      fullscreenBtn.addEventListener('click', async () => {
+        await window.electronAPI.toggleFullscreen();
+        const state = await window.electronAPI.getFullscreenState();
+        fullscreenBtn.textContent = state.fullscreen ? 'On' : 'Off';
+        fullscreenBtn.classList.toggle('active', state.fullscreen);
+      });
+    }
+    const borderlessBtn = document.getElementById('settings-borderless-btn');
+    if (borderlessBtn && window.electronAPI) {
+      borderlessBtn.addEventListener('click', async () => {
+        await window.electronAPI.toggleBorderless();
+        const state = await window.electronAPI.getFullscreenState();
+        borderlessBtn.textContent = state.borderless ? 'On' : 'Off';
+        borderlessBtn.classList.toggle('active', state.borderless);
+      });
+    }
+
     const settingsHowToPlayBtn = document.getElementById('settings-howtoplay-btn');
     if (settingsHowToPlayBtn) {
       settingsHowToPlayBtn.addEventListener('click', () => {

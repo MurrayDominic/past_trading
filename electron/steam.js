@@ -27,7 +27,8 @@ const ACHIEVEMENT_MAP = {
 function initSteam() {
   try {
     const steamworks = require('steamworks.js');
-    // Replace 480 with your real Steam App ID
+    // TODO: Replace 480 with your real Steam App ID before release!
+    // Also update steam_appid.txt to match
     steamClient = steamworks.init(480);
     initialized = true;
     console.log('Steam initialized successfully');
