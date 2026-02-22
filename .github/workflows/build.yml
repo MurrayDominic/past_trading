@@ -20,7 +20,7 @@ jobs:
         run: npm rebuild
 
       - name: Build macOS
-        run: npm run build:mac
+        run: npx electron-builder --mac --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
 
