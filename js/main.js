@@ -832,7 +832,7 @@ class Game {
     container.className = 'confetti-container';
     document.body.appendChild(container);
 
-    const colors = ['#00C805', '#5AC8FA', '#BD10E0', '#FFD60A', '#FF5000', '#FFFFFF'];
+    const colors = ['#00BFFF', '#5AC8FA', '#BD10E0', '#FFD60A', '#FF5000', '#FFFFFF'];
     for (let i = 0; i < 80; i++) {
       const piece = document.createElement('div');
       piece.className = 'confetti-piece';

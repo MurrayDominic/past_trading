@@ -17,16 +17,16 @@
   --rh-text: #FFFFFF;
   --rh-text-secondary: #A0A0A0;
   --rh-text-tertiary: #6B6B6B;
-  --rh-green: #00C805;
-  --rh-green-bg: rgba(0, 200, 5, 0.12);
-  --rh-green-hover: #00E007;
+  --rh-green: #00BFFF;
+  --rh-green-bg: rgba(0, 191, 255, 0.12);
+  --rh-green-hover: #33CFFF;
   --rh-red: #FF5000;
   --rh-red-bg: rgba(255, 80, 0, 0.12);
   --rh-red-hover: #FF6820;
   --rh-blue: #5AC8FA;
   --rh-purple: #BD10E0;
   --rh-yellow: #FFD60A;
-  --rh-accent: #00C805;
+  --rh-accent: #00BFFF;
 
   /* Typography */
   --font-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
@@ -327,6 +327,13 @@ input[type="range"]::-webkit-slider-thumb {
 
 .menu-section {
   margin-top: var(--spacing-xl);
+}
+
+.menu-logo {
+  width: 140px;
+  height: 140px;
+  margin-bottom: var(--spacing-md);
+  filter: drop-shadow(0 0 20px rgba(0, 191, 255, 0.3));
 }
 
 .menu-title {
@@ -1261,6 +1268,12 @@ input[type="range"].year-slider {
   align-items: center;
   justify-content: space-between;
   padding: 0 var(--spacing-lg);
+}
+
+.header-logo {
+  width: 28px;
+  height: 28px;
+  filter: drop-shadow(0 0 6px rgba(0, 191, 255, 0.4));
 }
 
 .header-left {

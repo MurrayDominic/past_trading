@@ -18,6 +18,7 @@ function createWindow() {
       nodeIntegration: false,
       sandbox: false
     },
+    icon: path.join(__dirname, '..', 'assets', 'icon.png'),
     backgroundColor: '#000000',
     show: false
   });

@@ -203,7 +203,7 @@ class ChartManager {
     data.forEach((bar, i) => {
       const x = padding + (i + 0.5) * candleSpacing;
       const isGreen = bar.close >= bar.open;
-      const color = isGreen ? '#00C805' : '#FF5000';
+      const color = isGreen ? '#00BFFF' : '#FF5000';
 
       // Map prices to Y coordinates
       const openY = toY(bar.open);
@@ -249,7 +249,7 @@ class ChartManager {
     const lastBar = data[data.length - 1];
     const isGreen = lastBar.close >= lastBar.open;
     ctx.font = 'bold 18px var(--font-primary)';
-    ctx.fillStyle = isGreen ? '#00C805' : '#FF5000';
+    ctx.fillStyle = isGreen ? '#00BFFF' : '#FF5000';
     ctx.textAlign = 'left';
     ctx.fillText(this.formatPrice(lastBar.close), 20, 30);
 
@@ -405,7 +405,7 @@ class ChartManager {
     const lastPrice = data[data.length - 1];
     const isPositive = data.length > 1 && lastPrice >= data[data.length - 2];
     ctx.font = 'bold 18px var(--font-primary)';
-    ctx.fillStyle = isPositive ? '#00C805' : '#FF5000';
+    ctx.fillStyle = isPositive ? '#00BFFF' : '#FF5000';
     ctx.textAlign = 'left';
     ctx.fillText(this.formatPrice(lastPrice), 20, 30);
 
