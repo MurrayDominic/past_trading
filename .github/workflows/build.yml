@@ -19,6 +19,9 @@ jobs:
       - name: Rebuild native modules for macOS
         run: npm rebuild
 
+      - name: Compress market data
+        run: npm run compress-data
+
       - name: Build macOS
         run: npx electron-builder --mac --publish never
         env:
