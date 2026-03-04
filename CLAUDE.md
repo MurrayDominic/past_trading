@@ -36,7 +36,7 @@ Each run lasts 365 days (configurable). The game ticks at `CONFIG.TICK_MS` inter
 
 The game is composed of **six independent subsystems** that communicate through the central `Game` controller:
 
-1. **Market** (`market.js`) - Price simulation using geometric Brownian motion with mean reversion and momentum
+1. **Market** (`market.js`) - Replays real historical OHLC price data (2000–2024) for all asset classes
 2. **TradingEngine** (`trading.js`) - Portfolio management, P&L calculation, buy/sell/short execution
 3. **SECSystem** (`sec.js`) - Regulatory attention tracking, investigation stages, illegal actions
 4. **NewsSystem** (`news.js`) - Event feed with market events and satirical commentary
