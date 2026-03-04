@@ -1218,6 +1218,7 @@ class GameUI {
         category: 'Algo Tools',
         icon: '',
         nodes: [
+          { id: 'algoEngine', name: 'Algo Engine', icon: '', cost: UNLOCKS.algoEngine.cost },
           { id: 'scalping', name: 'Scalping Bot', icon: '', cost: EQUIPABLE_TOOLS.scalping.cost, requires: ['algoEngine'], isTool: true },
           { id: 'arbitrage', name: 'Arbitrage Scanner', icon: '', cost: EQUIPABLE_TOOLS.arbitrage.cost, isTool: true },
           { id: 'marketMaking', name: 'Market Making', icon: '', cost: EQUIPABLE_TOOLS.marketMaking.cost, isTool: true },

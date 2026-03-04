@@ -1,7 +1,44 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node generate_market_data.js:*)"
+      "Bash(node generate_market_data.js:*)",
+      "Bash(git push:*)",
+      "Bash(dir:*)",
+      "Bash(find:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(done)",
+      "Bash(pip --version:*)",
+      "Bash(pip install:*)",
+      "Bash(python fetch_sp500_data.py:*)",
+      "Bash(timeout /t 1)",
+      "Bash(ls:*)",
+      "Bash(python:*)",
+      "Bash(comm:*)",
+      "Bash(while read ticker)",
+      "Bash(do [ ! -f \"assets/market_data/stocks/$ticker.json\" ])",
+      "Bash(echo:*)",
+      "Bash(for ticker in Jazz EXEL NBIX ALNY SGEN BMRN HWM GME AMC BB NOK BBBY WISH CLOV PLUG RIVN LCID XRAY UTHR TNDM RARE IONS SRPT NTRA LEGN INSM RGEN MEDP KVUE GPS AAP VFC HBI PVH NWL HAS MAT BBWI DRI QSR WEN TXRH BJRI BLMN BWLD CBRL AES VST CEG PCG ANSS)",
+      "Bash(git diff:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(\"C:\\\\Users\\\\Dominic\\\\Documents\\\\Code\\\\past_trading\\\\WHATS_NEW.md\" << 'EOF'\n# What's New - UI/UX and Gameplay Update\n\n## Visual Changes You'll Notice\n\n### 1. Menu Screen Improvements\n\n**Year Preset Buttons**\n- **Before**: Text cut off \\(\"2008 cr\"\\), hard to read\n- **After**: Full text \\(\"2008 Crisis\"\\) in white, no truncation\n\n**Unlock Shop**\n- **Before**: Categories in random order\n- **After**: Stock Sectors at the very top for easy access\n\n**Shop Prerequisites**\n- **Before**: Could click locked items, confusing what's actually available\n- **After**: Blocked nodes show ⛓️ icon and \"Requires: [Name]\" - crystal clear!\n\n**Prestige Costs**\n- **Before**: Weird progression \\(too expensive early, too cheap late\\)\n- **After**: Smooth curve - first unlocks cost 0.5-2 PP, endgame costs 40+ PP\n\n### 2. In-Game Screen Improvements\n\n**Stock Search Area**\n- **Before**: Category dropdown and search input cramped on same line\n- **After**: Dropdown on line 1 \\(full width\\), search on line 2 \\(full width\\)\n\n**Category Filter**\n- **Before**: Dropdown reset to \"All Categories\" every day \\(annoying!\\)\n- **After**: Stays on your selected category throughout the run\n\n**Chart Date Labels**\n- **Before**: \"Jan 15\" - no year \\(confusing in multi-year runs\\)\n- **After**: \"Jan '08\" - includes year so you know where you are\n\n### 3. End Screen Improvements\n\n**Run Summary**\n- **Before**: Text too big, aligned weird, no scrolling for long stats\n- **After**: Smaller text \\(18px\\), centered properly, scrollable container\n\n### 4. Gameplay Changes\n\n**SEC Arrest System**\n- **Before**: Arrest ALWAYS at exactly 100% \\(predictable, boring\\)\n- **After**: Random arrest between 60-100% each run! Sometimes 65%, sometimes 90%\n  - Guaranteed arrest at 95%+ \\(can't push luck too far\\)\n  - Makes illegal actions more thrilling - you never know when you'll get caught\n\n**Risk Management**\n- **Already Working**: Getting fired at 100% risk \\(no changes needed\\)\n\n## New Cost Structure\n\n### Early Game \\(First 1-2 Runs\\)\n- Leverage 2x: 0.5 PP ⭐ \\(was 1 PP\\)\n- Reduced Fees I: 1 PP ⭐ \\(was 2 PP\\)\n- Finance Sector: 2 PP ⭐ \\(was 3 PP\\)\n\n### Basic \\(Runs 3-5\\)\n- Healthcare Sector: 3 PP\n- Leverage 5x: 3 PP\n- More Positions: 4 PP\n- Industrials Sector: 5 PP\n\n### Mid Game \\(Runs 6-12\\)\n- Energy Sector: 6 PP\n- PAC Access: 6 PP\n- Trust Fund: 6 PP\n- Tech Sector: 8 PP ⭐ \\(was 8 PP - unchanged\\)\n- Insider Network: 8 PP\n- Reduced Fees II: 8 PP ⭐ \\(was 5 PP - more valuable\\)\n\n### Late Game \\(Runs 13+\\)\n- Leverage 10x: 15 PP ⭐ \\(was 8 PP - better gated\\)\n- Hedge Fund Access: 15 PP\n- Reduced Fees III: 18 PP ⭐ \\(was 10 PP\\)\n- Meme Stocks: 20 PP ⭐ \\(was 10 PP - more exclusive\\)\n- Low Profile II: 20 PP ⭐ \\(was 10 PP\\)\n- Fund Manager: 25 PP ⭐ \\(was 20 PP\\)\n- Rich Parents: 25 PP ⭐ \\(was 15 PP\\)\n\n### Endgame \\(Veteran Players\\)\n- Leverage 50x: 40 PP ⭐ \\(was 20 PP - properly gated now!\\)\n\n⭐ = Cost changed from previous version\n\n## Why These Changes?\n\n### Better Progression\n- **Early unlocks are now accessible**: After first run, you can buy something meaningful\n- **Late game stays challenging**: Degenerate leverage \\(50x\\) now requires serious dedication\n- **Natural curve**: Costs scale exponentially, not randomly\n\n### More Dynamic Gameplay\n- **SEC arrest randomization**: Every run feels different - can't just memorize \"stop at 99%\"\n- **Category persistence**: Less micromanagement, more focus on trading\n- **Visual clarity**: Blocked nodes are obviously blocked, no confusion\n\n### Quality of Life\n- **Year labels on charts**: Know when you are in multi-year runs\n- **Better search layout**: More space for both category and search\n- **Scrollable end screen**: See all your stats without cutting off\n\n## How to Test\n\n1. **Start Fresh**: Consider resetting save to see early game balance\n2. **Check Shop**: Open unlock shop, verify Stock Sectors at top, blocked nodes show chain\n3. **Play a Run**: \n   - Select category, verify it stays selected\n   - Check chart dates show years\n   - Use illegal actions, see if you get arrested before 100%\n4. **Complete Run**: Check end screen is readable and centered\n5. **Multiple Runs**: Observe different arrest thresholds each time\n\n## Feedback Welcome\n\nIf you notice:\n- Costs feel too expensive/cheap\n- SEC arrests too frequent/rare\n- UI elements misaligned\n- Any bugs or issues\n\nPlease report them!\n\n---\n\n**Version**: UI/UX Update v1.0\n**Date**: 2026-02-09\n**Files Changed**: 5 files, ~206 lines\nEOF)",
+      "Bash(node -c:*)",
+      "Bash(node -e:*)",
+      "Bash(grep:*)",
+      "Bash(git status:*)",
+      "Bash(git checkout:*)",
+      "Bash(cd:*)",
+      "WebFetch(domain:pixabay.com)",
+      "Bash(npx electron:*)",
+      "Bash(./node_modules/electron/dist/electron.exe:*)",
+      "Bash(node_modules/electron/dist/electron.exe -e \"console.log\\(typeof require\\(''electron''\\).app\\)\")",
+      "Bash(node_modules/electron/dist/electron.exe:*)",
+      "Bash(node --version:*)",
+      "Bash(npm:*)",
+      "Bash(pip show:*)",
+      "Bash(python3:*)",
+      "Bash(where:*)"
     ]
   }
 }
