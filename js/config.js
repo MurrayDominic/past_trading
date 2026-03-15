@@ -66,14 +66,6 @@ const CONFIG = {
   CRASH_CHANCE_PER_DAY: 0.005,    // 0.5% chance of crash event
   BULL_DRIFT: 0.0003,             // slight upward bias
 
-  // --- Prestige (Skill-Based) ---
-  BASE_PRESTIGE_PER_RUN: 10,              // Base PP for completing a run
-  SHARPE_DIVISOR: 2.0,                    // Sharpe 2.0 = 1x multiplier
-  WIN_RATE_BASELINE: 0.3,                 // Below 30% = 0x multiplier
-  WIN_RATE_SCALE: 3,                      // Each 10% above baseline = 0.3x
-  DRAWDOWN_BONUS_THRESHOLD: 0.2,          // <20% max drawdown = bonus
-  DRAWDOWN_BONUS_MULTIPLIER: 1.5,         // 1.5x multiplier for low drawdown
-
   // --- Leaderboard ---
   MAX_LEADERBOARD_ENTRIES: 20,
 
@@ -82,16 +74,15 @@ const CONFIG = {
   FIXED_RUN_YEARS: 2,
   TOTAL_QUARTERS: 8,
   QUARTERLY_TARGETS: [
-    { level: 1, label: 'Q1 Y1', target: 15000, pp: 2 },         // $15K net worth (50% growth)
-    { level: 2, label: 'Q2 Y1', target: 50000, pp: 3 },         // $50K
-    { level: 3, label: 'Q3 Y1', target: 250000, pp: 4 },        // $250K
-    { level: 4, label: 'Q4 Y1', target: 1000000, pp: 5 },       // $1M
-    { level: 5, label: 'Q1 Y2', target: 10000000, pp: 7 },      // $10M
-    { level: 6, label: 'Q2 Y2', target: 100000000, pp: 9 },     // $100M
-    { level: 7, label: 'Q3 Y2', target: 500000000, pp: 12 },    // $500M
-    { level: 8, label: 'Q4 Y2', target: 1000000000, pp: 16 },   // $1B
+    { level: 1, label: 'Q1 Y1', target: 15000 },         // $15K net worth (50% growth)
+    { level: 2, label: 'Q2 Y1', target: 50000 },         // $50K
+    { level: 3, label: 'Q3 Y1', target: 250000 },        // $250K
+    { level: 4, label: 'Q4 Y1', target: 1000000 },       // $1M
+    { level: 5, label: 'Q1 Y2', target: 10000000 },      // $10M
+    { level: 6, label: 'Q2 Y2', target: 100000000 },     // $100M
+    { level: 7, label: 'Q3 Y2', target: 500000000 },     // $500M
+    { level: 8, label: 'Q4 Y2', target: 1000000000 },    // $1B
   ],
-  ALL_QUARTERS_BONUS_PP: 10,
 };
 
 // ============================================================================
@@ -154,6 +145,13 @@ const STOCK_CATEGORIES = {
     icon: '🚀',
     unlocked: false,
     sortOrder: 8
+  },
+  crypto: {
+    name: 'Crypto',
+    description: 'Digital assets. Real historical prices.',
+    icon: '₿',
+    unlocked: false,
+    sortOrder: 9
   }
 };
 
@@ -177,7 +175,7 @@ const TRADING_MODES = {
     description: 'Fast trades, pattern rules apply. Male astrology.',
     comingSoon: true,
     unlockRun: 0,
-    unlockCost: 5,      // 5 PP to unlock
+    unlockCost: 35000,
     volatilityMod: 1.3,
     feeMod: 0.8,
     secHeatMod: 0.8,
@@ -193,7 +191,7 @@ const TRADING_MODES = {
     description: 'Calls, puts, and the greeks. Leveraged chaos.',
     comingSoon: true,
     unlockRun: 2,
-    unlockCost: 15,     // 15 PP to unlock
+    unlockCost: 750000,
     volatilityMod: 2.0,
     feeMod: 1.5,
     secHeatMod: 1.0,
@@ -211,7 +209,7 @@ const TRADING_MODES = {
     description: 'Currency pairs. The market that never sleeps.',
     comingSoon: true,
     unlockRun: 3,
-    unlockCost: 20,     // 20 PP to unlock
+    unlockCost: 2500000,
     volatilityMod: 0.6,
     feeMod: 0.3,
     secHeatMod: 0.5,
@@ -228,7 +226,7 @@ const TRADING_MODES = {
     description: 'Oil, gold, wheat. Geopolitics is your friend.',
     comingSoon: true,
     unlockRun: 4,
-    unlockCost: 25,     // 25 PP to unlock
+    unlockCost: 7500000,
     volatilityMod: 1.2,
     feeMod: 1.2,
     secHeatMod: 0.7,
@@ -243,19 +241,19 @@ const TRADING_MODES = {
   crypto: {
     name: 'Crypto',
     description: 'Wild west. No regulation, max degen.',
-    comingSoon: true,
-    unlockRun: 5,
-    unlockCost: 30,     // 30 PP to unlock
+    comingSoon: false,
     volatilityMod: 3.0,
     feeMod: 0.5,
     secHeatMod: 0.3,
     assets: [
-      { ticker: 'BTC', name: 'Bitcoin', basePrice: 42000 },
-      { ticker: 'ETH', name: 'Ethereum', basePrice: 2200 },
-      { ticker: 'DOGE', name: 'Dogebiscuit', basePrice: 0.08 },
-      { ticker: 'SOL', name: 'Solarium', basePrice: 95 },
-      { ticker: 'PEPE', name: 'PepeCoin', basePrice: 0.000001 },
-      { ticker: 'MOON', name: 'MoonRug Token', basePrice: 0.50 },
+      { ticker: 'BTC',  name: 'Bitcoin',      basePrice: 42000, category: 'crypto', dataCategory: 'crypto' },
+      { ticker: 'ETH',  name: 'Ethereum',      basePrice: 2200,  category: 'crypto', dataCategory: 'crypto' },
+      { ticker: 'LTC',  name: 'Litecoin',      basePrice: 80,    category: 'crypto', dataCategory: 'crypto' },
+      { ticker: 'XRP',  name: 'Ripple',        basePrice: 0.55,  category: 'crypto', dataCategory: 'crypto' },
+      { ticker: 'BNB',  name: 'Binance Coin',  basePrice: 380,   category: 'crypto', dataCategory: 'crypto' },
+      { ticker: 'SOL',  name: 'Solana',        basePrice: 95,    category: 'crypto', dataCategory: 'crypto' },
+      { ticker: 'DOGE', name: 'Dogecoin',      basePrice: 0.08,  category: 'crypto', dataCategory: 'crypto' },
+      { ticker: 'ADA',  name: 'Cardano',       basePrice: 0.45,  category: 'crypto', dataCategory: 'crypto' },
     ]
   }
 };
@@ -265,157 +263,165 @@ const TRADING_MODES = {
 // ============================================================================
 
 const UNLOCKS = {
-  // Early game unlocks (0.5-2 PP) - accessible after first 1-2 runs
-  leverage2x:    { name: 'Leverage 2x', cost: 0.5, description: 'Double your position sizes', category: 'trading', leverageLevel: 2 },
-  reducedFees1:  { name: 'Reduced Fees I', cost: 1, description: 'Fees reduced by 25%', category: 'trading', feeReduction: 0.25 },
+  // Early game
+  leverage2x:    { name: 'Leverage 2x', cost: 10000, description: 'Double your position sizes', category: 'trading', leverageLevel: 2 },
+  reducedFees1:  { name: 'Reduced Fees I', cost: 15000, description: 'Fees reduced by 25%', category: 'trading', feeReduction: 0.25 },
 
-  // Basic unlocks (2-5 PP) - mid-early game
+  // Basic unlocks
   financeStocks: {
     name: 'Finance Sector',
-    cost: 2,
+    cost: 5000,
     description: 'Unlock banks and financial services stocks',
     category: 'sectors',
     unlocksCategory: 'finance'
   },
   healthcareStocks: {
     name: 'Healthcare Sector',
-    cost: 3,
+    cost: 5000,
     description: 'Unlock pharmaceutical and medical stocks',
     category: 'sectors',
     unlocksCategory: 'healthcare'
   },
-  leverage5x:    { name: 'Leverage 5x', cost: 3, description: '5x position sizes', category: 'trading', leverageLevel: 5, requires: 'leverage2x' },
-  betterRep1:    { name: 'Analyst', cost: 4, description: 'Start as an analyst. Slightly better info.', category: 'career', repLevel: 1 },
-  morePositions: { name: 'Portfolio Expansion', cost: 4, description: 'Hold up to 10 positions', category: 'trading', maxPositions: 10 },
+  leverage5x:    { name: 'Leverage 5x', cost: 50000, description: '5x position sizes', category: 'trading', leverageLevel: 5, requires: 'leverage2x' },
+  betterRep1:    { name: 'Analyst', cost: 50000, description: 'Start as an analyst. Slightly better info.', category: 'career', repLevel: 1 },
+  morePositions: { name: 'Portfolio Expansion', cost: 35000, description: 'Hold up to 10 positions', category: 'trading', maxPositions: 10 },
   industrialsStocks: {
     name: 'Industrials Sector',
-    cost: 5,
+    cost: 8000,
     description: 'Unlock manufacturing and industrial stocks',
     category: 'sectors',
     unlocksCategory: 'industrials'
   },
 
-  // Mid-game unlocks (6-12 PP)
+  // Mid-game unlocks
   energyStocks: {
     name: 'Energy Sector',
-    cost: 6,
+    cost: 10000,
     description: 'Unlock oil, gas, and energy stocks',
     category: 'sectors',
     unlocksCategory: 'energy'
   },
-  politicalDonations: { name: 'PAC Access', cost: 6, description: 'Donate to reduce SEC heat', category: 'illegal' },
-  startingCash2x:{ name: 'Trust Fund Kid', cost: 6, description: 'Start with $20,000', category: 'starting', cashMultiplier: 2 },
-  reducedFees2:  { name: 'Reduced Fees II', cost: 8, description: 'Fees reduced by 50%', category: 'trading', feeReduction: 0.50, requires: 'reducedFees1' },
-  insiderNetwork:{ name: 'Insider Network', cost: 8, description: 'Access to insider tips (risky)', category: 'illegal' },
+  politicalDonations: { name: 'PAC Access', cost: 30000, description: 'Donate to reduce SEC heat', category: 'illegal' },
+  startingCash2x:{ name: 'Trust Fund Kid', cost: 25000, description: 'Start with $20,000', category: 'starting', cashMultiplier: 2 },
+  reducedFees2:  { name: 'Reduced Fees II', cost: 75000, description: 'Fees reduced by 50%', category: 'trading', feeReduction: 0.50, requires: 'reducedFees1' },
+  insiderNetwork:{ name: 'Insider Network', cost: 60000, description: 'Access to insider tips (risky)', category: 'illegal' },
   techStocks: {
     name: 'Tech Sector',
-    cost: 8,
+    cost: 15000,
     description: 'Unlock high-growth technology stocks',
     category: 'sectors',
     unlocksCategory: 'tech'
   },
-  lowerSurv1:    { name: 'Low Profile I', cost: 10, description: 'SEC attention grows 20% slower', category: 'stealth', survReduction: 0.20 },
-  betterRep2:    { name: 'Trader', cost: 10, description: 'Start as a trader. Access to better tools.', category: 'career', repLevel: 2, requires: 'betterRep1' },
-  algoEngine:    { name: 'Algo Engine', cost: 12, description: 'Unlock algo trading mode', category: 'trading' },
+  lowerSurv1:    { name: 'Low Profile I', cost: 80000, description: 'SEC attention grows 20% slower', category: 'stealth', survReduction: 0.20 },
+  betterRep2:    { name: 'Trader', cost: 80000, description: 'Start as a trader. Access to better tools.', category: 'career', repLevel: 2, requires: 'betterRep1' },
+  algoEngine:    { name: 'Algo Engine', cost: 100000, description: 'Unlock algo trading mode', category: 'trading' },
 
-  // Late game unlocks (15-25 PP)
-  leverage10x:   { name: 'Leverage 10x', cost: 15, description: '10x position sizes', category: 'trading', leverageLevel: 10, requires: 'leverage5x' },
-  hedgeFund:     { name: 'Hedge Fund Access', cost: 15, description: 'Trade with firm capital. Higher stakes.', category: 'career', repLevel: 3, requires: 'betterRep2' },
-  reducedFees3:  { name: 'Reduced Fees III', cost: 18, description: 'Fees reduced by 75%', category: 'trading', feeReduction: 0.75, requires: 'reducedFees2' },
+  // Late game unlocks
+  leverage10x:   { name: 'Leverage 10x', cost: 150000, description: '10x position sizes', category: 'trading', leverageLevel: 10, requires: 'leverage5x' },
+  hedgeFund:     { name: 'Hedge Fund Access', cost: 150000, description: 'Trade with firm capital. Higher stakes.', category: 'career', repLevel: 3, requires: 'betterRep2' },
+  reducedFees3:  { name: 'Reduced Fees III', cost: 150000, description: 'Fees reduced by 75%', category: 'trading', feeReduction: 0.75, requires: 'reducedFees2' },
   memeStocks: {
     name: 'Meme Stocks',
-    cost: 20,
+    cost: 25000,
     description: 'Unlock WSB favorites. YOLO.',
     category: 'sectors',
     unlocksCategory: 'meme',
-    requires: 'techStocks'  // Requires tech first
+    requires: 'techStocks'
   },
-  lowerSurv2:    { name: 'Low Profile II', cost: 20, description: 'SEC attention grows 40% slower', category: 'stealth', survReduction: 0.40, requires: 'lowerSurv1' },
-  fundManager:   { name: 'Fund Manager', cost: 25, description: 'Manage OPM. AUM bonuses.', category: 'career', repLevel: 4, requires: 'hedgeFund' },
-  startingCash5x:{ name: 'Rich Parents', cost: 25, description: 'Start with $50,000', category: 'starting', cashMultiplier: 5, requires: 'startingCash2x' },
+  cryptoTrading: {
+    name: 'Crypto Trading',
+    cost: 50000,
+    description: 'Add BTC, ETH, SOL and more to your asset list. Real prices, max volatility.',
+    category: 'sectors',
+    unlocksCategory: 'crypto',
+    requires: 'memeStocks'
+  },
+  lowerSurv2:    { name: 'Low Profile II', cost: 200000, description: 'SEC attention grows 40% slower', category: 'stealth', survReduction: 0.40, requires: 'lowerSurv1' },
+  fundManager:   { name: 'Fund Manager', cost: 200000, description: 'Manage OPM. AUM bonuses.', category: 'career', repLevel: 4, requires: 'hedgeFund' },
+  startingCash5x:{ name: 'Rich Parents', cost: 175000, description: 'Start with $50,000', category: 'starting', cashMultiplier: 5, requires: 'startingCash2x' },
 
-  // Endgame unlocks (40+ PP)
-  leverage50x:   { name: 'Leverage 50x', cost: 40, description: 'Degenerate leverage', category: 'trading', leverageLevel: 50, requires: 'leverage10x' },
+  // Endgame unlocks
+  leverage50x:   { name: 'Leverage 50x', cost: 350000, description: 'Degenerate leverage', category: 'trading', leverageLevel: 50, requires: 'leverage10x' },
 
   // --- Risk Management ---
-  riskManager1:  { name: 'Risk Manager I', cost: 3, description: 'Internal risk reduced by 20%', category: 'risk', riskReduction: 0.20 },
-  riskManager2:  { name: 'Risk Manager II', cost: 8, description: 'Internal risk reduced by 40%', category: 'risk', riskReduction: 0.40, requires: 'riskManager1' },
-  riskManager3:  { name: 'Risk Manager III', cost: 15, description: 'Internal risk reduced by 60%', category: 'risk', riskReduction: 0.60, requires: 'riskManager2' },
-  riskImmunity:  { name: 'Risk Immunity', cost: 30, description: 'Risk cap raised to 150%. Live dangerously.', category: 'risk', riskLimitOverride: 150, requires: 'riskManager3' },
+  riskManager1:  { name: 'Risk Manager I', cost: 15000, description: 'Internal risk reduced by 20%', category: 'risk', riskReduction: 0.20 },
+  riskManager2:  { name: 'Risk Manager II', cost: 75000, description: 'Internal risk reduced by 40%', category: 'risk', riskReduction: 0.40, requires: 'riskManager1' },
+  riskManager3:  { name: 'Risk Manager III', cost: 200000, description: 'Internal risk reduced by 60%', category: 'risk', riskReduction: 0.60, requires: 'riskManager2' },
+  riskImmunity:  { name: 'Risk Immunity', cost: 300000, description: 'Risk cap raised to 150%. Live dangerously.', category: 'risk', riskLimitOverride: 150, requires: 'riskManager3' },
 
   // --- Starting Capital Extensions ---
-  silverSpoon:   { name: 'Silver Spoon', cost: 35, description: 'Start with $100,000', category: 'starting', cashMultiplier: 10, requires: 'startingCash5x' },
-  oligarchHeir:  { name: "Oligarch's Heir", cost: 50, description: 'Start with $250,000', category: 'starting', cashMultiplier: 25, requires: 'silverSpoon' },
+  silverSpoon:   { name: 'Silver Spoon', cost: 300000, description: 'Start with $100,000', category: 'starting', cashMultiplier: 10, requires: 'startingCash5x' },
+  oligarchHeir:  { name: "Oligarch's Heir", cost: 500000, description: 'Start with $250,000', category: 'starting', cashMultiplier: 25, requires: 'silverSpoon' },
 
   // --- Market Intel ---
-  bloombergTerminal: { name: 'Bloomberg Terminal', cost: 5, description: 'See 5-day price trend arrows on assets', category: 'intel' },
-  analystReports:    { name: 'Analyst Reports', cost: 12, description: 'See sector momentum indicators', category: 'intel', requires: 'bloombergTerminal' },
-  timeTravelersAlmanac: { name: "Time Traveler's Almanac", cost: 25, description: 'Preview market events 3 days early', category: 'intel', requires: 'analystReports' },
+  bloombergTerminal: { name: 'Bloomberg Terminal', cost: 20000, description: 'See 5-day price trend arrows on assets', category: 'intel' },
+  analystReports:    { name: 'Analyst Reports', cost: 75000, description: 'See sector momentum indicators', category: 'intel', requires: 'bloombergTerminal' },
+  timeTravelersAlmanac: { name: "Time Traveler's Almanac", cost: 200000, description: 'Preview market events 3 days early', category: 'intel', requires: 'analystReports' },
 
   // --- Stealth Extension ---
-  ghostMode:     { name: 'Ghost Mode', cost: 35, description: 'SEC attention grows 60% slower', category: 'stealth', survReduction: 0.60, requires: 'lowerSurv2' },
+  ghostMode:     { name: 'Ghost Mode', cost: 350000, description: 'SEC attention grows 60% slower', category: 'stealth', survReduction: 0.60, requires: 'lowerSurv2' },
 
   // --- Time Extension ---
-  timeInMarket1: { name: 'Time in the Market I', cost: 8, description: '1 year head start — 1 year and 1 quarter to hit your first target', category: 'time', extraYears: 1 },
-  timeInMarket2: { name: 'Time in the Market II', cost: 18, description: '2 year head start — 2 years and 1 quarter to hit your first target', category: 'time', extraYears: 2, requires: 'timeInMarket1' },
-  timeInMarket3: { name: 'Time in the Market III', cost: 35, description: '3 year head start — 3 years and 1 quarter to hit your first target', category: 'time', extraYears: 3, requires: 'timeInMarket2' },
+  timeInMarket1: { name: 'Time in the Market I', cost: 50000, description: '1 year head start — 1 year and 1 quarter to hit your first target', category: 'time', extraYears: 1 },
+  timeInMarket2: { name: 'Time in the Market II', cost: 200000, description: '2 year head start — 2 years and 1 quarter to hit your first target', category: 'time', extraYears: 2, requires: 'timeInMarket1' },
+  timeInMarket3: { name: 'Time in the Market III', cost: 350000, description: '3 year head start — 3 years and 1 quarter to hit your first target', category: 'time', extraYears: 3, requires: 'timeInMarket2' },
 
   // --- Passive Income ---
-  dividendPortfolio: { name: 'Dividend Portfolio', cost: 10, description: 'Earn 0.1% of net worth per day passively', category: 'passive', passivePercent: 0.001 },
-  hedgeFundFee:      { name: 'Hedge Fund Fee', cost: 20, description: 'Earn 0.2% of net worth per day passively', category: 'passive', passivePercent: 0.002, requires: 'dividendPortfolio' },
+  dividendPortfolio: { name: 'Dividend Portfolio', cost: 75000, description: 'Earn 0.1% of net worth per day passively', category: 'passive', passivePercent: 0.001 },
+  hedgeFundFee:      { name: 'Hedge Fund Fee', cost: 175000, description: 'Earn 0.2% of net worth per day passively', category: 'passive', passivePercent: 0.002, requires: 'dividendPortfolio' },
 
   // --- Naughty Activities Extensions ---
-  burnerPhone:     { name: 'Burner Phone', cost: 8, description: 'Illegal actions generate 30% less SEC heat', category: 'illegal', illegalSecReduction: 0.30, requires: 'insiderNetwork' },
-  caymanShellCorp: { name: 'Cayman Shell Corp', cost: 25, description: 'Double profits from illegal actions', category: 'illegal', illegalProfitMultiplier: 2.0, requires: 'burnerPhone' },
+  burnerPhone:     { name: 'Burner Phone', cost: 75000, description: 'Illegal actions generate 30% less SEC heat', category: 'illegal', illegalSecReduction: 0.30, requires: 'insiderNetwork' },
+  caymanShellCorp: { name: 'Cayman Shell Corp', cost: 200000, description: 'Double profits from illegal actions', category: 'illegal', illegalProfitMultiplier: 2.0, requires: 'burnerPhone' },
 
   // --- Connections ---
-  darkPoolAccess:    { name: 'Dark Pool Access', cost: 10, description: 'Large trades generate 50% less SEC attention', category: 'connections', largeTradeSECReduction: 0.50 },
-  offshoreAccounts:  { name: 'Offshore Accounts', cost: 15, description: 'Hide 25% of net worth from SEC suspicion', category: 'connections', netWorthHidePercent: 0.25, requires: 'darkPoolAccess' },
-  politicianRetainer:{ name: 'Politician on Retainer', cost: 12, description: 'Political donations reduce 2x more SEC heat', category: 'connections', donationEffectiveness: 2.0, requires: 'offshoreAccounts' },
-  lobbyistNetwork:   { name: 'Lobbyist Network', cost: 18, description: 'SEC attention decay rate doubled', category: 'connections', decayMultiplier: 2.0, requires: 'politicianRetainer' },
+  darkPoolAccess:    { name: 'Dark Pool Access', cost: 70000, description: 'Large trades generate 50% less SEC attention', category: 'connections', largeTradeSECReduction: 0.50 },
+  offshoreAccounts:  { name: 'Offshore Accounts', cost: 175000, description: 'Hide 25% of net worth from SEC suspicion', category: 'connections', netWorthHidePercent: 0.25, requires: 'darkPoolAccess' },
+  politicianRetainer:{ name: 'Politician on Retainer', cost: 150000, description: 'Political donations reduce 2x more SEC heat', category: 'connections', donationEffectiveness: 2.0, requires: 'offshoreAccounts' },
+  lobbyistNetwork:   { name: 'Lobbyist Network', cost: 200000, description: 'SEC attention decay rate doubled', category: 'connections', decayMultiplier: 2.0, requires: 'politicianRetainer' },
 
   // --- Survival ---
-  goldenParachute: { name: 'Golden Parachute', cost: 20, description: 'Earn 50% bonus points when fired for missing targets', category: 'survival' },
-  fallGuy:         { name: 'Fall Guy', cost: 30, description: 'Once per run: blame someone else (-40 SEC attention)', category: 'survival', secReduction: 40, requires: 'goldenParachute' },
-  bailFund:        { name: 'Bail Fund', cost: 40, description: 'Survive one arrest per run (SEC resets to 60)', category: 'survival', requires: 'fallGuy' },
-  deadMansSwitch:  { name: "Dead Man's Switch", cost: 50, description: 'Earn 50% bonus points when arrested', category: 'survival', ppBonus: 0.50, requires: 'bailFund' },
-  offshoreEscape:  { name: 'Offshore Escape', cost: 65, description: 'Auto-escape at 95+ SEC once per run (resets to 50)', category: 'survival', escapeThreshold: 95, resetTo: 50, requires: 'deadMansSwitch' },
+  goldenParachute: { name: 'Golden Parachute', cost: 175000, description: 'Earn 50% bonus credits when fired for missing targets', category: 'survival' },
+  fallGuy:         { name: 'Fall Guy', cost: 300000, description: 'Once per run: blame someone else (-40 SEC attention)', category: 'survival', secReduction: 40, requires: 'goldenParachute' },
+  bailFund:        { name: 'Bail Fund', cost: 500000, description: 'Survive one arrest per run (SEC resets to 60)', category: 'survival', requires: 'fallGuy' },
+  deadMansSwitch:  { name: "Dead Man's Switch", cost: 600000, description: 'Earn 50% bonus credits when arrested', category: 'survival', ppBonus: 0.50, requires: 'bailFund' },
+  offshoreEscape:  { name: 'Offshore Escape', cost: 1000000, description: 'Auto-escape at 95+ SEC once per run (resets to 50)', category: 'survival', escapeThreshold: 95, resetTo: 50, requires: 'deadMansSwitch' },
 
   // --- Automation ---
-  stopLoss:          { name: 'Stop Loss', cost: 5, description: 'Auto-sell positions at -20% loss', category: 'automation', lossThreshold: -0.20 },
-  takeProfit:        { name: 'Take Profit', cost: 8, description: 'Auto-sell positions at +50% gain', category: 'automation', gainThreshold: 0.50, requires: 'stopLoss' },
-  dollarCostAverage: { name: 'Dollar Cost Average', cost: 12, description: 'Auto-invest $500 in random asset every 10 days', category: 'automation', investAmount: 500, investInterval: 10, requires: 'takeProfit' },
+  stopLoss:          { name: 'Stop Loss', cost: 20000, description: 'Auto-sell positions at -20% loss', category: 'automation', lossThreshold: -0.20 },
+  takeProfit:        { name: 'Take Profit', cost: 40000, description: 'Auto-sell positions at +50% gain', category: 'automation', gainThreshold: 0.50, requires: 'stopLoss' },
+  dollarCostAverage: { name: 'Dollar Cost Average', cost: 90000, description: 'Auto-invest $500 in random asset every 10 days', category: 'automation', investAmount: 500, investInterval: 10, requires: 'takeProfit' },
 
   // --- Time Travel ---
-  dejaVu:            { name: 'Deja Vu', cost: 10, description: 'See 10-day price change % for each asset', category: 'timeTravel' },
-  butterflyEffect:   { name: 'Butterfly Effect', cost: 15, description: 'Trading P&L amplified by 50% (gains AND losses)', category: 'timeTravel', pnlMultiplier: 1.5, requires: 'dejaVu' },
-  temporalArbitrage: { name: 'Temporal Arbitrage', cost: 25, description: '20% chance of perfect trade timing (+20% bonus)', category: 'timeTravel', perfectTradeChance: 0.20, perfectTradeBonus: 0.20, requires: 'butterflyEffect' },
-  groundhogDay:      { name: 'Groundhog Day', cost: 40, description: 'Add 90 extra days to your run', category: 'timeTravel', extraDays: 90, requires: 'temporalArbitrage' },
+  dejaVu:            { name: 'Deja Vu', cost: 35000, description: 'See 10-day price change % for each asset', category: 'timeTravel' },
+  butterflyEffect:   { name: 'Butterfly Effect', cost: 200000, description: 'Trading P&L amplified by 50% (gains AND losses)', category: 'timeTravel', pnlMultiplier: 1.5, requires: 'dejaVu' },
+  temporalArbitrage: { name: 'Temporal Arbitrage', cost: 300000, description: '20% chance of perfect trade timing (+20% bonus)', category: 'timeTravel', perfectTradeChance: 0.20, perfectTradeBonus: 0.20, requires: 'butterflyEffect' },
+  groundhogDay:      { name: 'Groundhog Day', cost: 400000, description: 'Add 90 extra days to your run', category: 'timeTravel', extraDays: 90, requires: 'temporalArbitrage' },
 
   // --- Reputation ---
-  charityFoundation: { name: 'Charity Foundation', cost: 6, description: 'Extra SEC decay +0.05/day', category: 'reputation', extraDecay: 0.05 },
-  tedTalk:           { name: 'TED Talk', cost: 10, description: 'Start runs with 5 less SEC attention', category: 'reputation', secReduction: 5, requires: 'charityFoundation' },
-  bookDeal:          { name: 'Book Deal', cost: 15, description: 'Earn $100/day passive income from royalties', category: 'reputation', passivePerDay: 100, requires: 'tedTalk' },
-  cnbcRegular:       { name: 'CNBC Regular', cost: 25, description: '+10% profit on all trades', category: 'reputation', profitBonus: 0.10, requires: 'bookDeal' },
+  charityFoundation: { name: 'Charity Foundation', cost: 20000, description: 'Extra SEC decay +0.05/day', category: 'reputation', extraDecay: 0.05 },
+  tedTalk:           { name: 'TED Talk', cost: 50000, description: 'Start runs with 5 less SEC attention', category: 'reputation', secReduction: 5, requires: 'charityFoundation' },
+  bookDeal:          { name: 'Book Deal', cost: 175000, description: 'Earn $100/day passive income from royalties', category: 'reputation', passivePerDay: 100, requires: 'tedTalk' },
+  cnbcRegular:       { name: 'CNBC Regular', cost: 300000, description: '+10% profit on all trades', category: 'reputation', profitBonus: 0.10, requires: 'bookDeal' },
 
   // --- Portfolio Bonuses ---
-  diversificationBonus: { name: 'Diversification Bonus', cost: 8, description: '+5% passive income per unique asset held', category: 'portfolio', bonusPerAsset: 0.05 },
-  sectorRotation:       { name: 'Sector Rotation', cost: 15, description: '+15% profit when trading different assets consecutively', category: 'portfolio', rotationBonus: 0.15, requires: 'diversificationBonus' },
-  whaleStatus:          { name: 'Whale Status', cost: 25, description: 'No SEC attention from large trades', category: 'portfolio', requires: 'sectorRotation' },
+  diversificationBonus: { name: 'Diversification Bonus', cost: 40000, description: '+5% passive income per unique asset held', category: 'portfolio', bonusPerAsset: 0.05 },
+  sectorRotation:       { name: 'Sector Rotation', cost: 200000, description: '+15% profit when trading different assets consecutively', category: 'portfolio', rotationBonus: 0.15, requires: 'diversificationBonus' },
+  whaleStatus:          { name: 'Whale Status', cost: 300000, description: 'No SEC attention from large trades', category: 'portfolio', requires: 'sectorRotation' },
 
   // --- Naughty Activities Extensions ---
-  fakeNewsBot:    { name: 'Fake News Bot', cost: 30, description: 'Plant fake news to pump stocks for profit', category: 'illegal', requires: 'caymanShellCorp' },
-  moneyLaundering:{ name: 'Money Laundering', cost: 40, description: 'Clean your dirty money for cash and reduced heat', category: 'illegal', requires: 'fakeNewsBot' },
-  ponziScheme:    { name: 'Ponzi Scheme', cost: 50, description: 'Run a pyramid scheme for massive profits', category: 'illegal', requires: 'moneyLaundering' },
+  fakeNewsBot:    { name: 'Fake News Bot', cost: 300000, description: 'Plant fake news to pump stocks for profit', category: 'illegal', requires: 'caymanShellCorp' },
+  moneyLaundering:{ name: 'Money Laundering', cost: 500000, description: 'Clean your dirty money for cash and reduced heat', category: 'illegal', requires: 'fakeNewsBot' },
+  ponziScheme:    { name: 'Ponzi Scheme', cost: 600000, description: 'Run a pyramid scheme for massive profits', category: 'illegal', requires: 'moneyLaundering' },
 
   // --- Connections Extensions ---
-  mediaContact:     { name: 'Media Contact', cost: 22, description: 'Suspicious return SEC hits reduced 30%', category: 'connections', suspiciousReturnReduction: 0.30, requires: 'lobbyistNetwork' },
-  secMole:          { name: 'SEC Mole', cost: 30, description: 'See exact SEC attention value at all levels', category: 'connections', requires: 'mediaContact' },
-  judgeOnRetainer:  { name: 'Judge on Retainer', cost: 40, description: 'Bail fund resets SEC to 40 instead of 60', category: 'connections', bailResetLevel: 40, requires: 'secMole' },
+  mediaContact:     { name: 'Media Contact', cost: 250000, description: 'Suspicious return SEC hits reduced 30%', category: 'connections', suspiciousReturnReduction: 0.30, requires: 'lobbyistNetwork' },
+  secMole:          { name: 'SEC Mole', cost: 400000, description: 'See exact SEC attention value at all levels', category: 'connections', requires: 'mediaContact' },
+  judgeOnRetainer:  { name: 'Judge on Retainer', cost: 600000, description: 'Bail fund resets SEC to 40 instead of 60', category: 'connections', bailResetLevel: 40, requires: 'secMole' },
 
   // --- Market Intel Extensions ---
-  earningsCalendar:  { name: 'Earnings Calendar', cost: 30, description: 'See upcoming market events 5 days ahead', category: 'intel', previewDays: 5, requires: 'timeTravelersAlmanac' },
-  volatilityScanner: { name: 'Volatility Scanner', cost: 40, description: 'See volatility rating for each asset', category: 'intel', requires: 'earningsCalendar' },
+  earningsCalendar:  { name: 'Earnings Calendar', cost: 350000, description: 'See upcoming market events 5 days ahead', category: 'intel', previewDays: 5, requires: 'timeTravelersAlmanac' },
+  volatilityScanner: { name: 'Volatility Scanner', cost: 500000, description: 'See volatility rating for each asset', category: 'intel', requires: 'earningsCalendar' },
 };
 
 // ============================================================================
@@ -426,28 +432,28 @@ const EQUIPABLE_TOOLS = {
   scalping: {
     name: 'Scalping Bot',
     description: 'Passive micro-profits while you trade. Stacks with active trading.',
-    cost: 10,
+    cost: 100000,
     passiveIncomePerDay: 50,
     requires: 'algoEngine'
   },
   arbitrage: {
     name: 'Arbitrage Scanner',
     description: 'Automatically exploit price differences. Stacks with active trading.',
-    cost: 15,
+    cost: 150000,
     passiveIncomePerDay: 200,
     requires: 'algoEngine'
   },
   marketMaking: {
     name: 'Market Making Bot',
     description: 'Earn the spread passively. Stacks with active trading.',
-    cost: 20,
+    cost: 250000,
     passiveIncomePerDay: 500,
     requires: 'algoEngine'
   },
   algoTrading: {
     name: 'Algo Trading Suite',
     description: 'Automated strategy execution. Stacks with active trading.',
-    cost: 25,
+    cost: 400000,
     passiveIncomePerDay: 1000,
     requires: 'algoEngine'
   }

@@ -35,14 +35,24 @@ class Market {
         const category = asset.category || 'consumer';  // Default fallback
         return this.isCategoryUnlocked(category, progression);
       });
-      console.log(`Filtered to ${availableAssets.length} unlocked stocks`);
+
+      // If cryptoTrading is unlocked, append crypto assets
+      if (progression.data.unlocks && progression.data.unlocks.cryptoTrading) {
+        const cryptoAssets = (TRADING_MODES.crypto && TRADING_MODES.crypto.assets) || [];
+        availableAssets = availableAssets.concat(cryptoAssets);
+      }
+
+      console.log(`Filtered to ${availableAssets.length} unlocked assets`);
     }
 
     // Load historical data for all assets
-    const category = this.getCategoryForMode(mode);
+    const defaultCategory = this.getCategoryForMode(mode);
     const loadPromises = availableAssets.map(async (assetDef) => {
       let historicalData = null;
       let hasHistoricalData = false;
+
+      // Use per-asset dataCategory if set (e.g. crypto assets mixed into stocks mode)
+      const category = assetDef.dataCategory || defaultCategory;
 
       // Try to load historical data
       if (dataLoader && category) {

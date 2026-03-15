@@ -1,6 +1,7 @@
 node_modules/
 dist/
 assets/market_data/compressed/
+steamworks/output/
 assets/market_data/nul
 assets/market_data/stocks/nul
 nul

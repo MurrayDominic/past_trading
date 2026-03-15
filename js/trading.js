@@ -426,24 +426,8 @@ class TradingEngine {
         posValue = collateral + pnl;
       }
 
-      // Check for liquidation (loss > 90% of collateral)
-      const collateral = this.getCollateral(pos);
-      if (posValue < collateral * 0.1) {
-        // Auto-liquidate position
-        // Bug Fix #43: Store liquidation info for user notification
-        this.recentLiquidations.push({
-          ticker: pos.ticker,
-          type: pos.type,
-          quantity: pos.quantity,
-          loss: collateral - posValue
-        });
-        this.positions.splice(i, 1);
-        this.stats.hadMarginCall = true;
-        console.log(`Position liquidated: ${pos.ticker} (${pos.type})`);
-        continue;
-      }
-
       // Stop Loss / Take Profit auto-sell
+      const collateral = this.getCollateral(pos);
       if (metaProgression) {
         const pnlPct = collateral > 0 ? (posValue - collateral) / collateral : 0;
 

@@ -9,8 +9,8 @@ class ProgressionSystem {
 
   getDefaultData() {
     return {
-      prestigePoints: 0,
-      totalPrestigeEarned: 0,
+      upgradeCredits: 0,
+      totalCreditsEarned: 0,
       runCount: 0,
       totalArrests: 0,
       unlocks: {},
@@ -59,6 +59,14 @@ class ProgressionSystem {
         // MIGRATION: Backfill ownedUnlocks from unlocks for existing saves
         if (!savedData.ownedUnlocks && savedData.unlocks) {
           this.data.ownedUnlocks = { ...savedData.unlocks };
+          this.save();
+        }
+
+        // MIGRATION: Convert old prestigePoints to upgradeCredits
+        if (savedData.prestigePoints !== undefined && savedData.upgradeCredits === undefined) {
+          this.data.upgradeCredits = (savedData.prestigePoints || 0) * 10000;
+          this.data.totalCreditsEarned = (savedData.totalPrestigeEarned || 0) * 10000;
+          console.log('Migrated prestigePoints to upgradeCredits:', this.data.upgradeCredits);
           this.save();
         }
 
@@ -124,42 +132,34 @@ class ProgressionSystem {
     // Get skill metrics (still used for display/achievements)
     const { winRate, maxDrawdown } = tradingEngine.getSkillMetrics();
 
-    // PP from quarterly targets (replaces old Sharpe/win-rate formula)
-    let pp = 0;
-    if (quarterlySystem) {
-      pp = quarterlySystem.ppEarned;
-      // Pity PP if you didn't even pass level 1
-      if (quarterlySystem.completedLevels === 0) {
-        pp = 1;
-      }
-    }
+    // Credits earned = net worth profit above starting cash
+    const profit = tradingEngine.netWorth - CONFIG.STARTING_CASH;
+    let creditsEarned = Math.max(0, profit);
 
-    // Golden Parachute: 50% bonus PP when fired for missing quarterly targets
+    // Golden Parachute: 50% bonus credits when fired for missing quarterly targets
     if (quarterlySystem && quarterlySystem.fired && this.data.unlocks.goldenParachute) {
-      pp *= 1.5;
+      creditsEarned *= 1.5;
     }
 
-    // Dead Man's Switch: 50% bonus PP when arrested
+    // Dead Man's Switch: 50% bonus credits when arrested
     if (wasArrested && this.data.unlocks.deadMansSwitch) {
-      pp *= (1 + UNLOCKS.deadMansSwitch.ppBonus);
+      creditsEarned *= (1 + UNLOCKS.deadMansSwitch.ppBonus);
     }
 
-    // Title bonus still applies on top of quarterly PP
+    // Title bonus (prestigeBonus applies to credits)
     if (this.data.equippedTitle) {
       const achievement = ACHIEVEMENTS[this.data.equippedTitle];
       if (achievement && achievement.titleBonus && achievement.titleBonus.prestigeBonus) {
-        pp *= (1 + achievement.titleBonus.prestigeBonus);
+        creditsEarned *= (1 + achievement.titleBonus.prestigeBonus);
       }
     }
 
-    // Round to 1 decimal
-    pp = Math.floor(pp * 10) / 10;
+    creditsEarned = Math.floor(creditsEarned);
 
-    this.data.prestigePoints += pp;
-    this.data.totalPrestigeEarned += pp;
+    this.data.upgradeCredits += creditsEarned;
+    this.data.totalCreditsEarned += creditsEarned;
 
     // Record run with skill metrics
-    const profit = tradingEngine.netWorth - CONFIG.STARTING_CASH;
     const runRecord = {
       run: this.data.runCount,
       netWorth: tradingEngine.netWorth,
@@ -169,7 +169,7 @@ class ProgressionSystem {
       bankrupt: tradingEngine.stats.wentBankrupt,
       illegalActions: tradingEngine.stats.illegalActions,
       trades: tradingEngine.stats.totalTrades,
-      prestigeEarned: pp,
+      creditsEarned: creditsEarned,
       maxSecAttention: tradingEngine.stats.maxSecAttention,
 
       // Skill metrics
@@ -195,7 +195,7 @@ class ProgressionSystem {
 
     this.save();
 
-    return { pp, runRecord, newAchievements };
+    return { creditsEarned, runRecord, newAchievements };
   }
 
   checkAchievements(stats) {
@@ -286,13 +286,14 @@ class ProgressionSystem {
       return { success: false, message: `Requires: ${UNLOCKS[unlock.requires].name}` };
     }
 
-    if (this.data.prestigePoints < unlock.cost) {
-      return { success: false, message: `Need ${unlock.cost} Pts, have ${this.data.prestigePoints.toFixed(1)}` };
+    if ((this.data.upgradeCredits || 0) < unlock.cost) {
+      return { success: false, message: `Need ${formatMoney(unlock.cost)}, have ${formatMoney(this.data.upgradeCredits || 0)}` };
     }
 
-    this.data.prestigePoints -= unlock.cost;
+    this.data.upgradeCredits -= unlock.cost;
     this.data.ownedUnlocks[unlockId] = true;
     this.data.unlocks[unlockId] = true;
+
     this.save();
 
     return { success: true, message: `Unlocked: ${unlock.name}!` };
@@ -354,11 +355,11 @@ class ProgressionSystem {
     }
 
     const cost = mode.unlockCost || 0;
-    if (this.data.prestigePoints < cost) {
-      return { success: false, message: `Need ${cost} Pts, have ${this.data.prestigePoints.toFixed(1)}` };
+    if ((this.data.upgradeCredits || 0) < cost) {
+      return { success: false, message: `Need ${formatMoney(cost)}, have ${formatMoney(this.data.upgradeCredits || 0)}` };
     }
 
-    this.data.prestigePoints -= cost;
+    this.data.upgradeCredits -= cost;
     this.data.unlockedModes.push(modeId);
     this.save();
 
@@ -412,11 +413,11 @@ class ProgressionSystem {
       return { success: false, message: `Requires: ${UNLOCKS[tool.requires].name}` };
     }
 
-    if (this.data.prestigePoints < tool.cost) {
-      return { success: false, message: `Need ${tool.cost} Pts, have ${this.data.prestigePoints.toFixed(1)}` };
+    if ((this.data.upgradeCredits || 0) < tool.cost) {
+      return { success: false, message: `Need ${formatMoney(tool.cost)}, have ${formatMoney(this.data.upgradeCredits || 0)}` };
     }
 
-    this.data.prestigePoints -= tool.cost;
+    this.data.upgradeCredits -= tool.cost;
     this.data.ownedTools.push(toolId);
     this.save();
 

@@ -39,6 +39,10 @@ class Game {
     // Animation tracking
     this.rocketShown = false;    // Rocket at $10k
     this.confettiShown = false;  // Confetti at $1B
+
+    // Warning tracking (to show each threshold only once per run)
+    this.shownSecWarnings = new Set();
+    this.shownRiskWarnings = new Set();
   }
 
   // Bug Fix #37: Centralized state checking helpers to reduce duplication
@@ -178,6 +182,10 @@ class Game {
       this.rocketShown = false;
       this.confettiShown = false;
 
+      // Reset warning tracking for new run
+      this.shownSecWarnings = new Set();
+      this.shownRiskWarnings = new Set();
+
       // Start audio
       this.audio.resume();
       this.audio.startMusic();
@@ -309,13 +317,14 @@ class Game {
     if (quarterResult.levelUp) {
       const info = quarterResult.levelUpInfo;
       if (info.allComplete) {
-        this.news.addNews(`ALL 8 QUARTERLY TARGETS COMPLETE! Bonus: +${info.bonusPP} Pts`, 'milestone', this.currentDay);
+        this.news.addNews(`ALL 8 QUARTERLY TARGETS COMPLETE! Bonus awarded.`, 'milestone', this.currentDay);
       } else {
         this.news.addNews(
-          `NET WORTH TARGET HIT! Level ${info.level} complete (+${info.pp} Pts). Next: reach ${formatMoney(this.quarterly.getCurrentTarget().target)}`,
+          `NET WORTH TARGET HIT! Level ${info.level} complete. Next: reach ${formatMoney(this.quarterly.getCurrentTarget().target)}`,
           'milestone', this.currentDay
         );
       }
+      this.showBossMessage(info.level, this.quarterly.isAllComplete() ? null : this.quarterly.getCurrentTarget().target);
     }
 
     // Audio feedback based on net worth changes
@@ -395,6 +404,36 @@ class Game {
     if (this.currentDay >= this.totalDays) {
       this.endRun('timeUp');
       return;
+    }
+
+    // SEC attention threshold warnings (25, 50, 75)
+    const secPct = this.sec.attention;
+    for (const threshold of [25, 50, 75]) {
+      if (secPct >= threshold && !this.shownSecWarnings.has(threshold)) {
+        this.shownSecWarnings.add(threshold);
+        const secWarnings = {
+          25: ['🔍 SEC Notice', "Someone at the SEC has opened a file on you. It's probably routine. They open files on everyone. Just... maybe cool it with the suspicious returns."],
+          50: ['📋 Under Inquiry', "You are officially under formal inquiry. An actual human at the SEC is reading your trades right now. They have a coffee and a highlighter. Be cool."],
+          75: ['🚨 Grand Jury Convened', "A grand jury has been convened. Your lawyer has gone very quiet. The SEC agent outside your building has started bringing a thermos. This is not good."]
+        };
+        const [title, msg] = secWarnings[threshold];
+        this.showWarning(title, msg);
+      }
+    }
+
+    // Risk threshold warnings (25, 50, 75)
+    const riskPct = this.trading.getRiskLevel(this.market, this.progression.data);
+    for (const threshold of [25, 50, 75]) {
+      if (riskPct >= threshold && !this.shownRiskWarnings.has(threshold)) {
+        this.shownRiskWarnings.add(threshold);
+        const riskWarnings = {
+          25: ['📊 Risk Notice', "Your position sizes are getting chunky. Risk management is giving you side-eye. Nothing to worry about yet, but maybe don't go bigger."],
+          50: ['⚠️ Risk Warning', "You're halfway to the risk limit. The compliance desk has sent a strongly-worded internal memo. They used bold text. They never use bold text."],
+          75: ['🔴 Critical Risk', "Your risk level is critical. One bad tick and you're looking at a margin call. The compliance desk is standing outside your office. They brought a box."]
+        };
+        const [title, msg] = riskWarnings[threshold];
+        this.showWarning(title, msg);
+      }
     }
 
     // Update UI
@@ -897,6 +936,55 @@ class Game {
 
   equipTitle(titleId) {
     return this.progression.equipTitle(titleId);
+  }
+
+  showBossMessage(quarterLevel, nextTarget) {
+    const nextStr = nextTarget ? formatMoney(nextTarget) : null;
+
+    const messages = [
+      // Q1 - $15K
+      `Nice work, kid. I've taken the liberty of bumping Q2's target to ${nextStr}. Standard stuff. The partners barely noticed. Keep it up and there might be a stapler in it for you.`,
+      // Q2 - $50K
+      `Not bad, not bad at all! The partners are... cautiously pleased. We've adjusted Q3 upward to ${nextStr}. Nothing crazy. Totally reasonable. I may have told them you were "exceptional." No pressure.`,
+      // Q3 - $250K
+      `Excellent work this quarter! The board convened an emergency meeting specifically about you. The consensus was: raise the Q4 target to ${nextStr}. I know that sounds like a lot. It is a lot. But you've got that THING, you know? That energy. I believe in you. Also I already told the investors.`,
+      // Q4 - $1M
+      `A MILLION DOLLARS! Do you understand what you've done?! I have been screaming in the bathroom for twenty minutes. We're doubling down. Q1 Y2 target is ${nextStr}. Yes I wrote that correctly. I may have made some promises to some people in exchange for some funding. It's fine. It's all fine. YOU'VE GOT THIS.`,
+      // Q5 - $10M
+      `TEN MILLION DOLLARS. I have been on the phone all morning. Senator Williams asked if you'd like a yacht. I said yes on your behalf. The Q2 Y2 target is ${nextStr}. Before you say anything — the Cayman account people are very supportive. I haven't slept since Tuesday but that's unrelated. Please don't quit.`,
+      // Q6 - $100M
+      `ONE HUNDRED MILLION DOLLARS. I CANNOT STOP SCREAMING. I quit my last three jobs to be here for this moment. My therapist called it "delusional optimism." WHO'S LAUGHING NOW JANET. The Q3 Y2 target is ${nextStr}. I signed some paperwork I haven't fully read. It's probably fine. YOU ARE A GOD.`,
+      // Q7 - $500M
+      `HALF A BILLION. HALF. A. BILLION. I have not slept in 72 hours. My wife left me but honestly she was holding me back. The final target is ${nextStr}. ONE BILLION DOLLARS. I promised certain parties certain things and some of those things may be technically illegal but that is a TOMORROW problem. I love you. Not in a weird way. In a "you are printing money and I am leveraged 60x" way. DO NOT STOP.`,
+      // Q8 - $1B (completed)
+      `A BILLION DOLLARS. WE DID IT. I am going to prison. There are some regulatory issues I kept meaning to mention. The SEC has had a van outside my house since Q5. None of that matters right now. YOU DID IT. Pack up the offshore accounts. Take the yacht. I love you. Goodbye forever. It was an honor.`
+    ];
+
+    const idx = Math.min(quarterLevel - 1, messages.length - 1);
+    const title = quarterLevel === 8 ? '📞 Your Boss (Final Call)' : `📞 Your Boss (Q${quarterLevel} Complete)`;
+    this.showToast(title, messages[idx], 'info', 12000);
+  }
+
+  showWarning(title, message) {
+    this.showToast(title, message, 'warning', 8000);
+  }
+
+  showToast(title, message, type = 'info', duration = 6000) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast${type === 'warning' ? ' toast-warning' : type === 'danger' ? ' toast-danger' : ''}`;
+    toast.innerHTML = `<div class="toast-title">${title}</div><div class="toast-msg">${message}</div>`;
+    container.appendChild(toast);
+
+    const dismiss = () => {
+      toast.classList.add('toast-hiding');
+      toast.addEventListener('animationend', () => toast.remove(), { once: true });
+    };
+
+    setTimeout(dismiss, duration);
+    toast.addEventListener('click', dismiss);
   }
 
   exitToMenu() {

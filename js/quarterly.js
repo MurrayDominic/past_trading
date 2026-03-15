@@ -39,20 +39,16 @@ class QuarterlyTargetSystem {
 
       if (currentNetWorth >= target.target) {
         // Passed this level!
-        this.ppEarned += target.pp;
         this.completedLevels++;
         this.currentQuarter++;
         leveledUp = true;
 
         // Check if all 8 quarters completed
         if (this.completedLevels >= CONFIG.TOTAL_QUARTERS) {
-          this.ppEarned += CONFIG.ALL_QUARTERS_BONUS_PP;
           levelUpInfo = {
             level: this.completedLevels,
             target: target.target,
-            pp: target.pp,
             allComplete: true,
-            bonusPP: CONFIG.ALL_QUARTERS_BONUS_PP
           };
           break;
         }
@@ -60,7 +56,6 @@ class QuarterlyTargetSystem {
         levelUpInfo = {
           level: this.completedLevels,
           target: target.target,
-          pp: target.pp,
           allComplete: false
         };
         // Continue loop - might cascade through multiple levels

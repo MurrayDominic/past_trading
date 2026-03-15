@@ -69,7 +69,7 @@ class GameUI {
       // Menu
       menuPP: document.getElementById('menu-pp'),
       menuRunCount: document.getElementById('menu-run-count'),
-      modeSelector: document.getElementById('mode-selector'),
+      playBtn: document.getElementById('play-btn'),
       menuAchievements: document.getElementById('menu-achievements'),
       menuLeaderboards: document.getElementById('menu-leaderboards'),
       titleSelector: document.getElementById('title-selector'),
@@ -680,7 +680,7 @@ class GameUI {
     console.log('[Mode Unlock] prog object ID:', prog);
 
     // Stats
-    this.el.menuPP.textContent = prog.data.prestigePoints.toFixed(1);
+    this.el.menuPP.textContent = formatMoney(prog.data.upgradeCredits || 0);
     this.el.menuRunCount.textContent = prog.data.runCount;
 
     // Billion progress bar
@@ -702,86 +702,10 @@ class GameUI {
       this.updateYearDisplay(currentStart);
     }
 
-    // Mode selector
-    const modes = prog.getAvailableModes();
-    console.log('[Mode Unlock] getAvailableModes returned:', modes.map(m => ({id: m.id, unlocked: m.unlocked})));
-
-    let modeHtml = '';
-    for (const mode of modes) {
-      if (mode.comingSoon) {
-        // Coming soon mode - grayed out
-        modeHtml += `
-          <div class="mode-card coming-soon" data-mode="${mode.id}">
-            <div class="mode-card-content">
-              <h3>${mode.name}</h3>
-              <p>${mode.description}</p>
-              <div class="coming-soon-badge">
-                <span>🚧 Coming Soon</span>
-              </div>
-            </div>
-          </div>
-        `;
-      } else if (mode.unlocked) {
-        // Unlocked mode - show play button
-        modeHtml += `
-          <div class="mode-card unlocked" data-mode="${mode.id}">
-            <div class="mode-card-content">
-              <h3>${mode.name}</h3>
-              <p>${mode.description}</p>
-            </div>
-            <button class="btn btn-primary start-run-btn mode-card-play-btn" data-mode="${mode.id}">Play</button>
-          </div>
-        `;
-      } else {
-        // Locked mode - show with unlock button
-        const canAfford = prog.data.prestigePoints >= mode.unlockCost;
-        modeHtml += `
-          <div class="mode-card locked" data-mode="${mode.id}">
-            <div class="mode-card-content">
-              <h3>${mode.name}</h3>
-              <p>${mode.description}</p>
-              <div class="mode-lock-info">
-                <span class="lock-icon">🔒</span>
-                <span class="mode-cost">${mode.unlockCost} Pts Required</span>
-              </div>
-            </div>
-            <button class="btn ${canAfford ? 'btn-accent' : 'btn-disabled'} unlock-mode-btn"
-                    data-unlock-mode="${mode.id}"
-                    ${canAfford ? '' : 'disabled'}>
-              ${canAfford ? `Unlock (${mode.unlockCost} Pts)` : 'Insufficient Pts'}
-            </button>
-          </div>
-        `;
-      }
+    // Bind play button
+    if (this.el.playBtn) {
+      this.el.playBtn.onclick = () => this.showYearSelect('stocks');
     }
-    this.el.modeSelector.innerHTML = modeHtml;
-
-    // Bind unlock buttons for locked modes
-    document.querySelectorAll('.unlock-mode-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation(); // Prevent card click event
-        const modeId = btn.dataset.unlockMode;
-        const result = prog.unlockMode(modeId);
-        console.log('[Mode Unlock] Unlock result:', result);
-        console.log('[Mode Unlock] After unlock - unlockedModes:', prog.data.unlockedModes);
-
-        if (result.success) {
-          // Refresh menu to show newly unlocked mode - same pattern as shop
-          console.log('[Mode Unlock] Calling renderMenu to refresh...');
-          this.renderMenu();
-          console.log('[Mode Unlock] renderMenu completed');
-        } else {
-          this.showAlert('Cannot Unlock', result.message);
-        }
-      });
-    });
-
-    // Bind start buttons - go to year selection screen
-    document.querySelectorAll('.start-run-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        this.showYearSelect(btn.dataset.mode);
-      });
-    });
 
     // Unlock shop - MOVED TO SHOP SCREEN, COMMENTING OUT OLD CODE
     /*
@@ -1038,8 +962,10 @@ class GameUI {
     const prog = this.game.progression;
     console.log('renderShop called - Current unlocks:', prog.data.unlocks);
 
-    // Update PP display
-    this.el.shopPP.textContent = prog.data.prestigePoints.toFixed(1);
+    // Update credits display (both shop and top-of-menu)
+    const creditsFormatted = formatMoney(prog.data.upgradeCredits || 0);
+    this.el.shopPP.textContent = creditsFormatted;
+    this.el.menuPP.textContent = creditsFormatted;
 
     // Define progression tree structure (store as instance property)
     // Now reading costs and requirements from UNLOCKS config
@@ -1054,6 +980,7 @@ class GameUI {
           { id: 'energyStocks', name: 'Energy', icon: '🛢️', cost: UNLOCKS.energyStocks.cost },
           { id: 'techStocks', name: 'Tech', icon: '💻', cost: UNLOCKS.techStocks.cost },
           { id: 'memeStocks', name: 'Meme', icon: '🚀', cost: UNLOCKS.memeStocks.cost, requires: [UNLOCKS.memeStocks.requires] },
+          { id: 'cryptoTrading', name: 'Crypto', icon: '₿', cost: UNLOCKS.cryptoTrading.cost, requires: [UNLOCKS.cryptoTrading.requires] },
         ]
       },
       {
@@ -1242,7 +1169,7 @@ class GameUI {
         const equipped = node.isTool
           ? prog.data.equippedTool === node.id
           : (prog.data.unlocks[node.id] || false);
-        const canAfford = prog.data.prestigePoints >= node.cost;
+        const canAfford = (prog.data.upgradeCredits || 0) >= node.cost;
 
         // Check if prerequisites are met
         let prereqsMet = true;
@@ -1291,7 +1218,7 @@ class GameUI {
         treeHtml += `
           <div class="tree-node ${statusClass}" data-node-id="${node.id}" ${!prereqsMet ? `data-blocked-reason="Requires: ${UNLOCKS[missingPrereq]?.name || missingPrereq}"` : ''}>
             <div class="node-name">${node.name}</div>
-            <div class="node-cost">${node.cost} Pts</div>
+            <div class="node-cost">${formatMoney(node.cost)}</div>
             <div class="node-status ${statusClass}">${statusText}</div>
           </div>
         `;
@@ -1346,7 +1273,7 @@ class GameUI {
     const equipped = isTool
       ? prog.data.equippedTool === nodeId
       : (prog.data.unlocks[nodeId] || false);
-    const canAfford = prog.data.prestigePoints >= nodeData.cost;
+    const canAfford = (prog.data.upgradeCredits || 0) >= nodeData.cost;
 
     let prereqsMet = true;
     let prereqText = 'None';
@@ -1386,7 +1313,7 @@ class GameUI {
       <div class="detail-header">
         <div class="detail-icon">${nodeData.icon}</div>
         <div class="detail-name">${nodeData.name}</div>
-        <div class="detail-cost">${nodeData.cost} Pts</div>
+        <div class="detail-cost">${formatMoney(nodeData.cost)}</div>
       </div>
 
       <div class="detail-section">
@@ -1423,9 +1350,9 @@ class GameUI {
     } else if (!prereqsMet) {
       detailHtml += `<button class="btn btn-disabled" disabled>Prerequisites Not Met</button>`;
     } else if (!canAfford) {
-      detailHtml += `<button class="btn btn-disabled" disabled>Cannot Afford (${nodeData.cost} Pts)</button>`;
+      detailHtml += `<button class="btn btn-disabled" disabled>Cannot Afford (${formatMoney(nodeData.cost)})</button>`;
     } else {
-      detailHtml += `<button class="btn btn-accent" data-unlock="${nodeId}">Purchase for ${nodeData.cost} Pts</button>`;
+      detailHtml += `<button class="btn btn-accent" data-unlock="${nodeId}">Purchase for ${formatMoney(nodeData.cost)}</button>`;
     }
 
     detailHtml += `</div>`;
@@ -1475,6 +1402,10 @@ class GameUI {
         }
       });
     }
+
+    // Scroll sidebar into view so it's always visible after selection
+    const sidebar = document.querySelector('.shop-detail-sidebar');
+    if (sidebar) sidebar.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
   // ---- Game Rendering ----
@@ -1621,7 +1552,8 @@ class GameUI {
       const impactClass = impacted ? 'asset-impacted' : '';
 
       // Category emoji
-      const assetDef = SP500_ASSETS.find(a => a.ticker === asset.ticker);
+      const assetDef = SP500_ASSETS.find(a => a.ticker === asset.ticker)
+        || (TRADING_MODES.crypto && TRADING_MODES.crypto.assets.find(a => a.ticker === asset.ticker));
       const category = assetDef ? (assetDef.category || 'consumer') : 'consumer';
       const categoryIcon = STOCK_CATEGORIES[category] ? STOCK_CATEGORIES[category].icon : '';
 
@@ -1700,8 +1632,9 @@ class GameUI {
     // Apply category filter first
     if (this.currentCategoryFilter !== 'all') {
       filtered = filtered.filter(asset => {
-        // Get category from SP500_ASSETS by ticker
-        const assetDef = SP500_ASSETS.find(a => a.ticker === asset.ticker);
+        // Get category from SP500_ASSETS or crypto assets by ticker
+        const assetDef = SP500_ASSETS.find(a => a.ticker === asset.ticker)
+          || (TRADING_MODES.crypto && TRADING_MODES.crypto.assets.find(a => a.ticker === asset.ticker));
         const category = assetDef ? (assetDef.category || 'consumer') : 'consumer';
         return category === this.currentCategoryFilter;
       });
@@ -2309,12 +2242,12 @@ class GameUI {
             <span class="stat-value text-accent">${game.quarterly.completedLevels} / ${CONFIG.TOTAL_QUARTERS}</span>
           </div>
           <div class="stat-item highlight">
-            <span class="stat-label">Points Earned</span>
-            <span class="stat-value text-accent">+${result.pp.toFixed(1)} Pts</span>
+            <span class="stat-label">Credits Earned</span>
+            <span class="stat-value text-accent">+${formatMoney(result.creditsEarned)}</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">Total Points</span>
-            <span class="stat-value">${game.progression.data.prestigePoints.toFixed(1)} Pts</span>
+            <span class="stat-label">Total Credits</span>
+            <span class="stat-value">${formatMoney(game.progression.data.upgradeCredits || 0)}</span>
           </div>
         </div>
       </div>
