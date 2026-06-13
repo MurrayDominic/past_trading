@@ -2811,6 +2811,41 @@ canvas {
   }
 }
 
+/* Trade Feedback Animations */
+.trade-flash {
+  animation: trade-flash-anim 400ms ease-out;
+}
+
+@keyframes trade-flash-anim {
+  0% { filter: brightness(1); }
+  30% { filter: brightness(1.8); }
+  100% { filter: brightness(1); }
+}
+
+.cash-flash {
+  animation: cash-flash-anim 600ms ease-out;
+}
+
+@keyframes cash-flash-anim {
+  0% { color: var(--rh-text); }
+  20% { color: var(--rh-accent); transform: scale(1.05); }
+  100% { color: var(--rh-text); transform: scale(1); }
+}
+
+.level-up-flash {
+  animation: level-up-anim 1200ms ease-out;
+}
+
+@keyframes level-up-anim {
+  0% { filter: brightness(1); }
+  15% { filter: brightness(2); }
+  30% { filter: brightness(1); }
+  45% { filter: brightness(1.6); }
+  60% { filter: brightness(1); }
+  75% { filter: brightness(1.3); }
+  100% { filter: brightness(1); }
+}
+
 /* Utility Classes */
 .mt-1 { margin-top: var(--spacing-sm); }
 .mt-2 { margin-top: var(--spacing-md); }

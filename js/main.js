@@ -325,6 +325,7 @@ class Game {
         );
       }
       this.showBossMessage(info.level, this.quarterly.isAllComplete() ? null : this.quarterly.getCurrentTarget().target);
+      this.ui.flashQuarterlyLevelUp();
     }
 
     // Audio feedback based on net worth changes

@@ -2181,11 +2181,48 @@ class GameUI {
     this.el.tradeResult.textContent = result.message;
     this.el.tradeResult.className = 'trade-result ' + (result.success ? 'success' : 'error');
 
+    // Flash the trade button area on success
+    if (result.success) {
+      const tradeType = result.message && result.message.toLowerCase().includes('short') ? 'short'
+        : result.message && (result.message.toLowerCase().includes('sold') || result.message.toLowerCase().includes('closed')) ? 'sell'
+        : 'buy';
+      this.flashTradeButton(tradeType);
+      this.flashCashDisplay();
+    }
+
     clearTimeout(this.tradeResultTimeout);
     this.tradeResultTimeout = setTimeout(() => {
       this.el.tradeResult.textContent = '';
       this.el.tradeResult.className = 'trade-result';
     }, 3000);
+  }
+
+  flashTradeButton(type) {
+    const btn = type === 'buy' ? this.el.buyBtn
+      : type === 'sell' ? this.el.sellBtn
+      : this.el.shortBtn;
+    if (!btn) return;
+    btn.classList.add('trade-flash');
+    setTimeout(() => btn.classList.remove('trade-flash'), 400);
+  }
+
+  flashCashDisplay() {
+    if (!this.el.cashDisplay) return;
+    this.el.cashDisplay.classList.add('cash-flash');
+    setTimeout(() => this.el.cashDisplay.classList.remove('cash-flash'), 600);
+  }
+
+  flashQuarterlyLevelUp() {
+    const bar = document.querySelector('.quarterly-countdown-fill');
+    if (bar) {
+      bar.classList.add('level-up-flash');
+      setTimeout(() => bar.classList.remove('level-up-flash'), 1200);
+    }
+    const badges = document.querySelector('.quarterly-level-badges');
+    if (badges) {
+      badges.classList.add('level-up-flash');
+      setTimeout(() => badges.classList.remove('level-up-flash'), 1200);
+    }
   }
 
   spawnFloatingPnL(amount) {
