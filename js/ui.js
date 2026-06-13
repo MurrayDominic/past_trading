@@ -13,6 +13,7 @@ class GameUI {
     this.netWorthTimeRange = 'max';  // Time range filter for net worth graph
     this.currentSearchTerm = '';  // Store search term across ticks
     this.currentCategoryFilter = 'all';  // Store category filter across ticks
+    this._topMoversRenderedDay = null;  // Track last rendered day to avoid DOM thrash
   }
 
   init() {
@@ -1687,15 +1688,20 @@ class GameUI {
   renderTopMovers(game) {
     if (!this.el.topMovers) return;
     if (game.market.dayCount < 1) {
-      this.el.topMovers.innerHTML = '<div class="top-movers-empty">Market opening...</div>';
+      if (this._topMoversRenderedDay !== -1) {
+        this.el.topMovers.innerHTML = '<div class="top-movers-empty">Market opening...</div>';
+        this._topMoversRenderedDay = -1;
+      }
       return;
     }
 
+    // Only re-render when the day changes (data is cached per-day anyway)
+    if (this._topMoversRenderedDay === game.market.dayCount) return;
+
     const { gainers, losers } = game.market.getTopMovers(3);
-    if (gainers.length === 0 && losers.length === 0) {
-      this.el.topMovers.innerHTML = '';
-      return;
-    }
+    if (gainers.length === 0 && losers.length === 0) return;
+
+    this._topMoversRenderedDay = game.market.dayCount;
 
     const renderMover = (m) => {
       const pct = (m.change * 100).toFixed(1);
