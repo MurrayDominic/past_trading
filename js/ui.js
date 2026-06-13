@@ -559,9 +559,18 @@ class GameUI {
     this._pendingMode = mode;
     this.el.menuScreen.classList.add('hidden');
     this.el.yearSelectScreen.classList.remove('hidden');
-    // Refresh the year display with current run length
-    const startYear = parseInt(this.el.startYearSlider.value);
-    this.updateYearDisplay(startYear);
+    // In demo mode, lock to 2020. Disable slider and year input so the user can't change them.
+    if (DEMO_MODE) {
+      this.el.startYearSlider.value = 2020;
+      this.el.startYearSlider.disabled = true;
+      if (this.el.startYearDisplay) this.el.startYearDisplay.readOnly = true;
+      this.updateYearDisplay(2020);
+    } else {
+      this.el.startYearSlider.disabled = false;
+      document.querySelectorAll('.year-preset-btn').forEach(btn => btn.style.display = '');
+      const startYear = parseInt(this.el.startYearSlider.value);
+      this.updateYearDisplay(startYear);
+    }
   }
 
   getRunYears() {
@@ -1195,9 +1204,15 @@ class GameUI {
           }
         }
 
+        // Demo mode: check if this unlock is restricted
+        const isDemoLocked = DEMO_MODE && !DEMO_ALLOWED_UNLOCKS.has(node.id) && !owned;
+
         // Determine node state
         let statusClass, statusText;
-        if (owned && equipped) {
+        if (isDemoLocked) {
+          statusClass = 'demo-locked';
+          statusText = 'Full Game Only';
+        } else if (owned && equipped) {
           statusClass = 'unlocked';
           statusText = 'Equipped';
         } else if (owned && !equipped) {
@@ -1216,9 +1231,9 @@ class GameUI {
         }
 
         treeHtml += `
-          <div class="tree-node ${statusClass}" data-node-id="${node.id}" ${!prereqsMet ? `data-blocked-reason="Requires: ${UNLOCKS[missingPrereq]?.name || missingPrereq}"` : ''}>
+          <div class="tree-node ${statusClass}" data-node-id="${node.id}" ${!prereqsMet && !isDemoLocked ? `data-blocked-reason="Requires: ${UNLOCKS[missingPrereq]?.name || missingPrereq}"` : ''}>
             <div class="node-name">${node.name}</div>
-            <div class="node-cost">${formatMoney(node.cost)}</div>
+            <div class="node-cost">${isDemoLocked ? '🔒' : formatMoney(node.cost)}</div>
             <div class="node-status ${statusClass}">${statusText}</div>
           </div>
         `;
@@ -1243,6 +1258,12 @@ class GameUI {
   showNodeDetail(nodeId) {
     const prog = this.game.progression;
     console.log('showNodeDetail called for:', nodeId, 'Current unlocks:', prog.data.unlocks);
+
+    // Demo mode: block purchase of restricted unlocks
+    if (DEMO_MODE && !DEMO_ALLOWED_UNLOCKS.has(nodeId) && !prog.data.ownedUnlocks[nodeId]) {
+      this.showToast('Available in the full game on Steam!', 'info');
+      return;
+    }
 
     // Find the node in tree structure
     let nodeData = null;

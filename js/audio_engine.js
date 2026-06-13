@@ -10,11 +10,8 @@ class AudioEngine {
     this.musicOscillators = [];
     this.currentIntensity = 0;
 
-    // MP3 music support
-    this.musicSource = null;
-    this.musicBuffer = null;
-    this.musicFilter = null;
-    this.hasMusicFile = false;
+    // HTML5 audio element for background music
+    this.musicEl = null;
   }
 
   init() {
@@ -33,38 +30,20 @@ class AudioEngine {
       this.sfxGain.connect(this.masterGain);
       this.sfxGain.gain.value = 0.5;
 
-      // Try to preload MP3 background music
-      this.preloadMusic();
+      // HTML5 audio element for background music — simpler and works on all browsers.
+      // Must be in the DOM to guarantee loading in all browser/sandbox combinations.
+      this.musicEl = document.createElement('audio');
+      this.musicEl.loop = true;
+      this.musicEl.volume = 0.15;
+      this.musicEl.preload = 'auto';
+      this.musicEl.src = 'assets/music/background.mp3';
+      this.musicEl.style.display = 'none';
+      document.body.appendChild(this.musicEl);
 
       return true;
     } catch (e) {
       console.warn('Web Audio API not supported:', e);
       return false;
-    }
-  }
-
-  async preloadMusic() {
-    try {
-      let arrayBuffer;
-
-      if (window.electronAPI && window.electronAPI.isElectron) {
-        // Electron: read file via Node.js fs
-        const uint8 = window.electronAPI.readFileBuffer('assets/music/background.mp3');
-        if (!uint8) throw new Error('No music file found');
-        arrayBuffer = uint8.buffer;
-      } else {
-        // Browser: fetch as usual
-        const response = await fetch('assets/music/background.mp3');
-        if (!response.ok) throw new Error('No music file found');
-        arrayBuffer = await response.arrayBuffer();
-      }
-
-      this.musicBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
-      this.hasMusicFile = true;
-      console.log('Background music loaded successfully');
-    } catch (e) {
-      console.log('No background music file found (assets/music/background.mp3) - using synthesized audio');
-      this.hasMusicFile = false;
     }
   }
 
@@ -176,160 +155,41 @@ class AudioEngine {
   }
 
   startMusic() {
-    if (!this.audioContext) return;
-
+    if (!this.audioContext || !this.musicEl) return;
+    this.resume();
     this.stopMusic();
-
-    if (this.hasMusicFile && this.musicBuffer) {
-      this.startMusicMP3();
-    } else {
-      this.startMusicSynth();
+    this.musicEl.currentTime = 0;
+    this.musicEl.muted = this.muted;
+    const attempt = this.musicEl.play();
+    if (attempt) {
+      attempt.catch(() => {
+        // Autoplay blocked — retry as soon as the audio is ready to play
+        const retry = () => {
+          this.musicEl.play().catch(() => {});
+          this.musicEl.removeEventListener('canplay', retry);
+        };
+        this.musicEl.addEventListener('canplay', retry);
+      });
     }
   }
 
-  startMusicMP3() {
-    const now = this.audioContext.currentTime;
-
-    // Create source from buffer
-    this.musicSource = this.audioContext.createBufferSource();
-    this.musicSource.buffer = this.musicBuffer;
-    this.musicSource.loop = true;
-
-    // Low-pass filter for "building up" effect - starts muffled
-    this.musicFilter = this.audioContext.createBiquadFilter();
-    this.musicFilter.type = 'lowpass';
-    this.musicFilter.frequency.value = 400; // Start very muffled
-    this.musicFilter.Q.value = 0.7;
-
-    // Connect: source -> filter -> musicGain -> master
-    this.musicSource.connect(this.musicFilter);
-    this.musicFilter.connect(this.musicGain);
-
-    // Start quiet and muffled
-    this.musicGain.gain.setValueAtTime(0.15, now);
-
-    this.musicSource.start(0);
-  }
-
-  startMusicSynth() {
-    if (this.muted) return;
-
-    const now = this.audioContext.currentTime;
-
-    // Base drone (C2, 130Hz)
-    const drone = this.audioContext.createOscillator();
-    const droneGain = this.audioContext.createGain();
-    drone.type = 'sine';
-    drone.frequency.value = 130;
-    droneGain.gain.value = 0.15;
-    drone.connect(droneGain);
-    droneGain.connect(this.musicGain);
-    drone.start(now);
-
-    // Harmony (E2, 164Hz)
-    const harmony = this.audioContext.createOscillator();
-    const harmonyGain = this.audioContext.createGain();
-    harmony.type = 'sine';
-    harmony.frequency.value = 164;
-    harmonyGain.gain.value = 0.12;
-    harmony.connect(harmonyGain);
-    harmonyGain.connect(this.musicGain);
-    harmony.start(now);
-
-    this.musicOscillators.push({ osc: drone, gain: droneGain });
-    this.musicOscillators.push({ osc: harmony, gain: harmonyGain });
-  }
-
   updateMusicIntensity(daysRemaining, totalDays) {
-    if (!this.audioContext || this.muted) return;
+    if (!this.audioContext || this.muted || !this.musicEl) return;
 
     const targetIntensity = 1 - (daysRemaining / totalDays);
     this.currentIntensity += (targetIntensity - this.currentIntensity) * 0.05;
 
-    // MP3 music: adjust filter and volume for building effect
-    if (this.hasMusicFile && this.musicFilter) {
-      const now = this.audioContext.currentTime;
-
-      // Open up filter as intensity increases: 400Hz -> 20000Hz
-      const filterFreq = 400 + this.currentIntensity * 19600;
-      this.musicFilter.frequency.setTargetAtTime(filterFreq, now, 0.5);
-
-      // Volume builds: 0.15 -> 0.5
-      const vol = 0.15 + this.currentIntensity * 0.35;
-      this.musicGain.gain.setTargetAtTime(vol, now, 0.5);
-      return;
-    }
-
-    // Synth fallback: Add tension layer when past 50%
-    if (this.currentIntensity > 0.5 && this.musicOscillators.length < 4) {
-      const now = this.audioContext.currentTime;
-
-      // Pulse oscillator
-      const pulse = this.audioContext.createOscillator();
-      const pulseGain = this.audioContext.createGain();
-
-      pulse.type = 'triangle';
-      pulse.frequency.value = 523; // C5
-
-      // LFO for pulsing effect
-      const lfo = this.audioContext.createOscillator();
-      const lfoGain = this.audioContext.createGain();
-      lfo.frequency.value = 2;
-      lfoGain.gain.value = 0.05;
-      lfo.connect(lfoGain);
-      lfoGain.connect(pulseGain.gain);
-
-      pulseGain.gain.value = 0.05;
-      pulse.connect(pulseGain);
-      pulseGain.connect(this.musicGain);
-
-      pulse.start(now);
-      lfo.start(now);
-
-      this.musicOscillators.push({ osc: pulse, gain: pulseGain, lfo });
-    }
-
-    // Add dramatic high layer when past 80%
-    if (this.currentIntensity > 0.8 && this.musicOscillators.length < 6) {
-      const now = this.audioContext.currentTime;
-
-      const high = this.audioContext.createOscillator();
-      const highGain = this.audioContext.createGain();
-
-      high.type = 'sine';
-      high.frequency.value = 1046; // C6
-      highGain.gain.value = 0.08;
-
-      high.connect(highGain);
-      highGain.connect(this.musicGain);
-      high.start(now);
-
-      this.musicOscillators.push({ osc: high, gain: highGain });
-    }
+    // Volume builds up as run progresses: 0.15 -> 0.45
+    this.musicEl.volume = 0.15 + this.currentIntensity * 0.3;
   }
 
   stopMusic() {
-    if (!this.audioContext) return;
-
-    // Stop MP3 source
-    if (this.musicSource) {
-      try {
-        this.musicSource.stop();
-      } catch (e) {
-        console.debug('Music source stop error (non-critical):', e.message);
-      }
-      this.musicSource = null;
-      this.musicFilter = null;
+    if (this.musicEl) {
+      this.musicEl.pause();
+      this.musicEl.currentTime = 0;
     }
-
-    // Stop synth oscillators
     this.musicOscillators.forEach(({ osc, lfo }) => {
-      try {
-        osc.stop();
-        if (lfo) lfo.stop();
-      } catch (e) {
-        console.debug('Audio oscillator stop error (non-critical):', e.message);
-      }
+      try { osc.stop(); if (lfo) lfo.stop(); } catch (e) {}
     });
     this.musicOscillators = [];
     this.currentIntensity = 0;
@@ -346,6 +206,9 @@ class AudioEngine {
     this.muted = !this.muted;
     if (this.masterGain) {
       this.masterGain.gain.value = this.muted ? 0 : this.volume;
+    }
+    if (this.musicEl) {
+      this.musicEl.muted = this.muted;
     }
     return this.muted;
   }

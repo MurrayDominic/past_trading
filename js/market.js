@@ -71,12 +71,15 @@ class Market {
       let highestPrice = startPrice;
       let lowestPrice = startPrice;
 
-      // Store actual data start date for late-IPO stocks
+      // Store actual data start/end dates for late-IPO and delisted stocks
       let actualDataStartDate = null;
+      let actualDataEndDate = null;
 
       if (hasHistoricalData && historicalData.ohlc && historicalData.ohlc.length > 0) {
         // Parse actual start date from first OHLC entry (period.start is unreliable for post-2000 IPOs)
         actualDataStartDate = new Date(historicalData.ohlc[0].date);
+        // End date: last OHLC entry — stocks delisted before run end will disappear naturally
+        actualDataEndDate = new Date(historicalData.ohlc[historicalData.ohlc.length - 1].date);
 
         // Calculate offset from actual data start, not from 2000-01-01
         const elapsedMs = this.startDate - actualDataStartDate;
@@ -144,7 +147,8 @@ class Market {
         daysToExpiry: assetDef.expiry || 0,
         hasHistoricalData,
         historicalData,
-        actualDataStartDate  // Store for calculateDataDay()
+        actualDataStartDate,  // Stock IPO / first data date
+        actualDataEndDate     // Stock delisting / last data date (null = still active)
       };
     });
 
@@ -368,7 +372,9 @@ class Market {
     if (!asset.hasHistoricalData) return false; // No data file = don't show
     if (!asset.actualDataStartDate) return false;
     const currentDate = new Date(this.startDate.getTime() + this.dayCount * 24 * 60 * 60 * 1000);
-    return currentDate >= asset.actualDataStartDate;
+    if (currentDate < asset.actualDataStartDate) return false; // Not yet listed
+    if (asset.actualDataEndDate && currentDate > asset.actualDataEndDate) return false; // Delisted
+    return true;
   }
 
   getLiveAssets() {

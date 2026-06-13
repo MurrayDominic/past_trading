@@ -208,7 +208,7 @@
   <!-- ============================================================ -->
   <div id="year-select-screen" class="hidden">
     <div class="year-select-container">
-      <button class="btn btn-small" id="year-select-back-btn">← Back to Menu</button>
+      <button class="btn btn-small" id="year-select-back-btn">&larr; Back to Menu</button>
       <h1 class="year-select-title">Select Starting Year</h1>
       <p class="section-subtitle" id="year-section-subtitle">Choose when to start your run (2000-2023)</p>
       <div class="year-selection-container">
@@ -217,15 +217,16 @@
             <label>Start Year</label>
             <input type="number" class="year-value year-input" id="start-year-display" min="2000" max="2023" value="2008">
           </div>
-          <div class="year-arrow">→</div>
+          <div class="year-arrow">&rarr;</div>
           <div class="year-display-box">
             <label>End Year</label>
             <div class="year-value" id="end-year-display">2009</div>
           </div>
         </div>
         <div class="year-slider-container">
-          <input type="range" id="start-year-slider" min="2000" max="2023" value="2008" class="year-slider">
+          <input type="range" id="start-year-slider" min="2000" max="2023" value="2020" class="year-slider">
         </div>
+        <p class="demo-year-label">Choose a historical era to trade through:</p>
         <div class="year-presets">
           <button class="btn btn-small year-preset-btn" data-start="2007">2008 Crisis</button>
           <button class="btn btn-small year-preset-btn" data-start="2020">2020 Pandemic</button>
@@ -523,6 +524,20 @@
   <!-- TOAST NOTIFICATIONS (bottom-right, no pause)                  -->
   <!-- ============================================================ -->
   <div id="toast-container"></div>
+
+  <!-- ============================================================ -->
+  <!-- DEMO BANNER (only shown in demo mode)                         -->
+  <!-- ============================================================ -->
+  <div id="demo-banner">
+    You're playing the <strong>free demo</strong> — 2008 Financial Crisis era, limited upgrades.
+  </div>
+
+  <!-- Activate demo mode if DEMO_MODE flag is set in config -->
+  <script>
+    if (typeof DEMO_MODE !== 'undefined' && DEMO_MODE) {
+      document.body.classList.add('demo-mode');
+    }
+  </script>
 
 </body>
 </html>

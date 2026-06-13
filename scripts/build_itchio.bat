@@ -1,0 +1,3 @@
+@echo off
+echo Building itch.io demo...
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0build_itchio.ps1" %*

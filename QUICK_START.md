@@ -1,181 +1,107 @@
-# Quick Start Guide - Past Trading (Robinhood Edition)
+# Quick Start Guide
 
 ## Playing the Game
 
-1. **Open `index.html` in your browser**
-   - Works offline, no server needed
-   - Supports Chrome, Firefox, Edge, Safari
-
-2. **Select a Trading Mode**
-   - Start with "Stocks" for the classic experience
-   - Each mode has different assets and mechanics
-
-3. **Trade Assets**
-   - Click on an asset in the left panel to select it
-   - Enter quantity and click "Buy" or "Short"
-   - Positions appear below with real-time P&L
-   - Click "Close Position" to sell
-
-4. **Watch the Charts**
-   - Default chart shows your selected asset
-   - Click "+" to add more chart tabs
-   - Click "×" to close a tab
-   - Day Trading mode shows candlestick charts
-
-5. **Audio Controls**
-   - 🔊 button to mute/unmute
-   - Slider to adjust volume
-   - Sounds play for trades, gains, losses
-
-6. **Speed Controls**
-   - 0.5x to 10x speed
-   - Default is 1x (1 second = 1 game day)
-   - Press Space to pause/unpause
-
-7. **Watch for News**
-   - News feed in right panel
-   - 📰 indicator shows impacted assets
-   - Historical events appear on correct days
-
-## Key Features
-
-### Historical Data
-- Game uses real 2020 market data
-- 365 days of trading
-- Falls back to synthetic if data missing
-
-### Charts
-- **Line charts**: All modes except day trading
-- **Candlestick charts**: Day trading mode only
-- Shows last 90 days/bars
-- Updates in real-time
-
-### Audio
-- **Click**: Trade executed
-- **Chirp**: +5% net worth gain
-- **Arpeggio**: +10% or +$10k gain
-- **Descending sweep**: -8% loss
-- **Ominous tone**: Illegal action
-- **Background music**: Builds intensity over time
-
-### News Types
-- **Blue (Market)**: Fed announcements, earnings, crashes
-- **Red (SEC)**: Investigations, arrests
-- **Green (Trade)**: Your trades
-- **Purple (Milestone)**: Net worth achievements
-- **Yellow (Satirical)**: Financial satire
-- **Gray (System)**: Meta-game messages
-
-## Tips
-
-1. **Start slow** - Use 1x speed until you understand the mechanics
-2. **Watch the news** - Historical events affect prices
-3. **Manage risk** - SEC attention meter is dangerous
-4. **Use charts** - Add tabs for assets you're watching
-5. **Listen** - Audio cues help you react faster at high speeds
-
-## Troubleshooting
-
-**No audio?**
-- Click anywhere on the page first (browser policy)
-- Check mute button (should show 🔊)
-- Check volume slider
-
-**Charts not showing?**
-- Click "+" to add a chart
-- Make sure an asset is selected
-- Try selecting a different asset
-
-**Loading takes a while?**
-- First load downloads ~4MB of market data
-- Subsequent loads use browser cache
-- Check browser console (F12) for errors
-
-**Game too slow/fast?**
-- Use speed controls in header
-- 10x speed may lag on older devices
-- Reduce speed if charts stutter
-
-## Keyboard Shortcuts
-
-- **Space**: Pause/unpause
-- **1**: Set speed to 1x
-- **2**: Set speed to 2x
-- **3**: Set speed to 5x
-- **4**: Set speed to 10x
-
-## Files Structure
-
-```
-past_trading/
-├── index.html              # Main game file
-├── css/style.css          # Robinhood styling
-├── js/
-│   ├── config.js          # Game constants
-│   ├── data_loader.js     # Historical data loader
-│   ├── market.js          # Price simulation
-│   ├── trading.js         # Portfolio management
-│   ├── sec.js             # Regulatory system
-│   ├── news.js            # News feed
-│   ├── progression.js     # Unlocks & achievements
-│   ├── leaderboard.js     # Score tracking
-│   ├── chart_manager.js   # Multi-tab charts
-│   ├── audio_engine.js    # Sound effects & music
-│   ├── ui.js              # Rendering
-│   └── main.js            # Game controller
-└── assets/market_data/
-    ├── stocks/            # AAPL, TSLA, etc.
-    ├── etfs/              # SPY, QQQ, etc.
-    ├── commodities/       # GOLD, OIL, etc.
-    ├── crypto/            # BTC, ETH, etc.
-    └── news_events.json   # Historical events
-```
-
-## Data Files
-
-All market data is pre-generated for 2020:
-- **Stocks**: AAPL, TSLA, AMZN, GOOG, META, NFLX, NVDA, JPM
-- **ETFs**: SPY, QQQ, IWM, DIA
-- **Commodities**: GOLD, OIL, SLVR, WHEAT, NAT.G
-- **Crypto**: BTC, ETH, DOGE, SOL
-
-Each file contains:
-- 365 days of OHLC data
-- Volume information
-- Asset-specific events
-
-## Regenerating Data
-
-To create new market data:
-
+### Desktop (Recommended)
 ```bash
-node generate_market_data.js
+npm install
+npm start
 ```
 
-This will regenerate all JSON files in `assets/market_data/`.
+### Browser (Development)
+Double-click `start_game.bat` on Windows, or run:
+```bash
+python -m http.server 8000
+```
+Then visit http://localhost:8000
 
-## Developer Notes
-
-- Game state stored in LocalStorage
-- No backend required
-- All processing client-side
-- Uses Web Audio API (requires user interaction)
-- Charts use Canvas API
-- Data loaded via Fetch API
-
-## Credits
-
-Built with vanilla JavaScript. No frameworks, no dependencies.
-
-- **Design**: Inspired by Robinhood
-- **Audio**: Web Audio API
-- **Charts**: HTML5 Canvas
-- **Data**: Synthetic (inspired by 2020 market)
-
-## License
-
-See main repository for license information.
+> Opening `index.html` directly in a browser will **not** work — the game loads market data via HTTP and browsers block this from `file://` protocol. See `HOW_TO_RUN.md` for troubleshooting.
 
 ---
 
-**Have fun trading! Watch out for the SEC. 📈🚔**
+## How to Play
+
+1. **Pick a starting year** (2000–2023) — or choose a preset like "2008 Financial Crisis" or "2020 Pandemic"
+2. **Buy and short stocks** from the S&P 500 using real historical prices
+3. **Hit quarterly net worth targets** — $15K → $50K → $250K → $1M → $10M → $100M → $500M → $1B
+4. **Manage your SEC attention meter** — suspicious returns and illegal actions attract regulators
+5. **Earn Prestige Points** at run end to unlock upgrades, and replay
+
+---
+
+## Key Controls
+
+| Action | How |
+|--------|-----|
+| Select asset | Click any stock in the left panel |
+| Buy / Short | Enter quantity, click Buy or Short |
+| Close position | Click "Close" on your open position |
+| Pause | Space bar |
+| Speed | 0.5x to 10x via header controls, or keys 1/2/3/4 |
+| Mute audio | 🔊 button in header |
+
+---
+
+## Game Mechanics
+
+### Quarterly Targets
+8 quarters across 2 years. Miss a target and you're fired. Hit all 8 for a bonus PP reward.
+
+| Quarter | Target |
+|---------|--------|
+| Q1 Y1 | $15,000 |
+| Q2 Y1 | $50,000 |
+| Q3 Y1 | $250,000 |
+| Q4 Y1 | $1,000,000 |
+| Q1 Y2 | $10,000,000 |
+| Q2 Y2 | $100,000,000 |
+| Q3 Y2 | $500,000,000 |
+| Q4 Y2 | $1,000,000,000 |
+
+### SEC Attention
+- Rises from: suspicious returns, large positions, illegal actions
+- Falls from: time passing, political donations, inactivity
+- Arrest threshold is **randomised each run** — you never know exactly when it will trigger
+
+### Illegal Actions (unlockable)
+- **Insider Trading** — future price tips (+12 SEC heat)
+- **Front Running** — guaranteed profit (+15 SEC heat)
+- **Fake News** — small profit (+18 SEC heat)
+- **Money Laundering** — flat profit + SEC reduction (+8 net)
+- **Ponzi Scheme** — 2× profit multiplier (+25 SEC heat)
+
+### Meta-Progression
+Earn Prestige Points (PP) at the end of each run. Spend them in the shop between runs to unlock leverage, lower fees, illegal actions, passive income tools, and more.
+
+---
+
+## News Feed
+- **Blue** — Market events (Fed announcements, earnings, crashes)
+- **Red** — SEC events (investigations, arrests)
+- **Green** — Your trades
+- **Purple** — Net worth milestones
+- **Yellow** — Satirical financial news
+- **Gray** — System messages
+
+---
+
+## Audio Cues
+- **Click** — Trade executed
+- **Rising chirp** — +5% net worth gain
+- **Arpeggio** — +10% or +$10K gain
+- **Descending sweep** — −8% loss
+- **Ominous tone** — Illegal action taken
+
+> Audio requires a first click/interaction due to browser policy.
+
+---
+
+## Troubleshooting
+
+**No audio?** Click anywhere on the page first, then check the mute button (🔊) and volume slider.
+
+**Charts not showing?** Click "+" to open a chart tab and select an asset from the left panel.
+
+**Game too slow/fast?** Use speed controls in the header. At 10x, older devices may stutter.
+
+**Data not loading?** Make sure you're running via HTTP (not `file://`). See `HOW_TO_RUN.md`.

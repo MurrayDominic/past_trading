@@ -460,6 +460,30 @@ const EQUIPABLE_TOOLS = {
 };
 
 // ============================================================================
+// DEMO MODE
+// ============================================================================
+// Set DEMO_MODE = true in the itch.io build. Leave false for the full Steam game.
+
+const DEMO_MODE = false;
+
+const DEMO_ALLOWED_UNLOCKS = new Set([
+  'financeStocks',
+  'healthcareStocks',
+  'leverage2x',
+  'reducedFees1',
+  'morePositions',
+  'riskManager1',
+  'bloombergTerminal',
+  'stopLoss',
+  'charityFoundation',
+  'dejaVu',
+  'startingCash2x',
+]);
+
+// Preset years available in the demo (by slider start value)
+const DEMO_PRESET_YEARS = new Set([2007]);
+
+// ============================================================================
 // ACHIEVEMENTS & TITLES
 // ============================================================================
 

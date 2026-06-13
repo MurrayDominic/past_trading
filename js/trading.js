@@ -296,6 +296,11 @@ class TradingEngine {
         this.stats.marginCallsRecovered++;
         this.stats.hadMarginCall = false;
       }
+
+      // HODL King: held crypto through a 50%+ crash and still profited
+      if (asset.dataCategory === 'crypto' && pos.lowestPriceSinceEntry <= pos.entryPrice * 0.5) {
+        this.stats.cryptoCrashHold = true;
+      }
     } else {
       this.stats.loseStreak++;
       this.stats.winStreak = 0;

@@ -1064,6 +1064,98 @@ input[type="range"].year-slider {
   font-size: 14px;
 }
 
+/* Demo mode: full-game-only nodes */
+.tree-node.demo-locked {
+  opacity: 0.45;
+  cursor: pointer;
+  border-color: #444;
+  background: linear-gradient(135deg, rgba(60, 60, 60, 0.15), transparent);
+}
+
+.tree-node.demo-locked:hover {
+  opacity: 0.65;
+  border-color: #00b4d8;
+}
+
+.tree-node.demo-locked::before {
+  content: '🔒';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 14px;
+}
+
+.node-status.demo-locked {
+  color: #00b4d8;
+  font-size: 10px;
+}
+
+/* Demo banner */
+#demo-banner {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(90deg, #003049, #0077b6);
+  color: #fff;
+  text-align: center;
+  padding: 8px 16px;
+  font-size: 13px;
+  z-index: 1000;
+  border-top: 1px solid #00b4d8;
+}
+
+#demo-banner a {
+  color: #90e0ef;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+body.demo-mode #demo-banner {
+  display: block;
+}
+
+/* Demo: hide only the subtitle; year boxes and slider stay visible */
+body.demo-mode #year-section-subtitle {
+  display: none;
+}
+
+/* Demo: grey out non-2020 preset buttons — visible but unclickable */
+body.demo-mode .year-preset-btn[data-start="2017"],
+body.demo-mode .year-preset-btn[data-start="2022"],
+body.demo-mode .year-preset-btn[data-start="2007"],
+body.demo-mode .year-preset-btn[data-start="2000"] {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Demo: add lock icon after greyed-out preset buttons */
+body.demo-mode .year-preset-btn[data-start="2017"]::after,
+body.demo-mode .year-preset-btn[data-start="2022"]::after,
+body.demo-mode .year-preset-btn[data-start="2007"]::after,
+body.demo-mode .year-preset-btn[data-start="2000"]::after {
+  content: ' \1F512';
+}
+
+body.demo-mode .year-presets {
+  justify-content: center;
+  gap: 16px;
+}
+
+.demo-year-label {
+  display: none;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+body.demo-mode .demo-year-label {
+  display: block;
+}
+
 .node-icon {
   font-size: 32px;
   text-align: center;

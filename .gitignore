@@ -1,9 +1,14 @@
 node_modules/
 dist/
 assets/market_data/compressed/
-steamworks/output/
-assets/market_data/nul
-assets/market_data/stocks/nul
+steamworks/
+itchio_build/
+assets/screen_shots/
+assets/shorts/
+assets/steam/
+assets/trailer/
+.claude/settings.local.json
 nul
 server.log
 *.log
+.gstack/

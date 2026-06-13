@@ -4,7 +4,7 @@ A roguelike trading simulation game where you travel back in time with knowledge
 
 ## Features
 
-- **Real Historical Data** - Trade using actual OHLC price data across stocks, ETFs, commodities, crypto, and forex
+- **Real Historical Data** - Trade using actual OHLC price data from 500+ S&P 500 stocks (2000–2024)
 - **6 Trading Modes** - Stocks (playable), plus day trading, options, forex, commodities, and crypto (coming soon)
 - **SEC Attention System** - Push your luck with insider trading, front running, and other illegal actions, but get caught and your run ends
 - **Quarterly Targets** - Hit escalating net worth targets across 8 quarters or get fired

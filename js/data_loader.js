@@ -15,6 +15,16 @@ class DataLoader {
       return this.cache.get(ticker);
     }
 
+    // Demo build: use preloaded inline data — no fetch required
+    if (typeof DEMO_STOCK_DATA !== 'undefined' && DEMO_STOCK_DATA[ticker]) {
+      const data = DEMO_STOCK_DATA[ticker];
+      this.cache.set(ticker, data);
+      if (!this.startDate && data.ohlc && data.ohlc.length > 0) {
+        this.startDate = new Date(data.ohlc[0].date);
+      }
+      return data;
+    }
+
     try {
       let data;
       const relativePath = `${this.baseUrl}${category}/${ticker}.json`;
@@ -31,11 +41,58 @@ class DataLoader {
         if (!raw) throw new Error(`File not found: ${relativePath}`);
         data = JSON.parse(raw);
       } else {
-        const response = await fetch(relativePath);
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: Failed to load ${ticker}`);
+        // Browser mode: try compressed first, always fall back to plain JSON on any failure.
+        // Compressed and plain-JSON paths are independent — a failure in compressed
+        // (bad response, HTML body, missing DecompressionStream, parse error) will
+        // always cause a retry against the plain .json path.
+        let loaded = false;
+
+        if (typeof DecompressionStream !== 'undefined') {
+          try {
+            const compressedPath = `${this.baseUrl}compressed/${category}/${ticker}.json.gz`;
+            const compressedResponse = await fetch(compressedPath);
+            if (compressedResponse.ok) {
+              const buffer = await compressedResponse.arrayBuffer();
+              const bytes = new Uint8Array(buffer);
+              if (bytes[0] === 0x1f && bytes[1] === 0x8b) {
+                // Valid gzip — decompress manually
+                const ds = new DecompressionStream('gzip');
+                const writer = ds.writable.getWriter();
+                writer.write(bytes);
+                writer.close();
+                const chunks = [];
+                const reader = ds.readable.getReader();
+                while (true) {
+                  const { value, done } = await reader.read();
+                  if (done) break;
+                  chunks.push(value);
+                }
+                const totalLength = chunks.reduce((sum, c) => sum + c.byteLength, 0);
+                const merged = new Uint8Array(totalLength);
+                let offset = 0;
+                for (const chunk of chunks) { merged.set(chunk, offset); offset += chunk.byteLength; }
+                data = JSON.parse(new TextDecoder().decode(merged));
+                loaded = true;
+              } else if (bytes[0] === 0x7B || bytes[0] === 0x5B) {
+                // Already decompressed by CDN (Content-Encoding: gzip) — bytes are JSON
+                data = JSON.parse(new TextDecoder().decode(bytes));
+                loaded = true;
+              }
+              // If bytes look like HTML or anything else, fall through to plain JSON
+            }
+          } catch (e) {
+            // Compressed attempt failed — will retry with plain JSON below
+          }
         }
-        data = await response.json();
+
+        if (!loaded) {
+          // Plain JSON fallback (always present in itch.io demo build)
+          const response = await fetch(relativePath);
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: Failed to load ${ticker}`);
+          }
+          data = await response.json();
+        }
       }
 
       this.cache.set(ticker, data);
