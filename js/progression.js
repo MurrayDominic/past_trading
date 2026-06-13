@@ -20,6 +20,7 @@ class ProgressionSystem {
       equippedTool: null,
       equippedTitle: null,
       hideTutorial: false,
+      watchlist: [],
       earnedAchievements: {},
       runHistory: [],
       bestScores: {

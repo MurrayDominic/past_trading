@@ -1861,6 +1861,12 @@ body.demo-mode .demo-year-label {
   gap: 2px;
 }
 
+.asset-ticker-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .asset-ticker {
   font-weight: 600;
   font-size: 14px;
@@ -1891,6 +1897,44 @@ body.demo-mode .demo-year-label {
   font-family: var(--font-mono);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+}
+
+/* Watchlist Star */
+.asset-star {
+  font-size: 14px;
+  color: var(--rh-text-tertiary);
+  cursor: pointer;
+  transition: color 150ms, transform 150ms;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.asset-star:hover {
+  color: var(--rh-yellow);
+  transform: scale(1.2);
+}
+
+.asset-star.starred {
+  color: var(--rh-yellow);
+}
+
+.category-pill-watchlist {
+  color: var(--rh-yellow);
+  border-color: rgba(255, 214, 10, 0.3);
+}
+
+.category-pill-watchlist.active {
+  background: var(--rh-yellow);
+  border-color: var(--rh-yellow);
+  color: #000;
+}
+
+.watchlist-empty {
+  padding: 24px 16px;
+  color: var(--rh-text-secondary);
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 /* Bloomberg Terminal: 5-day trend arrows */

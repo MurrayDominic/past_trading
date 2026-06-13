@@ -650,7 +650,10 @@ class GameUI {
     const hasAnalyst = this.game.progression.data.unlocks.analystReports;
     const momentum = hasAnalyst ? this.game.market.getSectorMomentum() : {};
 
-    let html = `<button class="category-pill ${this.currentCategoryFilter === 'all' ? 'active' : ''}" data-category="all">All</button>`;
+    const watchlistCount = this.game.progression.data.watchlist.length;
+    const watchlistLabel = watchlistCount > 0 ? `Watchlist (${watchlistCount})` : 'Watchlist';
+    let html = `<button class="category-pill category-pill-watchlist ${this.currentCategoryFilter === 'watchlist' ? 'active' : ''}" data-category="watchlist">\u2605 ${watchlistLabel}</button>`;
+    html += `<button class="category-pill ${this.currentCategoryFilter === 'all' ? 'active' : ''}" data-category="all">All</button>`;
 
     for (const [key, config] of sortedCategories) {
       const isActive = this.currentCategoryFilter === key ? 'active' : '';
@@ -673,6 +676,23 @@ class GameUI {
         this.filterAssets(this.currentSearchTerm);
       });
     });
+  }
+
+  toggleWatchlist(ticker) {
+    const wl = this.game.progression.data.watchlist;
+    const idx = wl.indexOf(ticker);
+    if (idx >= 0) {
+      wl.splice(idx, 1);
+    } else {
+      if (wl.length >= 20) {
+        this.game.showToast('Watchlist full (max 20)');
+        return;
+      }
+      wl.push(ticker);
+    }
+    this.game.progression.save();
+    this.renderCategoryPills();
+    this.filterAssets(this.currentSearchTerm || '');
   }
 
   showPauseOverlay(show) {
@@ -1566,6 +1586,11 @@ class GameUI {
       return;
     }
 
+    if (assets.length === 0 && this.currentCategoryFilter === 'watchlist') {
+      this.el.assetSelector.innerHTML = '<div class="watchlist-empty">Click the \u2605 star on any stock to add it to your watchlist</div>';
+      return;
+    }
+
     const hasBloomberg = game.progression.data.unlocks.bloombergTerminal;
 
     let html = '';
@@ -1618,11 +1643,17 @@ class GameUI {
         volHtml = `<span class="vol-indicator ${volClass}" title="Volatility: ${vol.toFixed(1)}%">${volLabel}</span>`;
       }
 
+      const isStarred = game.progression.data.watchlist.includes(asset.ticker);
+      const starClass = isStarred ? 'starred' : '';
+
       html += `
         <button class="asset-btn ${selected} ${impactClass}" data-ticker="${asset.ticker}">
           <div class="asset-btn-left">
-            ${impacted ? '<span class="impact-indicator">📰</span>' : ''}
-            <span class="asset-ticker">${categoryIcon} ${asset.ticker}</span>
+            <div class="asset-ticker-row">
+              <span class="asset-star ${starClass}" data-star-ticker="${asset.ticker}" title="${isStarred ? 'Remove from watchlist' : 'Add to watchlist'}">\u2605</span>
+              ${impacted ? '<span class="impact-indicator">📰</span>' : ''}
+              <span class="asset-ticker">${categoryIcon} ${asset.ticker}</span>
+            </div>
             <span class="asset-name">${asset.name}</span>
           </div>
           <div class="asset-btn-right">
@@ -1636,6 +1667,14 @@ class GameUI {
       `;
     }
     this.el.assetSelector.innerHTML = html;
+
+    // Bind star buttons (before asset buttons so stopPropagation works)
+    document.querySelectorAll('.asset-star').forEach(star => {
+      star.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.toggleWatchlist(star.dataset.starTicker);
+      });
+    });
 
     // Bind asset buttons
     document.querySelectorAll('.asset-btn').forEach(btn => {
@@ -1700,7 +1739,10 @@ class GameUI {
     let filtered = assets;
 
     // Apply category filter first
-    if (this.currentCategoryFilter !== 'all') {
+    if (this.currentCategoryFilter === 'watchlist') {
+      const wl = this.game.progression.data.watchlist;
+      filtered = filtered.filter(asset => wl.includes(asset.ticker));
+    } else if (this.currentCategoryFilter !== 'all') {
       filtered = filtered.filter(asset => {
         // Get category from SP500_ASSETS or crypto assets by ticker
         const assetDef = SP500_ASSETS.find(a => a.ticker === asset.ticker)
