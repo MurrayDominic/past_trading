@@ -1817,15 +1817,15 @@ class GameUI {
       return; // Skip render if not ready
     }
 
-    // Size canvas backing store to account for devicePixelRatio
+    // Size canvas backing store to match CSS size * devicePixelRatio for crisp rendering
     const dpr = window.devicePixelRatio || 1;
-    const targetW = Math.round(rect.width * dpr);
-    const targetH = Math.round(rect.height * dpr);
-    if (canvas.width !== targetW || canvas.height !== targetH) {
-      canvas.width = targetW;
-      canvas.height = targetH;
-      canvas.style.width = rect.width + 'px';
-      canvas.style.height = rect.height + 'px';
+    const cssW = Math.round(rect.width);
+    const cssH = Math.round(rect.height);
+    const backingW = Math.round(cssW * dpr);
+    const backingH = Math.round(cssH * dpr);
+    if (canvas.width !== backingW || canvas.height !== backingH) {
+      canvas.width = backingW;
+      canvas.height = backingH;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 

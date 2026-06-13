@@ -2275,13 +2275,12 @@ body.demo-mode .demo-year-label {
 }
 
 canvas {
-  width: 100%;
-  height: auto;
   display: block;
 }
 
 #net-worth-graph {
-  height: auto;
+  width: 100%;
+  height: 100%;
 }
 
 #asset-mini-graph {
