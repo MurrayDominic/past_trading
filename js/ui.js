@@ -33,6 +33,7 @@ class GameUI {
 
       // Trading panel
       categoryPills: document.getElementById('category-pills'),
+      topMovers: document.getElementById('top-movers'),
       assetSearch: document.getElementById('asset-search'),
       assetSelector: document.getElementById('asset-selector'),
       tradeQuantity: document.getElementById('trade-quantity'),
@@ -1501,6 +1502,9 @@ class GameUI {
       }
     }
 
+    // Top movers panel
+    this.renderTopMovers(game);
+
     // Asset selector - re-apply filters every tick (same pattern as search)
     this.filterAssets(this.currentSearchTerm || '');
 
@@ -1635,6 +1639,51 @@ class GameUI {
 
     // Bind asset buttons
     document.querySelectorAll('.asset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        game.selectAsset(btn.dataset.ticker);
+      });
+    });
+  }
+
+  renderTopMovers(game) {
+    if (!this.el.topMovers) return;
+    if (game.market.dayCount < 1) {
+      this.el.topMovers.innerHTML = '<div class="top-movers-empty">Market opening...</div>';
+      return;
+    }
+
+    const { gainers, losers } = game.market.getTopMovers(3);
+    if (gainers.length === 0 && losers.length === 0) {
+      this.el.topMovers.innerHTML = '';
+      return;
+    }
+
+    const renderMover = (m) => {
+      const pct = (m.change * 100).toFixed(1);
+      const sign = m.change >= 0 ? '+' : '';
+      const cls = m.change >= 0 ? 'positive' : 'negative';
+      return `<button class="top-mover-item" data-ticker="${m.ticker}">
+        <span class="top-mover-ticker">${m.ticker}</span>
+        <span class="top-mover-change ${cls}">${sign}${pct}%</span>
+      </button>`;
+    };
+
+    let html = '<div class="top-movers-row">';
+    if (gainers.length > 0) {
+      html += '<div class="top-movers-group"><span class="top-movers-label">Gainers</span>';
+      html += gainers.map(renderMover).join('');
+      html += '</div>';
+    }
+    if (losers.length > 0) {
+      html += '<div class="top-movers-group"><span class="top-movers-label">Losers</span>';
+      html += losers.map(renderMover).join('');
+      html += '</div>';
+    }
+    html += '</div>';
+
+    this.el.topMovers.innerHTML = html;
+
+    this.el.topMovers.querySelectorAll('.top-mover-item').forEach(btn => {
       btn.addEventListener('click', () => {
         game.selectAsset(btn.dataset.ticker);
       });

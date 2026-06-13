@@ -387,6 +387,27 @@ class Market {
     return (asset.price - asset.previousPrice) / asset.previousPrice;
   }
 
+  getTopMovers(count = 3) {
+    if (this._topMoversCache && this._topMoversCacheDay === this.dayCount) {
+      return this._topMoversCache;
+    }
+    const liveAssets = this.getLiveAssets();
+    const withChange = liveAssets.map(a => ({
+      ticker: a.ticker,
+      name: a.name || a.ticker,
+      price: a.price,
+      change: this.getPriceChange(a.ticker)
+    })).filter(a => a.change !== 0);
+
+    const sorted = withChange.sort((a, b) => Math.abs(b.change) - Math.abs(a.change));
+    const gainers = sorted.filter(a => a.change > 0).slice(0, count);
+    const losers = sorted.filter(a => a.change < 0).slice(0, count);
+
+    this._topMoversCache = { gainers, losers };
+    this._topMoversCacheDay = this.dayCount;
+    return this._topMoversCache;
+  }
+
   // Generate an insider tip (future event knowledge)
   generateInsiderTip() {
     const assets = Object.values(this.assets);

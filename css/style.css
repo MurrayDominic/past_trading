@@ -1534,6 +1534,72 @@ body.demo-mode .demo-year-label {
   font-weight: 700;
 }
 
+/* Top Movers Panel */
+.top-movers {
+  border-bottom: 1px solid var(--rh-border);
+}
+
+.top-movers-empty {
+  padding: 8px 16px;
+  font-size: 12px;
+  color: var(--rh-text-tertiary);
+  font-style: italic;
+}
+
+.top-movers-row {
+  display: flex;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.top-movers-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.top-movers-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--rh-text-tertiary);
+  padding: 0 4px;
+}
+
+.top-mover-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  background: var(--rh-panel);
+  border: 1px solid var(--rh-border);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 150ms, border-color 150ms;
+  font-family: var(--font-primary);
+  color: var(--rh-text);
+}
+
+.top-mover-item:hover {
+  background: var(--rh-panel-hover);
+  border-color: var(--rh-border-strong);
+}
+
+.top-mover-ticker {
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.top-mover-change {
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
 /* Column 2: Chart + Trade */
 .col-chart-trade {
   background: var(--rh-black);
