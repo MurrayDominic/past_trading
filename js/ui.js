@@ -1817,10 +1817,16 @@ class GameUI {
       return; // Skip render if not ready
     }
 
-    // Only resize if dimensions changed
-    if (canvas.width !== rect.width || canvas.height !== rect.height) {
-      canvas.width = rect.width;
-      canvas.height = rect.height;
+    // Size canvas backing store to account for devicePixelRatio
+    const dpr = window.devicePixelRatio || 1;
+    const targetW = Math.round(rect.width * dpr);
+    const targetH = Math.round(rect.height * dpr);
+    if (canvas.width !== targetW || canvas.height !== targetH) {
+      canvas.width = targetW;
+      canvas.height = targetH;
+      canvas.style.width = rect.width + 'px';
+      canvas.style.height = rect.height + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
     // Apply time range filter
@@ -1833,23 +1839,28 @@ class GameUI {
     }
 
     if (data.length < 2) {
-      // Show "No data in this time range" message
-      const w = canvas.width;
-      const h = canvas.height;
-      ctx.clearRect(0, 0, w, h);
+      const w = rect.width;
+      const h = rect.height;
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.restore();
       ctx.fillStyle = '#888';
-      ctx.font = '18px var(--font-primary)';
+      ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('No data in this time range', w / 2, h / 2);
       return;
     }
 
-    const w = canvas.width;
-    const h = canvas.height;
+    const w = rect.width;
+    const h = rect.height;
     const padding = 55;
 
-    // Clear
-    ctx.clearRect(0, 0, w, h);
+    // Clear (use full backing store size)
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
 
     // Find min/max (include quarterly target in range so it's always visible)
     let min = Infinity, max = -Infinity;
