@@ -1,39 +1,50 @@
-## Session: 2026-06-13
+## Session: 2026-06-14
 
 ### What was done
-- Committed all outstanding work from March sessions (268 files: source changes, 243 stock data files, 11 scripts, docs cleanup)
-- Updated .gitignore to exclude media assets (trailer 303MB, steam 12MB, shorts 7MB), itchio_build, steamworks, and .claude/settings.local.json
-- Ran full CEO Review (/plan-ceo-review) in SELECTIVE EXPANSION mode
-- Ran Design Review (/design-review) producing full audit report
-- Game has 60 Steam sales, looking to improve UX for growth
-
-### CEO Review Decisions
-- Approach: Full UX Overhaul (all screens)
-- 6 expansions accepted: guided first trade, watchlist/favorites (cap 20), trade feedback animations, enhanced sector tabs, P&L display with sorting, top movers panel
-- 1 expansion skipped: compact menu header redesign
-- 1 addition: artwork overhaul using Midjourney
-- Spec review caught that sector tabs and P&L colors already partially exist in code, guided tutorial is Medium effort not Small
-
-### Design Review Findings
-- Design Score: C+ | AI Slop Score: A
-- 10 findings: 4 high, 5 medium, 1 polish
-- Top issues: Net Worth text wrap, only 2 of 9 sector filters shown, stock list has no visual differentiation, heading scale wildly inconsistent (H2 ranges 18-32px)
-- Quick wins: fix text wrap, show all 9 category pills, color-code price changes, soften pure white on pure black
+- Committed all outstanding work from March sessions (268 files, commit 90ec3e5)
+- Ran full CEO Review in SELECTIVE EXPANSION mode - accepted 6 feature expansions + artwork overhaul
+- Ran Design Review - scored C+ baseline, found 10 design issues
+- Fixed all 10 design issues (color softening, net worth wrap, touch targets, speed buttons, quarter pills, news header, category pills, number formatting)
+- Built Top Movers panel - collapsible, closed by default, shows top 3 gainers/losers, cached per-day
+- Built P&L sorting + enhanced display - positions sorted by absolute P&L, percentage badge, colored borders
+- Built Watchlist/favorites - star system on every stock, Watchlist filter pill, max 20, persisted via SaveManager
+- Built trade feedback animations - button flash on buy/sell, cash display highlight, quarterly level-up celebration
+- Built guided first trade tutorial - 3-step spotlight overlay, auto-advances on player actions
+- Created Midjourney art guide (MIDJOURNEY_ART_GUIDE.md) - needs style iteration
+- Fixed Top Movers flickering (was rebuilding DOM every tick)
+- Fixed Top Movers toggle (wasn't responding to clicks, styled as button instead of section label)
+- 12 commits this session
 
 ### What was changed
-- Committed: all modified source files + new stock data + scripts
-- .gitignore updated with new exclusions
-- CEO plan written to ~/.gstack/projects/
-- Design audit report written to .gstack/design-reports/
+- `css/style.css` - Color softening, touch targets, top movers (collapsible), watchlist star, position card enhancements, trade animations, guided tutorial overlay
+- `js/ui.js` - Top movers rendering (collapsible, cached), P&L sorting, watchlist toggle/filter, trade flash methods, guided tutorial step tracking
+- `js/market.js` - getTopMovers() with per-day cache
+- `js/main.js` - Guided tutorial system, quarterly level-up flash trigger
+- `js/progression.js` - Watchlist array in default save data
+- `index.html` - Top movers div, guided tutorial overlay HTML
+- `.gitignore` - Added exclusions for media, build output, local settings
+- `MIDJOURNEY_ART_GUIDE.md` - Created (asset list + prompts, style needs work)
+
+### What is broken or incomplete
+- Midjourney art prompts need more iteration. Three rounds of prompts all looked too AI-generated. The right direction is "painted illustration style, atmospheric, muted palette, no people" but needs hands-on Midjourney experimentation to nail it. Reference that worked: HM Treasury building prompt.
+- Achievement icons deferred until main art style is locked in
+- All new features need continued playtesting (Dominic started testing, found Top Movers flicker + toggle bugs which were fixed)
+- Changes not yet pushed to remote
 
 ### Next steps
-1. CSS/Layout fixes (10 design findings from audit)
-2. Feature expansions (top movers, watchlist, guided tutorial, trade feedback)
-3. Artwork generation in Midjourney + integration
-4. Steam store page and trailer polish
-5. Reports saved at:
-   - CEO plan: ~/.gstack/projects/MurrayDominic-past_trading/ceo-plans/2026-06-13-ux-overhaul.md
-   - Design audit: .gstack/design-reports/design-audit-localhost-2026-06-13.md
+1. Continue playtesting all features in Electron (npm start) - report any bugs
+2. Experiment with Midjourney art style in Midjourney directly until it looks right
+3. Once art style is nailed, generate all 24 assets per MIDJOURNEY_ART_GUIDE.md
+4. Integrate artwork into game and Steam store page
+5. Push changes to origin when satisfied
+6. Take new screenshots and record new trailer with improved UX
+7. Update Steam store page
+
+### Open questions
+- What Midjourney style looks right? Needs hands-on experimentation, not more prompt writing
+- Top Movers: is 3 per side the right number? Is collapsible the right UX or should it just always show?
+- Do trade feedback animations feel right at high game speeds (20x, 50x)?
+- Should the guided tutorial pause the game or let time tick? (Currently pauses)
 
 ---
 
