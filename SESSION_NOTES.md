@@ -1,3 +1,42 @@
+## Session: 2026-06-13
+
+### What was done
+- Committed all outstanding work from March sessions (268 files: source changes, 243 stock data files, 11 scripts, docs cleanup)
+- Updated .gitignore to exclude media assets (trailer 303MB, steam 12MB, shorts 7MB), itchio_build, steamworks, and .claude/settings.local.json
+- Ran full CEO Review (/plan-ceo-review) in SELECTIVE EXPANSION mode
+- Ran Design Review (/design-review) producing full audit report
+- Game has 60 Steam sales, looking to improve UX for growth
+
+### CEO Review Decisions
+- Approach: Full UX Overhaul (all screens)
+- 6 expansions accepted: guided first trade, watchlist/favorites (cap 20), trade feedback animations, enhanced sector tabs, P&L display with sorting, top movers panel
+- 1 expansion skipped: compact menu header redesign
+- 1 addition: artwork overhaul using Midjourney
+- Spec review caught that sector tabs and P&L colors already partially exist in code, guided tutorial is Medium effort not Small
+
+### Design Review Findings
+- Design Score: C+ | AI Slop Score: A
+- 10 findings: 4 high, 5 medium, 1 polish
+- Top issues: Net Worth text wrap, only 2 of 9 sector filters shown, stock list has no visual differentiation, heading scale wildly inconsistent (H2 ranges 18-32px)
+- Quick wins: fix text wrap, show all 9 category pills, color-code price changes, soften pure white on pure black
+
+### What was changed
+- Committed: all modified source files + new stock data + scripts
+- .gitignore updated with new exclusions
+- CEO plan written to ~/.gstack/projects/
+- Design audit report written to .gstack/design-reports/
+
+### Next steps
+1. CSS/Layout fixes (10 design findings from audit)
+2. Feature expansions (top movers, watchlist, guided tutorial, trade feedback)
+3. Artwork generation in Midjourney + integration
+4. Steam store page and trailer polish
+5. Reports saved at:
+   - CEO plan: ~/.gstack/projects/MurrayDominic-past_trading/ceo-plans/2026-06-13-ux-overhaul.md
+   - Design audit: .gstack/design-reports/design-audit-localhost-2026-06-13.md
+
+---
+
 ## Session: 2026-03-28
 
 ### What was done
