@@ -14,6 +14,7 @@ class GameUI {
     this.currentSearchTerm = '';  // Store search term across ticks
     this.currentCategoryFilter = 'all';  // Store category filter across ticks
     this._topMoversRenderedDay = null;  // Track last rendered day to avoid DOM thrash
+    this._topMoversOpen = false;  // Collapsed by default
   }
 
   init() {
@@ -1688,10 +1689,8 @@ class GameUI {
   renderTopMovers(game) {
     if (!this.el.topMovers) return;
     if (game.market.dayCount < 1) {
-      if (this._topMoversRenderedDay !== -1) {
-        this.el.topMovers.innerHTML = '<div class="top-movers-empty">Market opening...</div>';
-        this._topMoversRenderedDay = -1;
-      }
+      this.el.topMovers.innerHTML = '';
+      this._topMoversRenderedDay = -1;
       return;
     }
 
@@ -1713,7 +1712,11 @@ class GameUI {
       </button>`;
     };
 
-    let html = '<div class="top-movers-row">';
+    const openClass = this._topMoversOpen ? 'open' : '';
+    const arrow = this._topMoversOpen ? '\u25B2' : '\u25BC';
+    let html = `<button class="top-movers-header"><span>Top Movers</span><span class="top-movers-arrow">${arrow}</span></button>`;
+    html += `<div class="top-movers-body ${openClass}">`;
+    html += '<div class="top-movers-row">';
     if (gainers.length > 0) {
       html += '<div class="top-movers-group"><span class="top-movers-label">Gainers</span>';
       html += gainers.map(renderMover).join('');
@@ -1724,9 +1727,14 @@ class GameUI {
       html += losers.map(renderMover).join('');
       html += '</div>';
     }
-    html += '</div>';
+    html += '</div></div>';
 
     this.el.topMovers.innerHTML = html;
+
+    this.el.topMovers.querySelector('.top-movers-header').addEventListener('click', () => {
+      this._topMoversOpen = !this._topMoversOpen;
+      this._topMoversRenderedDay = null; // force re-render to update arrow
+    });
 
     this.el.topMovers.querySelectorAll('.top-mover-item').forEach(btn => {
       btn.addEventListener('click', () => {

@@ -1539,11 +1539,39 @@ body.demo-mode .demo-year-label {
   border-bottom: 1px solid var(--rh-border);
 }
 
-.top-movers-empty {
-  padding: 8px 16px;
-  font-size: 12px;
-  color: var(--rh-text-tertiary);
-  font-style: italic;
+.top-movers-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 6px 16px;
+  background: var(--rh-panel);
+  border: none;
+  border-bottom: 1px solid var(--rh-border);
+  color: var(--rh-text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: color 150ms;
+}
+
+.top-movers-header:hover {
+  color: var(--rh-text);
+}
+
+.top-movers-arrow {
+  font-size: 9px;
+}
+
+.top-movers-body {
+  display: none;
+}
+
+.top-movers-body.open {
+  display: block;
 }
 
 .top-movers-row {
