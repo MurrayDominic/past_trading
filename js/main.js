@@ -194,9 +194,9 @@ class Game {
       this.ui.showGame();
       this.ui.update(this);
 
-      // Show tutorial popup if user hasn't dismissed it
+      // Show guided tutorial for new players, or start immediately
       if (!this.progression.data.hideTutorial) {
-        this.showTutorial();
+        this.startGuidedTutorial();
       } else {
         this.startTicker();
       }
@@ -826,6 +826,108 @@ class Game {
     }
     this.ui.showTradeResult(result);
     this.ui.update(this);
+  }
+
+  startGuidedTutorial() {
+    const container = document.getElementById('guided-tutorial');
+    if (!container) { this.startTicker(); return; }
+
+    const overlay = container.querySelector('.guided-overlay');
+    const spotlight = container.querySelector('.guided-spotlight');
+    const tooltip = container.querySelector('.guided-tooltip');
+    const message = container.querySelector('.guided-message');
+    const stepIndicator = container.querySelector('.guided-step-indicator');
+    const skipBtn = container.querySelector('.guided-skip');
+
+    this.stopTicker();
+    container.classList.remove('hidden');
+
+    let currentStep = 0;
+    const steps = [
+      {
+        target: '#asset-selector .asset-btn:first-child',
+        fallback: '.asset-section',
+        message: 'Pick a stock to see its price chart. Try clicking one now.',
+        listenFor: 'assetSelected'
+      },
+      {
+        target: '#buy-btn',
+        fallback: '.trade-section',
+        message: 'Set your amount and hit Buy to open a position.',
+        listenFor: 'tradeExecuted'
+      },
+      {
+        target: '.positions-section',
+        fallback: '.col-networth-positions',
+        message: "You're trading! Watch your P&L update each day. Hit quarterly targets to earn points.",
+        listenFor: null
+      }
+    ];
+
+    const positionSpotlight = (targetSelector, fallbackSelector) => {
+      const el = document.querySelector(targetSelector) || document.querySelector(fallbackSelector);
+      if (!el) { spotlight.style.display = 'none'; return; }
+      const rect = el.getBoundingClientRect();
+      const pad = 8;
+      spotlight.style.display = 'block';
+      spotlight.style.top = (rect.top - pad) + 'px';
+      spotlight.style.left = (rect.left - pad) + 'px';
+      spotlight.style.width = (rect.width + pad * 2) + 'px';
+      spotlight.style.height = Math.min(rect.height + pad * 2, 300) + 'px';
+
+      // Position tooltip near spotlight
+      const tooltipTop = rect.bottom + 16;
+      const tooltipLeft = Math.max(16, Math.min(rect.left, window.innerWidth - 340));
+      tooltip.style.top = tooltipTop + 'px';
+      tooltip.style.left = tooltipLeft + 'px';
+      if (tooltipTop + 120 > window.innerHeight) {
+        tooltip.style.top = (rect.top - 120) + 'px';
+      }
+    };
+
+    const showStep = (idx) => {
+      if (idx >= steps.length) {
+        dismiss();
+        return;
+      }
+      currentStep = idx;
+      const step = steps[idx];
+      stepIndicator.textContent = `Step ${idx + 1} of ${steps.length}`;
+      message.textContent = step.message;
+      positionSpotlight(step.target, step.fallback);
+
+      // Auto-dismiss step 3 after delay
+      if (!step.listenFor) {
+        setTimeout(() => dismiss(), 4000);
+      }
+    };
+
+    // Listen for game events to auto-advance
+    const originalSelectAsset = this.selectAsset.bind(this);
+    this.selectAsset = (ticker) => {
+      originalSelectAsset(ticker);
+      if (currentStep === 0) showStep(1);
+    };
+
+    const originalShowTradeResult = this.ui.showTradeResult.bind(this.ui);
+    this.ui.showTradeResult = (result) => {
+      originalShowTradeResult(result);
+      if (currentStep === 1 && result.success) showStep(2);
+    };
+
+    const dismiss = () => {
+      container.classList.add('hidden');
+      this.progression.data.hideTutorial = true;
+      this.progression.save();
+      // Restore original methods
+      this.selectAsset = originalSelectAsset;
+      this.ui.showTradeResult = originalShowTradeResult;
+      this.startTicker();
+    };
+
+    skipBtn.onclick = dismiss;
+
+    showStep(0);
   }
 
   showTutorial() {

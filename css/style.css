@@ -2981,6 +2981,89 @@ canvas {
 /* (old quarterly target info styles replaced by quarterly-target-bar above) */
 
 /* ======== TUTORIAL POPUP ======== */
+/* ======== GUIDED TUTORIAL ======== */
+.guided-tutorial {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.guided-tutorial.hidden {
+  display: none;
+}
+
+.guided-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.guided-spotlight {
+  position: absolute;
+  border: 2px solid var(--rh-accent);
+  border-radius: 8px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+  z-index: 1;
+  pointer-events: none;
+  transition: top 300ms ease, left 300ms ease, width 300ms ease, height 300ms ease;
+}
+
+.guided-tooltip {
+  position: absolute;
+  width: 320px;
+  background: var(--rh-darker);
+  border: 1px solid var(--rh-accent);
+  border-radius: 10px;
+  padding: 16px 20px;
+  z-index: 2;
+  pointer-events: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.guided-step-indicator {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--rh-accent);
+  margin-bottom: 8px;
+}
+
+.guided-message {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--rh-text);
+  margin-bottom: 12px;
+}
+
+.guided-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.guided-skip {
+  background: none;
+  border: none;
+  color: var(--rh-text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: var(--font-primary);
+  transition: color 150ms;
+}
+
+.guided-skip:hover {
+  color: var(--rh-text);
+}
+
 .tutorial-modal {
   position: fixed;
   top: 0;
