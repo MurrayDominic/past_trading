@@ -1544,18 +1544,16 @@ body.demo-mode .demo-year-label {
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  padding: 6px 16px;
-  background: var(--rh-panel);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: none;
   border: none;
-  border-bottom: 1px solid var(--rh-border);
   color: var(--rh-text-secondary);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   font-family: var(--font-primary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   cursor: pointer;
-  transition: color 150ms;
 }
 
 .top-movers-header:hover {
@@ -1563,7 +1561,8 @@ body.demo-mode .demo-year-label {
 }
 
 .top-movers-arrow {
-  font-size: 9px;
+  font-size: 8px;
+  color: var(--rh-text-tertiary);
 }
 
 .top-movers-body {

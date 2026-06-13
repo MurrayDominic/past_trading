@@ -1733,7 +1733,10 @@ class GameUI {
 
     this.el.topMovers.querySelector('.top-movers-header').addEventListener('click', () => {
       this._topMoversOpen = !this._topMoversOpen;
-      this._topMoversRenderedDay = null; // force re-render to update arrow
+      const body = this.el.topMovers.querySelector('.top-movers-body');
+      const arrow = this.el.topMovers.querySelector('.top-movers-arrow');
+      if (body) body.classList.toggle('open', this._topMoversOpen);
+      if (arrow) arrow.textContent = this._topMoversOpen ? '\u25B2' : '\u25BC';
     });
 
     this.el.topMovers.querySelectorAll('.top-mover-item').forEach(btn => {
