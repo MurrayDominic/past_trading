@@ -2005,6 +2005,15 @@ body.demo-mode .demo-year-label {
   border-radius: 8px;
   padding: 12px;
   border: 1px solid var(--rh-border);
+  transition: border-color 200ms;
+}
+
+.position-card.position-winning {
+  border-color: rgba(0, 191, 255, 0.2);
+}
+
+.position-card.position-losing {
+  border-color: rgba(255, 80, 0, 0.2);
 }
 
 .position-header {
@@ -2014,9 +2023,27 @@ body.demo-mode .demo-year-label {
   margin-bottom: var(--spacing-sm);
 }
 
+.position-header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .position-ticker {
-  font-weight: 600;
-  font-size: 14px;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.position-pnl-pct {
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.position-pnl-value {
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .position-type {
@@ -2062,6 +2089,7 @@ body.demo-mode .demo-year-label {
 .position-detail-value {
   font-family: var(--font-mono);
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 /* --- Chart Components --- */

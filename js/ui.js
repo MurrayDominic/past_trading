@@ -1916,23 +1916,33 @@ class GameUI {
       return;
     }
 
-    let html = '';
-    for (let i = 0; i < positions.length; i++) {
-      const pos = positions[i];
+    // Compute P&L for each position and sort by absolute P&L descending
+    const positionsWithPnl = positions.map(pos => {
       const { pnl, pnlPercent, currentPrice } = game.trading.getPositionPnL(pos, game.market);
+      return { pos, pnl, pnlPercent, currentPrice };
+    }).sort((a, b) => Math.abs(b.pnl) - Math.abs(a.pnl));
+
+    let html = '';
+    for (const { pos, pnl, pnlPercent, currentPrice } of positionsWithPnl) {
       const pnlClass = pnl >= 0 ? 'positive' : 'negative';
+      const pnlBg = pnl >= 0 ? 'position-winning' : 'position-losing';
       const typeLabel = pos.type === 'short' ? 'Short' : 'Long';
       const typeClass = pos.type === 'short' ? 'short' : 'long';
+      const pctSign = pnlPercent >= 0 ? '+' : '';
+      const pctStr = `${pctSign}${(pnlPercent * 100).toFixed(1)}%`;
 
       html += `
-        <div class="position-card">
+        <div class="position-card ${pnlBg}">
           <div class="position-header">
             <span class="position-ticker">${pos.ticker}</span>
-            <span class="position-type ${typeClass}">${typeLabel}</span>
+            <div class="position-header-right">
+              <span class="position-pnl-pct ${pnlClass}">${pctStr}</span>
+              <span class="position-type ${typeClass}">${typeLabel}</span>
+            </div>
           </div>
           <div class="position-details">
             <div class="position-detail-item">
-              <span class="position-detail-label">Quantity</span>
+              <span class="position-detail-label">Qty</span>
               <span class="position-detail-value">${pos.quantity}</span>
             </div>
             <div class="position-detail-item">
@@ -1945,7 +1955,7 @@ class GameUI {
             </div>
             <div class="position-detail-item">
               <span class="position-detail-label">P&L</span>
-              <span class="position-detail-value ${pnlClass}">${pnl >= 0 ? '+' : ''}${formatMoney(pnl)}</span>
+              <span class="position-detail-value position-pnl-value ${pnlClass}">${pnl >= 0 ? '+' : ''}${formatMoney(pnl)}</span>
             </div>
           </div>
           ${pos.leverage > 1 ? `<div style="font-size: 11px; color: var(--rh-yellow); margin-bottom: 8px;">${pos.leverage}x Leverage</div>` : ''}
