@@ -1838,7 +1838,17 @@ class GameUI {
 
     const w = canvas.width;
     const h = canvas.height;
-    const padding = 55;
+
+    // Dynamic padding and grid lines based on available space
+    const padLeft = Math.min(50, Math.max(35, w * 0.12));
+    const padTop = 10;
+    const padBottom = 6;
+    const padRight = 10;
+    const drawW = w - padLeft - padRight;
+    const drawH = h - padTop - padBottom;
+
+    // Fewer grid lines on small canvases
+    const gridLines = h < 120 ? 2 : h < 200 ? 3 : 4;
 
     // Clear
     ctx.clearRect(0, 0, w, h);
@@ -1861,15 +1871,15 @@ class GameUI {
     // Draw grid lines
     ctx.strokeStyle = '#2a2a3a';
     ctx.lineWidth = 1;
-    for (let i = 0; i <= 4; i++) {
-      const y = padding + (h - padding * 2) * (i / 4);
+    for (let i = 0; i <= gridLines; i++) {
+      const y = padTop + drawH * (i / gridLines);
       ctx.beginPath();
-      ctx.moveTo(padding, y);
-      ctx.lineTo(w - 10, y);
+      ctx.moveTo(padLeft, y);
+      ctx.lineTo(w - padRight, y);
       ctx.stroke();
 
       // Label (compact format, no decimals for axis)
-      const value = max - (range * i / 4);
+      const value = max - (range * i / gridLines);
       let label;
       if (Math.abs(value) >= 1e9) label = '$' + Math.round(value / 1e9) + 'B';
       else if (Math.abs(value) >= 1e6) label = '$' + Math.round(value / 1e6) + 'M';
@@ -1878,7 +1888,7 @@ class GameUI {
       ctx.fillStyle = '#fff';
       ctx.font = '12px monospace';
       ctx.textAlign = 'right';
-      ctx.fillText(label, padding - 4, y + 4);
+      ctx.fillText(label, padLeft - 4, y + 4);
     }
 
     // Draw line
@@ -1886,20 +1896,20 @@ class GameUI {
     ctx.strokeStyle = data[data.length - 1] >= data[0] ? '#4caf50' : '#f44336';
     ctx.lineWidth = 2;
 
-    const xStep = (w - padding - 10) / Math.max(1, data.length - 1);
+    const xStep = drawW / Math.max(1, data.length - 1);
     for (let i = 0; i < data.length; i++) {
-      const x = padding + i * xStep;
-      const y = padding + (1 - (data[i] - min) / range) * (h - padding * 2);
+      const x = padLeft + i * xStep;
+      const y = padTop + (1 - (data[i] - min) / range) * drawH;
       if (i === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     }
     ctx.stroke();
 
     // Fill under the line
-    const lastX = padding + (data.length - 1) * xStep;
-    const lastY = padding + (1 - (data[data.length - 1] - min) / range) * (h - padding * 2);
-    ctx.lineTo(lastX, h - padding);
-    ctx.lineTo(padding, h - padding);
+    const lastX = padLeft + (data.length - 1) * xStep;
+    const lastY = padTop + (1 - (data[data.length - 1] - min) / range) * drawH;
+    ctx.lineTo(lastX, padTop + drawH);
+    ctx.lineTo(padLeft, padTop + drawH);
     ctx.closePath();
     ctx.fillStyle = data[data.length - 1] >= data[0]
       ? 'rgba(76, 175, 80, 0.1)'
@@ -1908,58 +1918,56 @@ class GameUI {
 
     // Current value label
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 18px monospace';
+    ctx.font = 'bold 14px monospace';
     ctx.textAlign = 'right';
-    ctx.fillText(formatMoney(data[data.length - 1]), w - 10, lastY - 6);
+    ctx.fillText(formatMoney(data[data.length - 1]), w - padRight, lastY - 6);
 
     // Quarterly target line
     if (game.quarterly && !game.quarterly.isAllComplete()) {
       const targetValue = game.quarterly.getCurrentTarget().target;
       if (targetValue >= min && targetValue <= max) {
-        const targetY = padding + (1 - (targetValue - min) / range) * (h - padding * 2);
+        const targetY = padTop + (1 - (targetValue - min) / range) * drawH;
         ctx.beginPath();
         ctx.setLineDash([6, 4]);
         ctx.strokeStyle = 'rgba(255, 214, 10, 0.6)';
         ctx.lineWidth = 1.5;
-        ctx.moveTo(padding, targetY);
-        ctx.lineTo(w - 10, targetY);
+        ctx.moveTo(padLeft, targetY);
+        ctx.lineTo(w - padRight, targetY);
         ctx.stroke();
         ctx.setLineDash([]);
 
         ctx.fillStyle = 'rgba(255, 214, 10, 0.8)';
-        ctx.font = '14px monospace';
+        ctx.font = '12px monospace';
         ctx.textAlign = 'right';
-        ctx.fillText('Target: ' + formatMoney(targetValue), w - 14, targetY - 8);
+        ctx.fillText('Target: ' + formatMoney(targetValue), w - padRight - 4, targetY - 6);
       }
     }
 
-    // X-axis date labels
-    if (game.market && game.market.startDate) {
-      ctx.fillStyle = '#fff';
-      ctx.font = '14px monospace';
+    // X-axis date labels (skip if too small)
+    if (game.market && game.market.startDate && h > 100) {
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.font = '10px monospace';
       ctx.textAlign = 'center';
 
       const totalDays = data.length;
-      const labelCount = Math.min(5, totalDays);
+      const maxLabels = Math.max(2, Math.floor(drawW / 80));
+      const labelCount = Math.min(maxLabels, totalDays);
       const xLabelStep = Math.floor(totalDays / labelCount);
 
-      // Calculate offset for filtered data
       const fullHistory = game.trading.netWorthHistory;
       const startOffset = fullHistory.length - data.length;
 
       for (let i = 0; i < labelCount; i++) {
         const dayIdx = i * xLabelStep;
         if (dayIdx < totalDays) {
-          const x = padding + dayIdx * xStep;
-          const y = h - padding + 20;
+          const x = padLeft + dayIdx * xStep;
 
-          // Calculate date accounting for filtered range, include year
           const actualDayIdx = startOffset + dayIdx;
           const date = new Date(game.market.startDate);
           date.setDate(date.getDate() + actualDayIdx);
           const label = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
 
-          ctx.fillText(label, x, y);
+          ctx.fillText(label, x, padTop + drawH + padBottom);
         }
       }
     }
