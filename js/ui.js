@@ -1840,9 +1840,10 @@ class GameUI {
     const h = canvas.height;
 
     // Dynamic padding and grid lines based on available space
+    const showXLabels = h > 100 && game.market && game.market.startDate;
     const padLeft = Math.min(50, Math.max(35, w * 0.12));
     const padTop = 10;
-    const padBottom = 6;
+    const padBottom = showXLabels ? 20 : 6;
     const padRight = 10;
     const drawW = w - padLeft - padRight;
     const drawH = h - padTop - padBottom;
@@ -1967,7 +1968,7 @@ class GameUI {
           date.setDate(date.getDate() + actualDayIdx);
           const label = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
 
-          ctx.fillText(label, x, padTop + drawH + padBottom);
+          ctx.fillText(label, x, padTop + drawH + 14);
         }
       }
     }

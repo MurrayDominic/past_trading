@@ -3351,6 +3351,8 @@ canvas {
 
 .run-end-tab-content.active {
   display: block;
+  max-height: 50vh;
+  overflow-y: auto;
 }
 
 .trade-summary-table {
