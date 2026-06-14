@@ -1817,17 +1817,9 @@ class GameUI {
       return; // Skip render if not ready
     }
 
-    // Size canvas backing store to match CSS size * devicePixelRatio for crisp rendering
-    const dpr = window.devicePixelRatio || 1;
-    const cssW = Math.round(rect.width);
-    const cssH = Math.round(rect.height);
-    const backingW = Math.round(cssW * dpr);
-    const backingH = Math.round(cssH * dpr);
-    if (canvas.width !== backingW || canvas.height !== backingH) {
-      canvas.width = backingW;
-      canvas.height = backingH;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
+    // Resize canvas to fit container (same pattern as chart_manager.js)
+    canvas.width = rect.width;
+    canvas.height = rect.height;
 
     // Apply time range filter
     let data;
@@ -1839,12 +1831,9 @@ class GameUI {
     }
 
     if (data.length < 2) {
-      const w = rect.width;
-      const h = rect.height;
-      ctx.save();
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.restore();
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
       ctx.fillStyle = '#888';
       ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
       ctx.textAlign = 'center';
@@ -1852,15 +1841,12 @@ class GameUI {
       return;
     }
 
-    const w = rect.width;
-    const h = rect.height;
+    const w = canvas.width;
+    const h = canvas.height;
     const padding = 55;
 
-    // Clear (use full backing store size)
-    ctx.save();
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.restore();
+    // Clear
+    ctx.clearRect(0, 0, w, h);
 
     // Find min/max (include quarterly target in range so it's always visible)
     let min = Infinity, max = -Infinity;
@@ -1887,12 +1873,17 @@ class GameUI {
       ctx.lineTo(w - 10, y);
       ctx.stroke();
 
-      // Label
+      // Label (compact format, no decimals for axis)
       const value = max - (range * i / 4);
+      let label;
+      if (Math.abs(value) >= 1e9) label = '$' + Math.round(value / 1e9) + 'B';
+      else if (Math.abs(value) >= 1e6) label = '$' + Math.round(value / 1e6) + 'M';
+      else if (Math.abs(value) >= 1e3) label = '$' + Math.round(value / 1e3) + 'K';
+      else label = '$' + Math.round(value);
       ctx.fillStyle = '#fff';
-      ctx.font = '14px monospace';
+      ctx.font = '11px monospace';
       ctx.textAlign = 'right';
-      ctx.fillText(formatMoney(value), padding - 4, y + 4);
+      ctx.fillText(label, padding - 4, y + 4);
     }
 
     // Draw line
