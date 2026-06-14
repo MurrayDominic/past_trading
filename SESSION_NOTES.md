@@ -1,3 +1,46 @@
+## Session: 2026-06-14 (artwork)
+
+### What was done
+- Rewrote Midjourney art direction from scratch: dropped "cyan glow / retro-futurism" AI slop, landed on painted illustration of empty NYSE trading floor, atmospheric, muted palette, no people
+- Tested 5 art styles (vintage editorial, Saul Bass, woodcut, flat, watercolour) and multiple subjects (desk still life, rocket chart, NYSE floor) before finding the right look
+- Generated 10 Midjourney images for Steam store and in-game use
+- Built add_text_overlay.py to add Copperplate Gothic Bold title text to capsule images
+- Integrated darkened backgrounds into menu, year select, and run end screens (success = warm golden, arrested = cold blue)
+- Removed rocket logo from menu screen
+- Moved "Back to Menu" button to top-right of run end screen
+- Fixed run end stat boxes not filling container width
+- Uploaded all store artwork and library assets to Steam
+- Built and uploaded new game build (BuildID 23730979) via SteamPipe
+- Set build live on default branch
+- Published store page with new artwork
+
+### What was changed
+- MIDJOURNEY_ART_GUIDE.md (complete rewrite with new art direction)
+- css/style.css (background images on menu/year-select/run-end, run-end-stats layout fix, run-end-arrested class)
+- index.html (removed rocket logo from menu, moved back-to-menu button to top)
+- js/ui.js (run end arrested background class toggle)
+- add_text_overlay.py (text overlay generation script)
+- artwork/ (10 original Midjourney images)
+- artwork/with-text/ (resized + text overlay versions for Steam)
+- assets/backgrounds/ (4 darkened JPEGs for in-game use)
+
+### What is broken or incomplete
+- Nothing broken
+- Game header still uses old rocket SVG logo (small icon, low priority)
+- Achievement icons are still auto-generated (not yet tackled)
+
+### Next steps
+- Consider updating Steam store screenshots to match the new UI
+- Optionally replace game header rocket logo with something matching the new style
+- Achievement icons (Priority 4) if desired
+- Monitor Steam store page to confirm artwork displays correctly across all views
+
+### Open questions
+- Does the rocket logo in the game header need replacing, or is it fine as a small icon?
+- Are achievement icons worth doing in Midjourney or better as simple designed icons?
+
+---
+
 ## Session: 2026-06-14 (final)
 
 ### What was done
