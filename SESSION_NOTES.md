@@ -1,3 +1,63 @@
+## Session: 2026-06-14 (final)
+
+### What was done
+- Fixed net worth graph text stretching (root cause: using parent element rect instead of canvas rect, parent includes header so height was wrong)
+- Made net worth graph Y-axis dynamic (fewer grid lines on small screens, removed decimal points from labels)
+- Reduced graph padding from 55px all sides to minimal (10px top, 20px bottom for labels, dynamic left)
+- Fixed X-axis date labels overlapping with bottom grid line
+- Fixed run end screen trade history overflowing its container box
+- Discovered Electron was caching old JS files, cleared cache
+
+### What was changed
+- `js/ui.js` - Net worth graph: use canvas.getBoundingClientRect(), dynamic padding, dynamic grid line count, compact axis labels, proper X-axis label spacing
+- `css/style.css` - Removed global canvas width:100%, run end tab content max-height + overflow scroll
+
+### What is broken or incomplete
+- Nothing known broken. Net worth graph confirmed working after Electron cache clear.
+- All changes still not pushed to remote
+
+### Next steps
+1. Clear Electron cache before each test session (or add cache-busting to main.js)
+2. Full playtest of all features
+3. Push to origin
+4. Midjourney artwork (deferred, needs style iteration)
+
+---
+
+## Session: 2026-06-14 (continued)
+
+### What was done
+- Fixed Top Movers flickering (was rebuilding DOM every tick, now only re-renders on day change)
+- Made Top Movers collapsible (closed by default, slim header bar, click to expand)
+- Fixed Top Movers toggle not responding to clicks (was waiting for next tick, now toggles CSS class directly)
+- Fixed Top Movers header styling to match existing section titles instead of looking like a separate button
+- Fixed net worth graph text stretching (4 attempts, root cause: code was using parent element rect which includes the header, not the canvas's own rect)
+- Removed decimal points from net worth graph Y-axis labels ($10K not $10.0K)
+- Attempted Midjourney prompt iterations (3 rounds, all too AI-looking, deferred)
+
+### What was changed
+- `js/ui.js` - Top movers: collapsible with cached render, direct CSS toggle. Net worth graph: use canvas.getBoundingClientRect() instead of parentElement, compact Y-axis labels
+- `css/style.css` - Top movers header styled as section label, canvas CSS rules cleaned up
+
+### What is broken or incomplete
+- Net worth graph fix needs verification by Dominic (4 failed attempts before finding root cause, may still not be right)
+- Midjourney art style not resolved, deferred to future session
+- None of the session's changes have been pushed to remote
+- All new features (top movers, watchlist, P&L sorting, guided tutorial, trade animations) still need thorough playtesting
+
+### Next steps
+1. Restart game (npm start) and verify net worth graph text is no longer stretched
+2. Playtest all features end-to-end in a full run
+3. Report any remaining bugs
+4. Push to origin when satisfied
+5. Come back to Midjourney artwork with fresh approach (try generating reference images manually first, then use --sref)
+
+### Open questions
+- Is the net worth graph finally fixed? Root cause was using parent rect instead of canvas rect
+- Top Movers: is collapsible the right UX, or should it be removed/simplified?
+
+---
+
 ## Session: 2026-06-14
 
 ### What was done
