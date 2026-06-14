@@ -1807,17 +1807,12 @@ class GameUI {
     const ctx = this.graphCtx;
     if (!canvas || !ctx) return;
 
-    // Bug Fix #42: Validate parent element exists and is visible
-    if (!canvas.parentElement) return;
-
-    const rect = canvas.parentElement.getBoundingClientRect();
-
-    // Bug Fix #9: Canvas sizing race condition - validate dimensions before rendering
-    if (rect.width === 0 || rect.height === 0) {
-      return; // Skip render if not ready
-    }
-
-    // Resize canvas to fit container (same pattern as chart_manager.js)
+    // Use the canvas's own bounding rect for sizing. The parent (.networth-section)
+    // also contains the header, so using parentElement.getBoundingClientRect() gives
+    // a taller rect than the canvas actually displays at, causing vertical compression
+    // that makes text look horizontally stretched.
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
     canvas.width = rect.width;
     canvas.height = rect.height;
 
@@ -1881,7 +1876,7 @@ class GameUI {
       else if (Math.abs(value) >= 1e3) label = '$' + Math.round(value / 1e3) + 'K';
       else label = '$' + Math.round(value);
       ctx.fillStyle = '#fff';
-      ctx.font = '11px monospace';
+      ctx.font = '12px monospace';
       ctx.textAlign = 'right';
       ctx.fillText(label, padding - 4, y + 4);
     }
