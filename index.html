@@ -15,7 +15,6 @@
   <!-- ============================================================ -->
   <div id="menu-screen">
     <div class="menu-container">
-      <img src="assets/logo.svg" alt="Past Trading" class="menu-logo">
       <h1 class="menu-title">Second Chance at a Billion</h1>
       <p class="menu-subtitle">Travel back in time. Trade with foresight. Try not to get arrested.</p>
 
@@ -444,7 +443,10 @@
   <!-- ============================================================ -->
   <div id="run-end-screen" class="hidden">
     <div class="run-end-container">
-      <h1 id="run-end-title" class="run-end-title">RUN OVER</h1>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md);">
+        <h1 id="run-end-title" class="run-end-title" style="margin-bottom: 0;">RUN OVER</h1>
+        <button class="btn btn-primary" id="back-to-menu">BACK TO MENU</button>
+      </div>
 
       <div id="run-end-stats" class="run-end-stats"></div>
 
@@ -455,8 +457,6 @@
         <label for="run-name-input" style="color: var(--rh-text-secondary); font-size: 14px;">Name this run for the leaderboard:</label>
         <input type="text" id="run-name-input" class="run-name-input" placeholder="e.g. YOLO Tesla Shorts" maxlength="30">
       </div>
-
-      <button class="btn btn-primary mt-2" id="back-to-menu">BACK TO MENU</button>
     </div>
   </div>
 

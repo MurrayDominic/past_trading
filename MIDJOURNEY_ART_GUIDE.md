@@ -2,269 +2,149 @@
 
 ## Art Direction
 
-**Theme:** Dark, moody financial thriller meets retro-futurism. Think Wolf of Wall Street meets Tron. Not cartoony, not photorealistic. Stylized, atmospheric, cinematic.
+**Style:** Painted illustration, atmospheric, muted palette. No people. Think editorial illustration for a financial magazine, not sci-fi or futuristic.
 
-**Color palette:** Deep navy/black backgrounds, cyan/electric blue accents, warm amber/gold highlights, hints of neon green for "money." Avoid purple gradients (AI slop signal).
+**Subject:** The empty New York Stock Exchange trading floor. Trading posts, screens, American flags, warm light from screens against cool blue architecture.
 
-**Mood:** Tense, exciting, slightly dangerous. This is a game about insider trading and dodging the SEC. The art should feel like a late-night trading floor, not a sunny finance app.
+**What to avoid:** Neon/cyan glow, volumetric lighting, "cinematic" AI slop, floating particles, futuristic elements, people/figures. Keep it simple and clean so it looks human-made.
 
-**Consistency tip:** Once you get a style you like, use `--sref [image URL]` to keep that style across all assets. Generate the main capsule first and use it as the style reference for everything else.
+**Style reference:** Use `--sref [URL]` with your chosen header capsule image on all prompts to maintain consistency.
 
----
-
-## PRIORITY 1: Steam Store Page (what buyers see first)
-
-### 1. Main Capsule (1232 x 706px)
-This is the single most important image. It appears on the Steam store page, in search results, and in recommendations. Must communicate the game concept in under 2 seconds.
-
-```
-A lone figure silhouetted at a massive curved trading desk covered in glowing screens,
-stock charts with cyan lines soaring upward, scattered dollar bills and gold coins
-floating in the air, dark moody room lit only by screens, volumetric light from monitors,
-cinematic composition, aspect ratio 16:9, dramatic lighting --ar 16:9 --s 750 --v 6.1
-```
-
-**Alt prompt (more abstract):**
-```
-Dark cinematic scene of glowing cyan stock market charts rising through a cityscape
-at night, golden dollar signs and ticker symbols floating like particles, a single
-rocket trail cutting through the charts heading upward, dramatic volumetric lighting,
-film noir atmosphere, digital art --ar 16:9 --s 750 --v 6.1
-```
-
-**Requirements:** Leave space in the upper-left for the title text overlay. Avoid putting important details in the corners (Steam crops them in some views).
-
-### 2. Header Capsule (920 x 430px)
-Appears at the top of the store page. Same concept as main capsule but wider and shorter.
-
-```
-Wide cinematic shot of a dark trading floor, multiple glowing screens showing rising
-stock charts in cyan and blue, a leather chair facing the screens, stacks of money
-on the desk, atmospheric fog and volumetric light, dark moody finance thriller aesthetic
---ar 920:430 --s 750 --v 6.1
-```
-
-**Requirements:** Title "SECOND CHANCE AT A BILLION" will be overlaid in post. Keep the center-left clear for text.
-
-### 3. Small Capsule (462 x 174px)
-Appears in wishlists, library, and sale pages. Very small, must read clearly.
-
-```
-Close-up of a glowing cyan stock chart arrow pointing sharply upward against a dark
-background, golden sparkles trailing behind it, minimal composition, high contrast,
-clean and bold --ar 462:174 --s 750 --v 6.1
-```
-
-**Requirements:** Very simple composition. This renders tiny. Just the chart/rocket motif with high contrast.
-
-### 4. Vertical Capsule (748 x 896px)
-Appears in Steam sales events and featured sections.
-
-```
-Vertical composition: a figure in a suit viewed from behind, standing before a towering
-wall of stock market screens in a dark room, cyan chart lines reflected on the floor,
-money floating upward like confetti, dramatic upward perspective, dark cinematic mood
---ar 5:6 --s 750 --v 6.1
-```
-
-### 5. Library Hero (3840 x 1240px)
-Ultra-wide banner shown in the Steam library when the game is selected.
-
-```
-Ultra-wide panoramic view of a futuristic trading floor at night, rows of curved
-monitors showing glowing cyan and blue stock charts, a subtle cityscape visible through
-floor-to-ceiling windows, atmospheric haze, reflective dark floor, no people,
-cinematic and moody --ar 3840:1240 --s 750 --v 6.1
-```
-
-**Requirements:** Very wide aspect ratio. Keep composition spread across the full width. The game logo will be overlaid on the left side.
-
-### 6. Library Logo (1280 x 400px)
-The game title rendered artistically. Generate separately or create in a design tool using a good font.
-
-```
-The text "SECOND CHANCE AT A BILLION" rendered in sleek modern typography,
-cyan glowing edges, dark background, subtle stock chart line integrated into the
-letterforms, clean and readable, logo design --ar 1280:400 --s 750 --v 6.1
-```
-
-### 7. Page Background (1438 x 810px)
-Subtle dark background for the Steam store page. Must not distract from content.
-
-```
-Abstract dark background with very subtle cyan grid lines fading into darkness,
-tiny floating particles like distant stars, barely visible stock chart curves in
-deep navy, minimal and atmospheric, meant as a background texture --ar 16:9 --s 250 --v 6.1
-```
-
-**Requirements:** Must be very dark and subtle. If it competes with the store page text, it's too busy.
+**Text overlay:** Copperplate Gothic Bold, white with drop shadow, right-aligned in the top-right corner. Run `add_text_overlay.py` to generate text versions.
 
 ---
 
-## PRIORITY 2: Promotional / Marketing
+## Asset List
 
-### 8. Social Media Banner (1200 x 630px - og:image)
-For Reddit posts, Twitter/X cards, Discord embeds.
+### PRIORITY 1: Steam Store Page
 
-```
-A dramatic scene of a time traveler's desk: vintage clock showing midnight, modern
-trading screens with cyan stock charts, a newspaper headline about a market crash,
-scattered $100 bills, a mysterious glowing briefcase, dark cinematic lighting
---ar 1200:630 --s 750 --v 6.1
-```
-
-**Overlay text in post-production:** "Travel back in time. Trade with foresight. Try not to get arrested."
-
-### 9. YouTube/TikTok Thumbnail (1280 x 720px)
-For trailer and gameplay videos.
+#### 1. Main Capsule (1232 x 706)
+The most important image. Appears in search results and recommendations.
 
 ```
-Close-up dramatic shot of a person's eyes reflected in a trading screen, the screen
-shows a stock chart going parabolic in cyan, golden dollar signs reflected in their
-eyes, intense expression, dark moody lighting, cinematic --ar 16:9 --s 750 --v 6.1
+The empty New York Stock Exchange trading floor, trading posts and screens, American flags, warm light glowing from screens, painted illustration style, atmospheric, muted palette --ar 16:9 --s 250 --v 6.1 --sref [URL]
 ```
 
-### 10. Trailer Key Frames (1920 x 1080px) - Generate 4-5
+**Text overlay:** "SECOND CHANCE / AT A BILLION" top-right
 
-**Frame 1: "The Setup"**
-```
-A dark office at night, single desk lamp illuminating a mysterious device (time machine),
-stock market newspapers scattered on the desk dated 2008, moody noir atmosphere,
-film grain --ar 16:9 --s 750 --v 6.1
-```
+#### 2. Header Capsule (920 x 430)
+Top of the store page.
 
-**Frame 2: "The Trading Floor"**
 ```
-First-person perspective sitting at a massive curved trading desk, dozens of screens
-showing green and cyan stock charts all going up, the feeling of power and control,
-dark room lit by screen glow --ar 16:9 --s 750 --v 6.1
+The empty New York Stock Exchange trading floor, trading posts and screens, American flags, warm light glowing from screens, clear space on the right side for text overlay, painted illustration style, atmospheric, muted palette --ar 920:430 --s 250 --v 6.1 --sref [URL]
 ```
 
-**Frame 3: "The SEC"**
+**Text overlay:** "SECOND CHANCE / AT A BILLION" top-right
+
+#### 3. Small Capsule (462 x 174)
+Wishlists, library, sale pages. Renders very small.
+
 ```
-A dark hallway with harsh fluorescent lighting, men in suits approaching from the
-shadows, FBI/SEC badges visible, red warning lights, tense thriller atmosphere,
-danger approaching --ar 16:9 --s 750 --v 6.1
+Close-up of a single NYSE trading post with glowing screens, American flag in background, painted illustration style, atmospheric, muted palette, simple composition --ar 462:174 --s 250 --v 6.1 --sref [URL]
 ```
 
-**Frame 4: "The Billion"**
+**Text overlay:** "SECOND CHANCE AT A BILLION" centered, single line
+
+#### 4. Vertical Capsule (748 x 896)
+Steam sales events and featured sections.
+
 ```
-Extreme wide shot of a figure standing on top of a mountain of gold coins and
-dollar bills, city skyline at night behind them, cyan aurora in the sky shaped
-like a stock chart, triumphant and cinematic --ar 16:9 --s 750 --v 6.1
+Looking upward inside the empty New York Stock Exchange, tall columns and American flags above, trading posts and screens below, absolutely no people, dramatic vertical perspective, painted illustration style, atmospheric, muted palette --ar 5:6 --s 250 --v 6.1 --sref [URL]
 ```
+
+**No text overlay.**
+
+#### 5. Library Hero (3840 x 1240)
+Ultra-wide banner in the Steam library.
+
+```
+Ultra-wide panoramic view of the empty New York Stock Exchange trading floor stretching across the full frame, trading posts and screens, American flags, warm light, painted illustration style, atmospheric, muted palette --ar 3840:1240 --s 250 --v 6.1 --sref [URL]
+```
+
+**No text overlay.** Game logo overlaid on the left side by Steam.
 
 ---
 
-## PRIORITY 3: In-Game Assets
+### PRIORITY 2: Promotional / Marketing
 
-### 11. Menu Background (1920 x 1080px)
-Atmospheric background for the main menu. Should be dark enough that cyan text is readable over it.
-
-```
-Dark atmospheric scene of a trading desk from above, scattered financial documents,
-a glowing computer screen, long shadows, dust particles in air, very dark and moody,
-noir aesthetic, must be dark enough for text overlay --ar 16:9 --s 500 --v 6.1
-```
-
-**Requirements:** Must be VERY dark (overall brightness below 20%). The game overlays white/cyan text on top. Test by putting white text over it.
-
-### 12. Year Select Background (1920 x 1080px)
-For the year selection screen. Could show a timeline or time-travel motif.
+#### 6. Social Media Banner (1200 x 630)
+For Reddit, Twitter/X, Discord embeds.
 
 ```
-Abstract dark composition showing a timeline flowing left to right, dates from
-2000 to 2024 subtly visible, a glowing portal or clock in the center, cyan energy
-lines connecting the dates, time travel aesthetic, very dark atmospheric
---ar 16:9 --s 500 --v 6.1
+The empty NYSE trading floor at dawn, first light streaming through windows onto the trading posts, American flags in warm light, painted illustration style, atmospheric, muted palette --ar 1200:630 --s 250 --v 6.1 --sref [URL]
 ```
 
-### 13. Run End Screen Background (1920 x 1080px)
-Two variants needed: one for success (reached targets) and one for arrest.
-
-**Success variant:**
-```
-Dark celebratory scene, golden light rays breaking through darkness, abstract
-stock charts forming a crown shape, scattered gold coins, triumphant atmosphere
-but still moody, dark enough for text overlay --ar 16:9 --s 500 --v 6.1
-```
-
-**Arrested variant:**
-```
-Dark oppressive scene, red and blue police lights casting shadows through window
-blinds, an empty chair at a trading desk, scattered papers, feeling of everything
-falling apart, noir thriller atmosphere --ar 16:9 --s 500 --v 6.1
-```
+**Text overlay:** "SECOND CHANCE / AT A BILLION" top-right
 
 ---
 
-## PRIORITY 4: Achievement Icons (256 x 256px each)
+### PRIORITY 3: In-Game Backgrounds
 
-Currently auto-generated with simple vector shapes. Midjourney can make these look premium. All should share the same style: circular composition, dark background, single iconic element.
+#### 7. Menu Background (1920 x 1080)
+Must be very dark for cyan/white text readability.
 
-**Style prefix for all achievement icons:**
 ```
-Circular icon design on dark background, single iconic symbol, glowing edges,
-game achievement badge style, detailed miniature illustration --ar 1:1 --s 750 --v 6.1
+The empty NYSE trading floor at night, very dark, screens casting faint warm glow on trading posts, deep shadows everywhere, must be very dark for text overlay, painted illustration style, atmospheric, muted palette --ar 16:9 --s 250 --v 6.1 --sref [URL]
 ```
 
-| Achievement | Prompt addition |
-|-------------|----------------|
-| Male Astrology | `a crystal ball showing stock charts, mystical purple glow` |
-| Diamond Hands | `a pair of diamond-encrusted hands gripping a stock chart, blue sparkle` |
-| Paper Hands | `paper origami hands crumbling apart, scattered paper pieces` |
-| Bought the Dip | `a shopping cart full of red downward arrows turning green` |
-| First Million | `the number $1M in gold, surrounded by golden light rays` |
-| GUH | `a shocked face emoji on a crashing red stock chart, dramatic` |
-| HODL King | `a golden crown on top of a candlestick chart, regal` |
-| Clean Hands | `pristine white gloves holding money, angelic glow` |
-| Literally Criminal | `handcuffs on a pile of money, red police siren light` |
-| Margin Call Survivor | `a person hanging from a cliff edge made of stock charts, dramatic` |
-| Teflon Don | `a shield deflecting red SEC warning arrows, golden defense` |
-| Speed Demon | `a clock melting like Dali with stock tickers racing past` |
-| Billion Dollar Baby | `a golden baby cradle overflowing with money, whimsical` |
-| Portfolio Picasso | `a painter's palette but the colors are stock chart patterns` |
-| Comeback Kid | `a phoenix made of green stock charts rising from red flames` |
-| Day Trader | `rapid-fire screens showing millisecond trades, energy and speed` |
+**No text overlay.** Game UI renders on top.
+
+#### 8. Year Select Background (1920 x 1080)
+
+```
+A long corridor inside the New York Stock Exchange, very dark, faint warm light at the far end, columns and wood panelling, deep shadows, painted illustration style, atmospheric, muted palette --ar 16:9 --s 250 --v 6.1 --sref [URL]
+```
+
+**No text overlay.** Game UI renders on top.
+
+#### 9. Run End - Success (1920 x 1080)
+
+```
+The NYSE trading floor bathed in warm golden morning light streaming through tall windows, triumphant atmosphere, empty and still, painted illustration style, atmospheric, muted palette, dark enough for text overlay --ar 16:9 --s 250 --v 6.1 --sref [URL]
+```
+
+**No text overlay.** Game UI renders on top.
+
+#### 10. Run End - Arrested (1920 x 1080)
+
+```
+The empty NYSE trading floor in cold blue light, a single overturned chair, papers scattered on the floor, abandoned and still, painted illustration style, atmospheric, muted palette, dark enough for text overlay --ar 16:9 --s 250 --v 6.1 --sref [URL]
+```
+
+**No text overlay.** Game UI renders on top.
 
 ---
 
-## Post-Production Notes
+## Post-Production
 
-After generating in Midjourney:
+The `add_text_overlay.py` script handles:
+- Resizing all images to exact Steam pixel dimensions
+- Adding "SECOND CHANCE AT A BILLION" in Copperplate Gothic Bold with drop shadow
+- Right-aligned in the top-right corner (except Small Capsule which is centered)
+- Originals preserved in `artwork/`, text versions saved to `artwork/with-text/`
 
-1. **Title text overlay** - Add "SECOND CHANCE AT A BILLION" to capsule images using a clean sans-serif font (Bebas Neue, Oswald, or similar). White or cyan text with subtle drop shadow.
+To re-run after replacing source images:
+```bash
+python add_text_overlay.py
+```
 
-2. **Resize precisely** - Steam rejects images that aren't exact dimensions. Use Photoshop/Figma to crop and resize to exact pixel specs.
-
-3. **Test readability** - Every capsule appears at multiple sizes on Steam. View your main capsule at 200px wide (search results) and make sure the key visual still reads.
-
-4. **In-game backgrounds** - Darken aggressively in post. Apply a 60-80% black overlay if needed. The game UI must remain readable.
-
-5. **Achievement icons** - Crop to circle, add dark border ring for consistency. Export as JPG at 256x256 for Steam and 64x64 for in-game display.
-
-6. **Style reference** - Once you find a style you love on the main capsule, copy the image URL and use `--sref [URL]` on all subsequent prompts to maintain visual consistency across all assets.
+For Steam upload, use the images from `artwork/with-text/` for capsules that need text, and directly from `artwork/` for backgrounds and the vertical capsule.
 
 ---
 
 ## Asset Checklist
 
-| # | Asset | Dimensions | Priority | Status |
-|---|-------|-----------|----------|--------|
-| 1 | Main Capsule | 1232 x 706 | P1 | |
-| 2 | Header Capsule | 920 x 430 | P1 | |
-| 3 | Small Capsule | 462 x 174 | P1 | |
-| 4 | Vertical Capsule | 748 x 896 | P1 | |
-| 5 | Library Hero | 3840 x 1240 | P1 | |
-| 6 | Library Logo | 1280 x 400 | P1 | |
-| 7 | Page Background | 1438 x 810 | P1 | |
-| 8 | Social Media Banner | 1200 x 630 | P2 | |
-| 9 | YouTube Thumbnail | 1280 x 720 | P2 | |
-| 10a-d | Trailer Key Frames | 1920 x 1080 | P2 | |
-| 11 | Menu Background | 1920 x 1080 | P3 | |
-| 12 | Year Select Background | 1920 x 1080 | P3 | |
-| 13a | Run End (Success) | 1920 x 1080 | P3 | |
-| 13b | Run End (Arrested) | 1920 x 1080 | P3 | |
-| 14a-p | Achievement Icons (16) | 256 x 256 | P4 | |
+| # | Asset | Dimensions | Text? | Status |
+|---|-------|-----------|-------|--------|
+| 1 | Main Capsule | 1232 x 706 | Yes | Done |
+| 2 | Header Capsule | 920 x 430 | Yes | Done |
+| 3 | Small Capsule | 462 x 174 | Yes | Done |
+| 4 | Vertical Capsule | 748 x 896 | No | Done |
+| 5 | Library Hero | 3840 x 1240 | No | Done |
+| 6 | Social Media Banner | 1200 x 630 | Yes | Done |
+| 7 | Menu Background | 1920 x 1080 | No | Done |
+| 8 | Year Select Background | 1920 x 1080 | No | Done |
+| 9 | Run End - Success | 1920 x 1080 | No | Done |
+| 10 | Run End - Arrested | 1920 x 1080 | No | Done |
 
-**Total: ~24 images to generate**
+**Total: 10 images**

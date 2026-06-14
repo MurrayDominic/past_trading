@@ -2280,6 +2280,13 @@ class GameUI {
     this.el.gameScreen.classList.add('hidden');
     this.el.runEndScreen.classList.remove('hidden');
 
+    // Set background based on run end reason
+    if (game.runEndReason === 'arrested') {
+      this.el.runEndScreen.classList.add('run-end-arrested');
+    } else {
+      this.el.runEndScreen.classList.remove('run-end-arrested');
+    }
+
     const reasonText = {
       arrested: 'ARRESTED BY THE SEC',
       bankrupt: 'BANKRUPT',
