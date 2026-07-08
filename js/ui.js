@@ -113,6 +113,13 @@ class GameUI {
       this.graphCtx = this.graphCanvas.getContext('2d');
     }
 
+    // Juice engine (v2): rolling counters, tiered popups, screen shake
+    this.juice = new Juice(() => this.game && this.game.audio);
+    this.juice.attachShakeTarget(this.el.gameScreen);
+    this.juice.attachPopupLayer(this.el.gameScreen);
+    this.cashCounter = this.juice.counter(this.el.cashDisplay);
+    this.netWorthCounter = this.juice.counter(this.el.netWorthDisplay);
+
     this.bindEvents();
 
     // Resize handler for canvas scaling
@@ -1574,9 +1581,9 @@ class GameUI {
     // News
     this.renderNews(game);
 
-    // Cash and net worth displays
-    this.el.cashDisplay.textContent = formatMoney(game.trading.cash);
-    this.el.netWorthDisplay.textContent = formatMoney(game.trading.netWorth);
+    // Cash and net worth displays (rolling counters, DESIGN.md precision tiers)
+    this.cashCounter.set(game.trading.cash);
+    this.netWorthCounter.set(game.trading.netWorth);
   }
 
   renderAssetSelector(game, filteredAssets = null) {
@@ -2249,27 +2256,8 @@ class GameUI {
   }
 
   spawnFloatingPnL(amount) {
-    // Create floating text element
-    const floatingText = document.createElement('div');
-    floatingText.className = amount > 0 ? 'floating-pnl floating-pnl-up' : 'floating-pnl floating-pnl-down';
-
-    // Format text: +$1,234 or -$1,234
-    const sign = amount > 0 ? '+' : '';
-    floatingText.textContent = `${sign}${formatMoney(amount)}`;
-
-    // Position near center with slight random offset to avoid overlapping
-    const randomOffset = Math.random() * 50 - 25; // -25px to +25px
-    floatingText.style.left = `calc(50% + ${randomOffset}px)`;
-
-    // Append to game screen
-    this.el.gameScreen.appendChild(floatingText);
-
-    // Remove after animation completes (2 seconds)
-    setTimeout(() => {
-      if (floatingText.parentNode) {
-        floatingText.parentNode.removeChild(floatingText);
-      }
-    }, 2000);
+    // Delegates to the juice engine (tiered, aggregated popups)
+    this.juice.moneyPopup(amount, this.game ? this.game.trading.netWorth : 0);
   }
 
   // ---- Run End Screen ----

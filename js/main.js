@@ -333,8 +333,9 @@ class Game {
     const netWorthChange = currentNetWorth - this.lastNetWorth;
     const percentChange = this.lastNetWorth > 0 ? netWorthChange / this.lastNetWorth : 0;
 
-    // Floating text for significant P&L changes
-    if (Math.abs(netWorthChange) >= 1000) {
+    // Floating text for significant one-day swings only (tier 2+, DESIGN.md):
+    // a flat $1000 threshold spams popups every tick once net worth is large
+    if (this.lastNetWorth > 0 && Math.abs(netWorthChange) >= Math.max(1000, this.lastNetWorth * 0.02)) {
       this.ui.spawnFloatingPnL(netWorthChange);
     }
 
@@ -480,8 +481,9 @@ class Game {
     const netWorthChange = currentNetWorth - this.lastNetWorth;
     const percentChange = this.lastNetWorth > 0 ? netWorthChange / this.lastNetWorth : 0;
 
-    // Floating text for significant P&L changes
-    if (Math.abs(netWorthChange) >= 1000) {
+    // Floating text for significant one-day swings only (tier 2+, DESIGN.md):
+    // a flat $1000 threshold spams popups every tick once net worth is large
+    if (this.lastNetWorth > 0 && Math.abs(netWorthChange) >= Math.max(1000, this.lastNetWorth * 0.02)) {
       this.ui.spawnFloatingPnL(netWorthChange);
     }
 

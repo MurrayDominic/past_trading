@@ -133,6 +133,36 @@ class AudioEngine {
     osc.stop(now + 0.05);
   }
 
+  // Generic tone for the juice engine (tallies, pitch ladders)
+  playTone(freq, duration = 0.1, type = 'sine', peak = 0.2) {
+    if (!this.audioContext || this.muted) return;
+
+    const now = this.audioContext.currentTime;
+    const osc = this.audioContext.createOscillator();
+    const gain = this.audioContext.createGain();
+
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(peak, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
+    osc.connect(gain);
+    gain.connect(this.sfxGain);
+    osc.start(now);
+    osc.stop(now + duration);
+  }
+
+  // Rising note ladder (Balatro-style): each step walks up a pentatonic scale
+  playPitchLadder(steps = 5, baseFreq = 523, stepMs = 90) {
+    if (!this.audioContext || this.muted) return;
+
+    const ratios = [1, 9 / 8, 5 / 4, 3 / 2, 5 / 3, 2, 9 / 4, 5 / 2];
+    const count = Math.min(steps, ratios.length);
+    for (let i = 0; i < count; i++) {
+      setTimeout(() => this.playTone(baseFreq * ratios[i], 0.11, 'triangle', 0.22), i * stepMs);
+    }
+  }
+
   playIllegalAction() {
     if (!this.audioContext || this.muted) return;
 
