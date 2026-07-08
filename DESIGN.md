@@ -66,8 +66,10 @@ Rules:
 
 ## 5. Terminal treatment
 
+**APPROVED DIRECTION (Dominic, 2026-07-08): the Painted Trading Floor blend.** Painted NYSE artwork glowing through behind floating translucent panels (mockup B), plus mockup A's scanline layer at reduced strength. Gold-forward accents, soft panel shadows, no hard phosphor-green styling except flavor text.
+
 Applied as one full-screen overlay layer plus per-panel styles, all cheap CSS:
-- Scanlines: repeating-linear-gradient, 3px period, 4% opacity max. Subtle. Must survive a screenshot without reading as a bug.
+- Scanlines: repeating-linear-gradient, 3px period, 2.4% white opacity (the approved value from the blended mockup). Subtle. Must survive a screenshot without reading as a bug.
 - Phosphor glow: text-shadow `0 0 6px` of the text's own color at ~35% on data displays only (never body text).
 - Vignette: radial-gradient darkening corners ~12%.
 - Ticker tape: one continuous crawl under the header, real tickers and prices from the live market state.
@@ -127,6 +129,6 @@ Magnitude is measured in log scale relative to current net worth, so a $500 win 
 
 ## 10. Mockups
 
-`mockups/cockpit-a-phosphor.html`: full-terminal direction, maximum period commitment.
-`mockups/cockpit-b-tradingfloor.html`: painted-art-forward direction, terminal treatment as a lighter layer.
+`mockups/cockpit-b-tradingfloor.html`: **THE APPROVED DIRECTION.** Painted trading floor blended with subtle scanlines.
+`mockups/cockpit-a-phosphor.html`: the full-terminal alternative, kept for reference only.
 Open in any browser. Both use the bundled fonts and this palette; both animate the rolling net worth counter and ticker tape so the motion rules can be felt, not imagined.

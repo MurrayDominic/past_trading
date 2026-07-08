@@ -24,9 +24,11 @@
   }
   /* darken the painted art so panels float on it */
   body::before{content:''; position:fixed; inset:0; background:rgba(10,12,20,.58); z-index:0}
-  /* far gentler treatment than mockup A: faint vignette only, no scanlines */
+  /* APPROVED BLEND: painted-floor warmth + mockup A's scanlines (slightly gentler) */
   body::after{content:''; position:fixed; inset:0; pointer-events:none; z-index:99;
-    background:radial-gradient(ellipse at center, transparent 62%, rgba(0,0,0,.30) 100%)}
+    background:
+      radial-gradient(ellipse at center, transparent 62%, rgba(0,0,0,.30) 100%),
+      repeating-linear-gradient(0deg, rgba(255,255,255,.024) 0 1px, transparent 1px 3px)}
   .num{font-family:'Plex Mono',monospace; font-variant-numeric:tabular-nums}
 
   .cockpit{position:relative; z-index:1; display:grid; height:100vh;
