@@ -134,6 +134,10 @@ Acceptance: daily run works on a second machine; archetypes meaningfully change 
 
 44-63 sessions of focused work. At a few sessions per week this is roughly 4-6 months to the 2.0 relaunch. Cutting day trading (Phase 6) and archetypes (5.1) saves ~8-10 sessions if speed matters more.
 
+## Status log
+
+- **2026-07-08:** Research phase complete (5 reports + summary). All strategic decisions locked: refit not rewrite, free 2.0 update, two run formats (Career + Time Machine), options shelved, day trading is the slip candidate. Plans committed to master via v2-planning branch (commit 6c1c41c). Phase task list created in the session task tracker. **Phase 0 started same day**: DESIGN.md, bundled fonts, and cockpit mockups (mockups/ folder) produced for Dominic's review.
+
 ## Standing risks
 
 1. **Scope creep inside phases.** The phase gates exist to force "playable and merged" before moving on.
