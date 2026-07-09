@@ -746,3 +746,21 @@ function formatDays(days) {
   }
   return days + ' days';
 }
+
+// ============================================================================
+// V2 SEMANTIC PALETTE (DESIGN.md section 2)
+// Single source of truth for canvas-drawn colors. CSS mirrors these values
+// via the --rh-* variable overrides in style.css. Never reuse a color for
+// another meaning.
+// ============================================================================
+const PALETTE = {
+  profit: '#33D69F',
+  loss: '#FF5C5C',
+  money: '#F5C542',
+  heat: '#B95CFF',
+  info: '#5CA8FF',
+  bg: '#0B0E14',
+  panel: '#131826',
+  text: '#E8ECF4',
+  textDim: '#8B94A8',
+};

@@ -1904,7 +1904,7 @@ class GameUI {
 
     // Draw line
     ctx.beginPath();
-    ctx.strokeStyle = data[data.length - 1] >= data[0] ? '#4caf50' : '#f44336';
+    ctx.strokeStyle = data[data.length - 1] >= data[0] ? PALETTE.profit : PALETTE.loss;
     ctx.lineWidth = 2;
 
     const xStep = drawW / Math.max(1, data.length - 1);
@@ -1923,8 +1923,8 @@ class GameUI {
     ctx.lineTo(padLeft, padTop + drawH);
     ctx.closePath();
     ctx.fillStyle = data[data.length - 1] >= data[0]
-      ? 'rgba(76, 175, 80, 0.1)'
-      : 'rgba(244, 67, 54, 0.1)';
+      ? 'rgba(51, 214, 159, 0.1)'
+      : 'rgba(255, 92, 92, 0.1)';
     ctx.fill();
 
     // Current value label
@@ -1940,14 +1940,14 @@ class GameUI {
         const targetY = padTop + (1 - (targetValue - min) / range) * drawH;
         ctx.beginPath();
         ctx.setLineDash([6, 4]);
-        ctx.strokeStyle = 'rgba(255, 214, 10, 0.6)';
+        ctx.strokeStyle = 'rgba(245, 197, 66, 0.6)';
         ctx.lineWidth = 1.5;
         ctx.moveTo(padLeft, targetY);
         ctx.lineTo(w - padRight, targetY);
         ctx.stroke();
         ctx.setLineDash([]);
 
-        ctx.fillStyle = 'rgba(255, 214, 10, 0.8)';
+        ctx.fillStyle = 'rgba(245, 197, 66, 0.8)';
         ctx.font = '12px monospace';
         ctx.textAlign = 'right';
         ctx.fillText('Target: ' + formatMoney(targetValue), w - padRight - 4, targetY - 6);

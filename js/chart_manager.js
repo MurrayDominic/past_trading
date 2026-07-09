@@ -121,7 +121,7 @@ class ChartManager {
       const w = activeTab.canvas.width;
       const h = activeTab.canvas.height;
 
-      ctx.fillStyle = '#0a0a0a';
+      ctx.fillStyle = PALETTE.bg;
       ctx.fillRect(0, 0, w, h);
 
       ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
@@ -203,7 +203,7 @@ class ChartManager {
     data.forEach((bar, i) => {
       const x = padding + (i + 0.5) * candleSpacing;
       const isGreen = bar.close >= bar.open;
-      const color = isGreen ? '#00BFFF' : '#FF5000';
+      const color = isGreen ? PALETTE.profit : PALETTE.loss;
 
       // Map prices to Y coordinates
       const openY = toY(bar.open);
@@ -230,7 +230,7 @@ class ChartManager {
     if (position) {
       const entryY = toY(position.entryPrice);
       ctx.setLineDash([5, 5]);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.strokeStyle = 'rgba(245, 197, 66, 0.7)';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(padding, entryY);
@@ -240,7 +240,7 @@ class ChartManager {
 
       // Entry price label
       ctx.font = '11px var(--font-mono)';
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.fillStyle = 'rgba(245, 197, 66, 0.9)';
       ctx.textAlign = 'left';
       ctx.fillText(`Entry: ${this.formatPrice(position.entryPrice)}`, padding + 10, entryY - 6);
     }
@@ -249,7 +249,7 @@ class ChartManager {
     const lastBar = data[data.length - 1];
     const isGreen = lastBar.close >= lastBar.open;
     ctx.font = 'bold 18px var(--font-primary)';
-    ctx.fillStyle = isGreen ? '#00BFFF' : '#FF5000';
+    ctx.fillStyle = isGreen ? PALETTE.profit : PALETTE.loss;
     ctx.textAlign = 'left';
     ctx.fillText(this.formatPrice(lastBar.close), 20, 30);
 
@@ -318,7 +318,7 @@ class ChartManager {
       const w = tab.canvas.width;
       const h = tab.canvas.height;
 
-      ctx.fillStyle = '#0a0a0a';
+      ctx.fillStyle = PALETTE.bg;
       ctx.fillRect(0, 0, w, h);
 
       ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
@@ -364,7 +364,7 @@ class ChartManager {
     const toY = (price) => h - padding - ((price - min) / range) * (h - padding * 2);
     const spacing = (w - padding - 20) / (data.length - 1);
 
-    ctx.strokeStyle = '#5AC8FA';
+    ctx.strokeStyle = PALETTE.info;
     ctx.lineWidth = 2;
     ctx.beginPath();
     data.forEach((price, i) => {
@@ -379,14 +379,14 @@ class ChartManager {
     ctx.lineTo(padding + (data.length - 1) * spacing, h - padding);
     ctx.lineTo(padding, h - padding);
     ctx.closePath();
-    ctx.fillStyle = 'rgba(90, 200, 250, 0.1)';
+    ctx.fillStyle = 'rgba(92, 168, 255, 0.12)';
     ctx.fill();
 
     // Draw entry price line if position exists
     if (position) {
       const entryY = toY(position.entryPrice);
       ctx.setLineDash([5, 5]);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.strokeStyle = 'rgba(245, 197, 66, 0.7)';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(padding, entryY);
@@ -396,7 +396,7 @@ class ChartManager {
 
       // Entry price label
       ctx.font = '11px var(--font-mono)';
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.fillStyle = 'rgba(245, 197, 66, 0.9)';
       ctx.textAlign = 'left';
       ctx.fillText(`Entry: ${this.formatPrice(position.entryPrice)}`, padding + 10, entryY - 6);
     }
@@ -405,7 +405,7 @@ class ChartManager {
     const lastPrice = data[data.length - 1];
     const isPositive = data.length > 1 && lastPrice >= data[data.length - 2];
     ctx.font = 'bold 18px var(--font-primary)';
-    ctx.fillStyle = isPositive ? '#00BFFF' : '#FF5000';
+    ctx.fillStyle = isPositive ? PALETTE.profit : PALETTE.loss;
     ctx.textAlign = 'left';
     ctx.fillText(this.formatPrice(lastPrice), 20, 30);
 

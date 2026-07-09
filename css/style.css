@@ -3819,3 +3819,65 @@ canvas {
   from { opacity: 0; transform: rotate(-3deg) scale(1.6); }
   to   { opacity: 1; transform: rotate(-3deg) scale(1); }
 }
+
+/* ============================================================================
+   V2 THEME OVERRIDE (Phase 1, cockpit re-skin)
+   Remaps the legacy --rh-* variables to the approved DESIGN.md palette and
+   applies the Painted Trading Floor treatment. Mirrors PALETTE in config.js.
+   ============================================================================ */
+:root {
+  --rh-black: #0B0E14;
+  --rh-dark: #0D1018;
+  --rh-darker: #10141F;
+  --rh-panel: #131826;
+  --rh-panel-hover: #1B2233;
+  --rh-border: #2A3247;
+  --rh-border-strong: #3A4560;
+  --rh-text: #E8ECF4;
+  --rh-text-secondary: #8B94A8;
+  --rh-text-tertiary: #5E6678;
+  --rh-green: #33D69F;
+  --rh-green-bg: rgba(51, 214, 159, 0.12);
+  --rh-green-hover: #4FE3B2;
+  --rh-red: #FF5C5C;
+  --rh-red-bg: rgba(255, 92, 92, 0.12);
+  --rh-red-hover: #FF7A7A;
+  --rh-blue: #5CA8FF;
+  --rh-purple: #B95CFF;
+  --rh-yellow: #F5C542;
+  --rh-accent: #F5C542;
+}
+
+body {
+  font-family: 'Plex Sans', -apple-system, sans-serif;
+}
+
+/* Painted NYSE artwork glowing through behind the cockpit */
+#game-screen {
+  background:
+    linear-gradient(rgba(11, 14, 20, 0.90), rgba(11, 14, 20, 0.94)),
+    url('../assets/backgrounds/menu_bg.jpg') center / cover no-repeat fixed;
+}
+
+/* Terminal treatment: subtle scanlines + vignette over the whole cockpit */
+#game-screen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1100;
+  background:
+    radial-gradient(ellipse at center, transparent 62%, rgba(0, 0, 0, 0.26) 100%),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.024) 0 1px, transparent 1px 3px);
+}
+
+/* Live numbers get the data font + tabular numerals (DESIGN.md section 3) */
+#day-counter, #countdown-timer,
+.asset-price, .asset-change,
+.position-detail-value, .position-pnl-value,
+#quarterly-target-value, #quarterly-earnings-value, #quarterly-timer-value,
+#risk-value, #sec-value,
+.top-mover-item, .stat-value {
+  font-family: 'Plex Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}
