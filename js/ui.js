@@ -2323,6 +2323,21 @@ class GameUI {
     const netWorth = game.trading.netWorth;
     const daysRemaining = q.getDaysRemainingInQuarter(game.currentDay);
 
+    // Board mandate status (v2)
+    const mandateEl = document.getElementById('quarterly-mandate-value');
+    if (mandateEl) {
+      const status = q.getMandateStatus(game.trading);
+      if (status) {
+        mandateEl.textContent = status.blown ? `${status.label} ✗` : status.label;
+        mandateEl.classList.toggle('mandate-blown', status.blown);
+        mandateEl.parentElement.dataset.tip = status.blown
+          ? `${status.tip} You broke this one; the bonus is gone.`
+          : status.tip;
+      } else {
+        mandateEl.textContent = '—';
+      }
+    }
+
     // Level badges (1-8)
     let badgesHtml = '';
     for (let i = 0; i < CONFIG.TOTAL_QUARTERS; i++) {

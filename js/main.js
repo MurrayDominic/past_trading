@@ -307,7 +307,7 @@ class Game {
     }
 
     // Quarterly target check (net worth thresholds - pass instantly when hit)
-    const quarterResult = this.quarterly.tick(this.currentDay, this.trading.netWorth);
+    const quarterResult = this.quarterly.tick(this.currentDay, this.trading.netWorth, this.trading, this.market);
     if (quarterResult.fired) {
       this.news.addSecNews(
         `MISSED QUARTERLY TARGET - Needed ${formatMoney(quarterResult.failInfo.target)} net worth, had ${formatMoney(quarterResult.failInfo.netWorth)}`,
@@ -329,6 +329,13 @@ class Game {
       }
       this.ui.flashQuarterlyLevelUp();
 
+      if (info.mandateResult && info.mandateResult.satisfied) {
+        this.news.addNews(
+          `BOARD MANDATE MET: ${info.mandateResult.name}. Compliance bonus ${formatMoney(info.mandateResult.bonus)} paid.`,
+          'milestone', this.currentDay
+        );
+      }
+
       // Quarter evaluation takeover: auto-pauses at any speed (DESIGN.md tier 4)
       this.stopTicker();
       this.ui.showQuarterScreen({
@@ -337,6 +344,7 @@ class Game {
         target: info.target,
         nextTarget,
         allComplete: info.allComplete,
+        mandate: info.mandateResult,
         boss: this.getBossMessage(info.level, nextTarget),
         onContinue: () => { if (this.isPlaying()) this.startTicker(); }
       });

@@ -795,3 +795,30 @@ let RUN_ASCENSION = getAscension(0);
 function setRunAscension(level) {
   RUN_ASCENSION = getAscension(level);
 }
+
+// ============================================================================
+// V2 BOARD MANDATES (Phase 2)
+// One random directive per quarter. Comply and the board pays a bonus at the
+// quarter review (a percent of net worth). Ignoring it just forfeits the
+// bonus. banCategory only uses always-unlocked categories so a locked sector
+// can never hand out a free pass.
+// ============================================================================
+const BOARD_MANDATES = [
+  { id: 'banUtilities', type: 'banCategory', category: 'utilities', name: 'Utilities Freeze', bonusPct: 0.04,
+    desc: 'The board lost money on a dam. Hold no Utilities positions this quarter.' },
+  { id: 'banConsumer', type: 'banCategory', category: 'consumer', name: 'Staples Embargo', bonusPct: 0.04,
+    desc: 'The board is boycotting groceries. Hold no Consumer Staples positions this quarter.' },
+  { id: 'shortDays', type: 'shortDays', param: 15, name: 'Bear Season', bonusPct: 0.06,
+    desc: 'Keep at least one short open on 15 different days this quarter.' },
+  { id: 'tradeCount', type: 'minTrades', param: 8, name: 'Churn the Book', bonusPct: 0.04,
+    desc: 'Execute at least 8 trades this quarter. The brokers have families.' },
+  { id: 'diversify', type: 'endDiversified', param: 3, name: 'Spread the Risk', bonusPct: 0.05,
+    desc: 'End the quarter holding at least 3 open positions.' },
+  { id: 'whaleWatch', type: 'maxPositionPct', param: 0.5, name: 'Whale Watch', bonusPct: 0.05,
+    desc: 'Never let a single position exceed 50% of your net worth this quarter.' },
+];
+
+function getTickerCategory(ticker) {
+  const def = SP500_ASSETS.find(a => a.ticker === ticker);
+  return def ? (def.category || null) : null;
+}

@@ -4062,3 +4062,18 @@ body {
   color: var(--rh-text-secondary);
 }
 .ascension-picker .btn:disabled { opacity: 0.35; cursor: default; }
+
+/* Board mandates (v2) */
+.quarterly-mandate-val { color: var(--rh-blue); }
+.quarterly-mandate-val.mandate-blown { color: var(--rh-red); text-decoration: line-through; }
+.quarter-mandate {
+  display: inline-block;
+  font-family: 'Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  border-radius: 6px;
+  padding: 5px 12px;
+  margin-bottom: 12px;
+}
+.quarter-mandate.passed { color: #33D69F; border: 1px solid rgba(51, 214, 159, 0.5); }
+.quarter-mandate.failed { color: #8B94A8; border: 1px solid #2A3247; text-decoration: line-through; }
