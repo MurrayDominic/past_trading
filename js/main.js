@@ -629,6 +629,8 @@ class Game {
       if (this.market.activeEvent && result.profit > 0) {
         this.sec.addAttention(2, 'Suspiciously timed trade');
       }
+
+      this.ui.showSellTally(result.trade);
     }
 
     this.ui.showTradeResult(result);
@@ -670,6 +672,8 @@ class Game {
       if (this.market.activeEvent && result.profit > 0) {
         this.sec.addAttention(2, 'Suspiciously timed trade');
       }
+
+      this.ui.showSellTally(result.trade);
     }
 
     this.ui.showTradeResult(result);

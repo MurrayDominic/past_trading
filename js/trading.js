@@ -315,7 +315,14 @@ class TradingEngine {
 
     this.positions.splice(positionIndex, 1);
 
-    const trade = { action: 'SELL', ticker: pos.ticker, quantity: pos.quantity, price: asset.price, profit, fee, day: currentDay };
+    const trade = {
+      action: 'SELL', ticker: pos.ticker, quantity: pos.quantity, price: asset.price,
+      profit, fee, day: currentDay,
+      // v2 tally data: full breakdown of where the P&L came from
+      entryPrice: pos.entryPrice, exitPrice: asset.price,
+      leverage: pos.leverage || 1, type: pos.type,
+      daysHeld: currentDay - pos.entryDay
+    };
     this.tradeHistory.push(trade);
 
     return { success: true, message: `Sold ${pos.quantity} ${pos.ticker} @ ${formatPrice(asset.price)} (${profit >= 0 ? '+' : ''}${formatMoney(profit)})`, trade, profit };

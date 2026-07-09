@@ -119,6 +119,8 @@ class GameUI {
     this.juice.attachPopupLayer(this.el.gameScreen);
     this.cashCounter = this.juice.counter(this.el.cashDisplay);
     this.netWorthCounter = this.juice.counter(this.el.netWorthDisplay);
+    this.tradeTally = new TradeTally(this.juice);
+    this.tradeTally.attach(this.el.gameScreen);
 
     this.bindEvents();
 
@@ -2258,6 +2260,11 @@ class GameUI {
   spawnFloatingPnL(amount) {
     // Delegates to the juice engine (tiered, aggregated popups)
     this.juice.moneyPopup(amount, this.game ? this.game.trading.netWorth : 0);
+  }
+
+  showSellTally(trade) {
+    // Staged close-position receipt (DESIGN.md section 3, moment 1)
+    this.tradeTally.show(trade, this.game ? this.game.trading.netWorth : 0);
   }
 
   // ---- Run End Screen ----

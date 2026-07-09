@@ -3611,3 +3611,72 @@ canvas {
   60% { transform: translate(6px, 3px) rotate(0.4deg); }
   80% { transform: translate(-3px, 2px) rotate(0); }
 }
+
+/* Trade tally: staged close-position receipt (DESIGN.md section 3) */
+.trade-tally {
+  position: absolute;
+  top: 110px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 300px;
+  background: rgba(19, 24, 38, 0.96);
+  border: 1px solid #2A3247;
+  border-radius: 10px;
+  padding: 12px 16px;
+  z-index: 960;
+  pointer-events: none;
+  font-family: 'Plex Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.5);
+  animation: tally-in 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.trade-tally.tally-out { opacity: 0; transition: opacity 0.5s ease; }
+.tally-head {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #E8ECF4;
+  margin-bottom: 8px;
+}
+.tally-lev { color: #F5C542; }
+.tally-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  font-size: 12px;
+  color: #8B94A8;
+  padding: 2px 0;
+  opacity: 0;
+  transform: translateY(6px);
+}
+.tally-row.shown { opacity: 1; transform: translateY(0); transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.tally-row .tally-val { color: #E8ECF4; }
+.tally-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 24px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #2A3247;
+  font-weight: 700;
+  opacity: 0;
+  transform: translateY(6px) scale(0.9);
+}
+.tally-total.shown { opacity: 1; transform: translateY(0) scale(1); transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.tally-total span:first-child { font-size: 11px; letter-spacing: 0.1em; color: #8B94A8; }
+.tally-pnl { font-size: 22px; }
+.tally-up .tally-pnl { color: #33D69F; }
+.tally-down .tally-pnl { color: #FF5C5C; }
+.tally-t2 .tally-pnl { text-shadow: 0 0 8px currentColor; }
+.tally-t3 .tally-pnl { font-size: 28px; text-shadow: 0 0 14px currentColor; }
+.tally-fire .tally-pnl { animation: tally-burn 0.6s ease-in-out infinite alternate; }
+
+@keyframes tally-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(-10px) scale(0.94); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+@keyframes tally-burn {
+  from { text-shadow: 0 0 10px currentColor, 0 0 22px rgba(245, 197, 66, 0.6); }
+  to   { text-shadow: 0 0 18px currentColor, 0 0 40px rgba(245, 197, 66, 0.9), 0 -6px 26px rgba(255, 92, 92, 0.7); }
+}
