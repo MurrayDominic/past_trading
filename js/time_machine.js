@@ -52,6 +52,10 @@ class TimeMachine {
       // Futures data runs from 2001 onward
       specials.push(this._makeDestination(2001 + Math.floor(Math.random() * 23), 'commodities'));
     }
+    if (unlocks && unlocks.forexTrading) {
+      // ECB rates run from 1999 onward
+      specials.push(this._makeDestination(2000 + Math.floor(Math.random() * 24), 'forex'));
+    }
     const slots = [0, 1, 2].sort(() => Math.random() - 0.5);
     specials.slice(0, offers.length - 1).forEach((s, i) => { offers[slots[i]] = s; });
     return offers;

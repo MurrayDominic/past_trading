@@ -159,6 +159,13 @@ const STOCK_CATEGORIES = {
     icon: '🛢️',
     unlocked: false,
     sortOrder: 10
+  },
+  forex: {
+    name: 'Forex',
+    description: 'Currency pairs from the ECB reference rates. Real macro history.',
+    icon: '💱',
+    unlocked: false,
+    sortOrder: 11
   }
 };
 
@@ -213,19 +220,17 @@ const TRADING_MODES = {
   },
   forex: {
     name: 'Forex',
-    description: 'Currency pairs. The market that never sleeps.',
-    comingSoon: true,
-    unlockRun: 3,
-    unlockCost: 2500000,
+    description: 'Currency pairs. Slow, until they are very much not.',
+    comingSoon: false,
     volatilityMod: 0.6,
     feeMod: 0.3,
     secHeatMod: 0.5,
     assets: [
-      { ticker: 'EUR/USD', name: 'Euro / Dollar', basePrice: 1.0850 },
-      { ticker: 'GBP/USD', name: 'Pound / Dollar', basePrice: 1.2650 },
-      { ticker: 'USD/JPY', name: 'Dollar / Yen', basePrice: 149.50 },
-      { ticker: 'USD/CHF', name: 'Dollar / Franc', basePrice: 0.8750 },
-      { ticker: 'AUD/USD', name: 'Aussie / Dollar', basePrice: 0.6550 },
+      { ticker: 'EURUSD', name: 'Euro / US Dollar',         basePrice: 1.0850, category: 'forex', dataCategory: 'forex' },
+      { ticker: 'GBPUSD', name: 'Pound / US Dollar',        basePrice: 1.2650, category: 'forex', dataCategory: 'forex' },
+      { ticker: 'USDJPY', name: 'US Dollar / Yen',          basePrice: 149.50, category: 'forex', dataCategory: 'forex' },
+      { ticker: 'USDCHF', name: 'US Dollar / Swiss Franc',  basePrice: 0.8750, category: 'forex', dataCategory: 'forex' },
+      { ticker: 'AUDUSD', name: 'Aussie / US Dollar',       basePrice: 0.6550, category: 'forex', dataCategory: 'forex' },
     ]
   },
   commodities: {
@@ -348,6 +353,14 @@ const UNLOCKS = {
     category: 'sectors',
     unlocksCategory: 'commodities',
     requires: 'cryptoTrading'
+  },
+  forexTrading: {
+    name: 'FX Desk',
+    cost: 250000,
+    description: 'Five major currency pairs, real ECB rates since 1999. Brexit night and the franc depeg are in there. Time Machine gains forex destinations.',
+    category: 'sectors',
+    unlocksCategory: 'forex',
+    requires: 'commoditiesTrading'
   },
   lowerSurv2:    { name: 'Low Profile II', cost: 200000, description: 'SEC attention grows 40% slower', category: 'stealth', survReduction: 0.40, requires: 'lowerSurv1' },
   fundManager:   { name: 'Fund Manager', cost: 200000, description: 'Manage OPM. AUM bonuses.', category: 'career', repLevel: 4, requires: 'hedgeFund' },

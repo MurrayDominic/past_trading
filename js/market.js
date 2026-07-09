@@ -49,6 +49,12 @@ class Market {
         availableAssets = availableAssets.concat(commodityAssets);
       }
 
+      // FX Desk unlock appends the currency pairs (v2)
+      if (progression.data.unlocks && progression.data.unlocks.forexTrading) {
+        const forexAssets = (TRADING_MODES.forex && TRADING_MODES.forex.assets) || [];
+        availableAssets = availableAssets.concat(forexAssets);
+      }
+
       console.log(`Filtered to ${availableAssets.length} unlocked assets`);
     }
 
