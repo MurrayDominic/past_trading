@@ -121,6 +121,7 @@ class GameUI {
     this.netWorthCounter = this.juice.counter(this.el.netWorthDisplay);
     this.tradeTally = new TradeTally(this.juice);
     this.tradeTally.attach(this.el.gameScreen);
+    this.quarterScreen = new QuarterScreen(this.juice);
 
     this.bindEvents();
 
@@ -2265,6 +2266,11 @@ class GameUI {
   showSellTally(trade) {
     // Staged close-position receipt (DESIGN.md section 3, moment 1)
     this.tradeTally.show(trade, this.game ? this.game.trading.netWorth : 0);
+  }
+
+  showQuarterScreen(data) {
+    // Full-screen quarter evaluation ceremony (DESIGN.md section 3, moment 2)
+    this.quarterScreen.show(data);
   }
 
   // ---- Run End Screen ----

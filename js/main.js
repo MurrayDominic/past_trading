@@ -316,16 +316,28 @@ class Game {
     }
     if (quarterResult.levelUp) {
       const info = quarterResult.levelUpInfo;
+      const nextTarget = this.quarterly.isAllComplete() ? null : this.quarterly.getCurrentTarget().target;
       if (info.allComplete) {
         this.news.addNews(`ALL 8 QUARTERLY TARGETS COMPLETE! Bonus awarded.`, 'milestone', this.currentDay);
       } else {
         this.news.addNews(
-          `NET WORTH TARGET HIT! Level ${info.level} complete. Next: reach ${formatMoney(this.quarterly.getCurrentTarget().target)}`,
+          `NET WORTH TARGET HIT! Level ${info.level} complete. Next: reach ${formatMoney(nextTarget)}`,
           'milestone', this.currentDay
         );
       }
-      this.showBossMessage(info.level, this.quarterly.isAllComplete() ? null : this.quarterly.getCurrentTarget().target);
       this.ui.flashQuarterlyLevelUp();
+
+      // Quarter evaluation takeover: auto-pauses at any speed (DESIGN.md tier 4)
+      this.stopTicker();
+      this.ui.showQuarterScreen({
+        level: info.level,
+        netWorth: this.trading.netWorth,
+        target: info.target,
+        nextTarget,
+        allComplete: info.allComplete,
+        boss: this.getBossMessage(info.level, nextTarget),
+        onContinue: () => { if (this.isPlaying()) this.startTicker(); }
+      });
     }
 
     // Audio feedback based on net worth changes
@@ -1047,7 +1059,7 @@ class Game {
     return this.progression.equipTitle(titleId);
   }
 
-  showBossMessage(quarterLevel, nextTarget) {
+  getBossMessage(quarterLevel, nextTarget) {
     const nextStr = nextTarget ? formatMoney(nextTarget) : null;
 
     const messages = [
@@ -1071,7 +1083,7 @@ class Game {
 
     const idx = Math.min(quarterLevel - 1, messages.length - 1);
     const title = quarterLevel === 8 ? '📞 Your Boss (Final Call)' : `📞 Your Boss (Q${quarterLevel} Complete)`;
-    this.showToast(title, messages[idx], 'info', 12000);
+    return { title, message: messages[idx] };
   }
 
   showWarning(title, message) {
