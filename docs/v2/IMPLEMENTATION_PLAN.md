@@ -136,6 +136,8 @@ Acceptance: daily run works on a second machine; archetypes meaningfully change 
 
 ## Status log
 
+- **2026-07-09 (balance bot findings):** `scripts/balance_bot.js` simulates buy-and-hold against the quarterly ladder using the real shipped data. Results over 23 start years: equal-weight buy-and-hold of all default-unlocked stocks passes ZERO quarters every year; a perfect-hindsight single-stock pick averages Q1.2 of 8 (best ever: Q3 in 2021). Conclusion: passive play cannot beat the ladder, which matches the design intent that decisions are mandatory. Open question for playtesting: whether ACTIVE knowledge-driven trading can reasonably clear Q1 (+50% in 91 days) on the two starter sectors with no unlocks, or whether new players are mathematically doomed on run 1 (a possible driver of the v1 refunds). Do not rebalance targets until playtest data answers this. Re-run the bot after the shop rebalance as a power-creep guardrail.
+
 - **2026-07-08:** Research phase complete (5 reports + summary). All strategic decisions locked: refit not rewrite, free 2.0 update, two run formats (Career + Time Machine), options shelved, day trading is the slip candidate. Plans committed to master via v2-planning branch (commit 6c1c41c). Phase task list created in the session task tracker. **Phase 0 started same day**: DESIGN.md, bundled fonts, and cockpit mockups (mockups/ folder) produced for Dominic's review.
 
 ## Standing risks
