@@ -97,7 +97,7 @@ class ChartManager {
     });
   }
 
-  renderActiveChart(market, currentDay, mode, positions = [], tradeHistory = []) {
+  renderActiveChart(market, currentDay, mode, positions = [], tradeHistory = [], extras = null) {
     const activeTab = this.tabs.find(t => t.active);
     if (!activeTab) return;
 
@@ -114,7 +114,7 @@ class ChartManager {
     if (mode === 'dayTrading' && asset.ohlcHistory && asset.ohlcHistory.length > 1) {
       this.renderCandlestickChart(activeTab, asset, positions, market.startDate, currentDay);
     } else if (asset.history && asset.history.length > 1) {
-      this.renderLineChart(activeTab, asset, positions, market.startDate, currentDay, tradeHistory);
+      this.renderLineChart(activeTab, asset, positions, market.startDate, currentDay, tradeHistory, market, extras);
     } else {
       // Show "Loading..." message when data is insufficient
       const ctx = activeTab.canvas.getContext('2d');
@@ -285,7 +285,7 @@ class ChartManager {
     }
   }
 
-  renderLineChart(tab, asset, positions = [], startDate = null, currentDay = 0, tradeHistory = []) {
+  renderLineChart(tab, asset, positions = [], startDate = null, currentDay = 0, tradeHistory = [], market = null, extras = null) {
     const ctx = tab.ctx;
     const canvas = tab.canvas;
     const w = canvas.width;
@@ -339,6 +339,30 @@ class ChartManager {
       max = Math.max(max, position.entryPrice);
     }
 
+    // v2 memory bands: with the Almanac unlock, the chart's right edge shows
+    // a fuzzy cone around the REAL future path. Nothing is invented; the fuzz
+    // is how vaguely you remember it. An active insider tip draws the real
+    // line, ghosted, out to the tip's horizon.
+    const FUTURE_DAYS = 45;
+    let future = null;
+    let tipGhostDays = 0;
+    if (market && extras && extras.almanac) {
+      future = [];
+      for (let i = 1; i <= FUTURE_DAYS; i++) {
+        const f = market.peekFutureClose(asset.ticker, i);
+        if (f === null) break;
+        future.push(f);
+        const fuzz = 0.012 + i * 0.004;
+        min = Math.min(min, f * (1 - fuzz));
+        max = Math.max(max, f * (1 + fuzz));
+      }
+      if (!future.length) future = null;
+      if (future && extras.tips) {
+        const tip = extras.tips.find(t => t.ticker === asset.ticker && !t.resolved);
+        if (tip) tipGhostDays = Math.min(future.length, Math.max(1, tip.expiresDay - currentDay));
+      }
+    }
+
     const range = max - min;
     if (range === 0 || !isFinite(range)) return;
 
@@ -360,9 +384,10 @@ class ChartManager {
       ctx.stroke();
     }
 
-    // Draw line
+    // Draw line (history compresses left when a future band is shown)
     const toY = (price) => h - padding - ((price - min) / range) * (h - padding * 2);
-    const spacing = (w - padding - 20) / (data.length - 1);
+    const chartRight = future ? padding + (w - padding - 20) * 0.8 : w - 20;
+    const spacing = (chartRight - padding) / (data.length - 1);
 
     ctx.strokeStyle = PALETTE.info;
     ctx.lineWidth = 2;
@@ -432,6 +457,54 @@ class ChartManager {
           ctx.arc(x, y, 4, 0, Math.PI * 2);
           ctx.fill();
         }
+      }
+    }
+
+    // v2 memory bands: the fuzzy cone of what you remember coming
+    if (future) {
+      const xToday = padding + (data.length - 1) * spacing;
+      const fSpacing = (w - 20 - xToday) / FUTURE_DAYS;
+      const lastY = toY(data[data.length - 1]);
+
+      ctx.strokeStyle = 'rgba(232, 236, 244, 0.15)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(xToday, padding);
+      ctx.lineTo(xToday, h - padding);
+      ctx.stroke();
+
+      for (let layer = 3; layer >= 1; layer--) {
+        ctx.beginPath();
+        ctx.moveTo(xToday, lastY);
+        for (let i = 0; i < future.length; i++) {
+          const fuzz = (0.012 + (i + 1) * 0.004) * layer / 2;
+          ctx.lineTo(xToday + (i + 1) * fSpacing, toY(future[i] * (1 + fuzz)));
+        }
+        for (let i = future.length - 1; i >= 0; i--) {
+          const fuzz = (0.012 + (i + 1) * 0.004) * layer / 2;
+          ctx.lineTo(xToday + (i + 1) * fSpacing, toY(future[i] * (1 - fuzz)));
+        }
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(92, 168, 255, 0.05)';
+        ctx.fill();
+      }
+
+      ctx.font = '10px var(--font-mono)';
+      ctx.fillStyle = 'rgba(92, 168, 255, 0.75)';
+      ctx.textAlign = 'left';
+      ctx.fillText('you remember…', xToday + 6, padding + 12);
+
+      if (tipGhostDays > 0) {
+        ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = 'rgba(245, 197, 66, 0.8)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(xToday, lastY);
+        for (let i = 0; i < tipGhostDays; i++) {
+          ctx.lineTo(xToday + (i + 1) * fSpacing, toY(future[i]));
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
       }
     }
 

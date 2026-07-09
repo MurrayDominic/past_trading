@@ -146,7 +146,7 @@ class GameUI {
           this.chartManager.renderActiveChart(
             this.game.market, this.game.currentDay,
             this.game.selectedMode, this.game.trading.positions,
-            this.game.trading.tradeHistory
+            this.game.trading.tradeHistory, this._chartExtras(this.game)
           );
         }
       }
@@ -455,7 +455,8 @@ class GameUI {
               this.game.currentDay,
               this.game.selectedMode,
               this.game.trading.positions,
-              this.game.trading.tradeHistory
+              this.game.trading.tradeHistory,
+              this._chartExtras(this.game)
             );
           }
         }
@@ -1642,7 +1643,7 @@ class GameUI {
 
     // Chart manager
     if (this.chartManager) {
-      this.chartManager.renderActiveChart(game.market, game.currentDay, game.selectedMode, game.trading.positions, game.trading.tradeHistory);
+      this.chartManager.renderActiveChart(game.market, game.currentDay, game.selectedMode, game.trading.positions, game.trading.tradeHistory, this._chartExtras(game));
     }
 
     // Quarterly target panel
@@ -2498,6 +2499,14 @@ class GameUI {
   spawnFloatingPnL(amount) {
     // Delegates to the juice engine (tiered, aggregated popups)
     this.juice.moneyPopup(amount, this.game ? this.game.trading.netWorth : 0);
+  }
+
+  // v2 memory bands: what the chart is allowed to remember about the future
+  _chartExtras(game) {
+    return {
+      almanac: !!(game.progression && game.progression.data.unlocks.timeTravelersAlmanac),
+      tips: game.tips ? game.tips.getActiveTips() : [],
+    };
   }
 
   showSellTally(trade) {
