@@ -268,6 +268,24 @@ class GameUI {
     if (yearSelectBackBtn) {
       yearSelectBackBtn.addEventListener('click', () => this.showMenu());
     }
+
+    // Random year (v2): the machine picks, you cope
+    const randomYearBtn = document.getElementById('random-year-btn');
+    if (randomYearBtn) {
+      randomYearBtn.addEventListener('click', () => {
+        const year = 2000 + Math.floor(Math.random() * 24);
+        this.el.startYearSlider.value = year;
+        this.updateYearDisplay(year);
+      });
+    }
+
+    // Ascension difficulty picker (v2)
+    const ascDown = document.getElementById('asc-down');
+    const ascUp = document.getElementById('asc-up');
+    if (ascDown && ascUp) {
+      ascDown.addEventListener('click', () => this.setAscension(this.game.ascensionLevel - 1));
+      ascUp.addEventListener('click', () => this.setAscension(this.game.ascensionLevel + 1));
+    }
     const yearSelectStartBtn = document.getElementById('year-select-start-btn');
     if (yearSelectStartBtn) {
       yearSelectStartBtn.addEventListener('click', () => {
@@ -607,6 +625,30 @@ class GameUI {
       const startYear = parseInt(this.el.startYearSlider.value);
       this.updateYearDisplay(startYear);
     }
+    this.setAscension(this.game.ascensionLevel);
+  }
+
+  // Clamp and display the chosen ascension level (v2 difficulty ladder)
+  setAscension(level) {
+    const asc = this.game.progression.data.ascension || { maxUnlocked: 0 };
+    const clamped = Math.max(0, Math.min(level, asc.maxUnlocked));
+    this.game.ascensionLevel = clamped;
+    const info = getAscension(clamped);
+
+    const levelEl = document.getElementById('asc-level');
+    const nameEl = document.getElementById('asc-name');
+    const descEl = document.getElementById('asc-desc');
+    const upBtn = document.getElementById('asc-up');
+    const downBtn = document.getElementById('asc-down');
+    if (levelEl) levelEl.textContent = clamped;
+    if (nameEl) nameEl.textContent = info.name;
+    if (descEl) {
+      descEl.textContent = clamped === asc.maxUnlocked && asc.maxUnlocked < ASCENSION_LEVELS.length - 1 && clamped > 0
+        ? `${info.desc} Credits ×${info.ppMult || 1}.`
+        : (clamped === 0 ? info.desc : `${info.desc} Credits ×${info.ppMult || 1}.`);
+    }
+    if (upBtn) upBtn.disabled = clamped >= asc.maxUnlocked;
+    if (downBtn) downBtn.disabled = clamped <= 0;
   }
 
   getRunYears() {

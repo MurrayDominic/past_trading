@@ -23,6 +23,7 @@ class Game {
     this.selectedMode = 'stocks';
     this.selectedAsset = null;
     this.selectedYears = { start: 2008, end: 2009 }; // Default: 2-year fixed run
+    this.ascensionLevel = 0;  // v2 difficulty ladder, chosen at year select
 
     // Intraday time tracking
     this.isIntraday = false;
@@ -162,7 +163,8 @@ class Game {
       else if (this.progression.data.unlocks.timeInMarket2) extraYearDays = 2 * 365;
       else if (this.progression.data.unlocks.timeInMarket1) extraYearDays = 1 * 365;
       this.quarterly.init(CONFIG.STARTING_CASH, extraYearDays);
-      this.sec.init();
+      setRunAscension(this.ascensionLevel);
+    this.sec.init();
 
       // TED Talk: start with reduced SEC attention
       if (this.progression.data.unlocks.tedTalk) {
@@ -597,7 +599,8 @@ class Game {
       this.sec,
       this.currentDay,
       reason === 'arrested',
-      this.quarterly
+      this.quarterly,
+      this.ascensionLevel
     );
 
     // Submit to leaderboard

@@ -23,6 +23,9 @@ class ProgressionSystem {
       watchlist: [],
       earnedAchievements: {},
       runHistory: [],
+      ascension: {
+        maxUnlocked: 0,   // highest selectable difficulty level
+      },
       bestScores: {
         sharpe: 0,
         longestSurvival: 0,
@@ -55,6 +58,9 @@ class ProgressionSystem {
         }
         if (savedData.bestScores) {
           this.data.bestScores = { ...defaultData.bestScores, ...savedData.bestScores };
+        }
+        if (savedData.ascension) {
+          this.data.ascension = { ...defaultData.ascension, ...savedData.ascension };
         }
 
         // MIGRATION: Backfill ownedUnlocks from unlocks for existing saves
@@ -120,7 +126,7 @@ class ProgressionSystem {
     }
   }
 
-  endRun(tradingEngine, secSystem, currentDay, wasArrested, quarterlySystem = null) {
+  endRun(tradingEngine, secSystem, currentDay, wasArrested, quarterlySystem = null, ascensionLevel = 0) {
     this.data.runCount++;
 
     if (wasArrested) {
@@ -155,10 +161,21 @@ class ProgressionSystem {
       }
     }
 
+    // Ascension payout multiplier (v2): harder runs pay more
+    creditsEarned *= (getAscension(ascensionLevel).ppMult || 1);
+
     creditsEarned = Math.floor(creditsEarned);
 
     this.data.upgradeCredits += creditsEarned;
     this.data.totalCreditsEarned += creditsEarned;
+
+    // Completing all 8 quarters at your highest unlocked level unlocks the next
+    if (!this.data.ascension) this.data.ascension = { maxUnlocked: 0 };
+    if (quarterlySystem && quarterlySystem.isAllComplete()
+        && ascensionLevel >= this.data.ascension.maxUnlocked
+        && this.data.ascension.maxUnlocked < ASCENSION_LEVELS.length - 1) {
+      this.data.ascension.maxUnlocked = ascensionLevel + 1;
+    }
 
     // Record run with skill metrics
     const runRecord = {

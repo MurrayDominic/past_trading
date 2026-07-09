@@ -90,10 +90,11 @@ class QuarterlyTargetSystem {
   }
 
   getCurrentTarget() {
-    if (this.currentQuarter >= CONFIG.QUARTERLY_TARGETS.length) {
-      return CONFIG.QUARTERLY_TARGETS[CONFIG.QUARTERLY_TARGETS.length - 1];
-    }
-    return CONFIG.QUARTERLY_TARGETS[this.currentQuarter];
+    const idx = Math.min(this.currentQuarter, CONFIG.QUARTERLY_TARGETS.length - 1);
+    const base = CONFIG.QUARTERLY_TARGETS[idx];
+    const mult = RUN_ASCENSION.targetMult || 1;
+    if (mult === 1) return base;
+    return { ...base, target: Math.round(base.target * mult) };
   }
 
   getDaysRemainingInQuarter(currentDay) {

@@ -135,7 +135,7 @@ class TradingEngine {
       return { success: false, message: 'Invalid trading mode' };
     }
 
-    const feePercent = CONFIG.BASE_FEE_PERCENT * modeConfig.feeMod * (1 - feeReduction);
+    const feePercent = CONFIG.BASE_FEE_PERCENT * modeConfig.feeMod * (1 - feeReduction) * (RUN_ASCENSION.feeMult || 1);
 
     // Calculate shares from dollar amount
     let fee = dollarAmount * feePercent / 100;
@@ -225,7 +225,7 @@ class TradingEngine {
 
     const feeReduction = this.getFeeReduction(metaProgression);
     const modeConfig = TRADING_MODES[market.currentMode];
-    const feePercent = CONFIG.BASE_FEE_PERCENT * modeConfig.feeMod * (1 - feeReduction);
+    const feePercent = CONFIG.BASE_FEE_PERCENT * modeConfig.feeMod * (1 - feeReduction) * (RUN_ASCENSION.feeMult || 1);
 
     const saleValue = asset.price * pos.quantity;
     const fee = saleValue * feePercent / 100;
@@ -340,7 +340,7 @@ class TradingEngine {
     const leverage = this.getLeverage(metaProgression);
     const feeReduction = this.getFeeReduction(metaProgression);
     const modeConfig = TRADING_MODES[market.currentMode];
-    const feePercent = CONFIG.BASE_FEE_PERCENT * modeConfig.feeMod * (1 - feeReduction);
+    const feePercent = CONFIG.BASE_FEE_PERCENT * modeConfig.feeMod * (1 - feeReduction) * (RUN_ASCENSION.feeMult || 1);
 
     const fee = dollarAmount * feePercent / 100;
     const collateral = dollarAmount / leverage + fee;

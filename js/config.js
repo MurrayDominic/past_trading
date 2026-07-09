@@ -764,3 +764,34 @@ const PALETTE = {
   text: '#E8ECF4',
   textDim: '#8B94A8',
 };
+
+// ============================================================================
+// V2 ASCENSION LADDER (Phase 2)
+// Each level states its TOTAL effect (not a delta). Completing all 8 quarters
+// at your highest unlocked level unlocks the next one. ppMult scales credits.
+// ============================================================================
+const ASCENSION_LEVELS = [
+  { level: 0,  name: 'Intern',            desc: 'The baseline experience.' },
+  { level: 1,  name: 'Analyst',           desc: 'SEC attention decays 15% slower.', secDecayMult: 0.85, ppMult: 1.15 },
+  { level: 2,  name: 'Associate',         desc: 'SEC hits sting 20% harder.', secDecayMult: 0.85, secHitMult: 1.2, ppMult: 1.3 },
+  { level: 3,  name: 'Vice President',    desc: 'The arrest window drops to 55-90%.', secDecayMult: 0.85, secHitMult: 1.2, arrestMin: 55, arrestMax: 90, ppMult: 1.45 },
+  { level: 4,  name: 'Director',          desc: 'Fees are 50% higher.', secDecayMult: 0.85, secHitMult: 1.2, arrestMin: 55, arrestMax: 90, feeMult: 1.5, ppMult: 1.6 },
+  { level: 5,  name: 'Managing Director', desc: 'Quarterly targets are 15% higher.', secDecayMult: 0.85, secHitMult: 1.2, arrestMin: 55, arrestMax: 90, feeMult: 1.5, targetMult: 1.15, ppMult: 1.8 },
+  { level: 6,  name: 'Partner',           desc: 'SEC hits sting 35% harder.', secDecayMult: 0.85, secHitMult: 1.35, arrestMin: 55, arrestMax: 90, feeMult: 1.5, targetMult: 1.15, ppMult: 2.0 },
+  { level: 7,  name: 'Senior Partner',    desc: 'SEC attention decays 40% slower.', secDecayMult: 0.6, secHitMult: 1.35, arrestMin: 55, arrestMax: 90, feeMult: 1.5, targetMult: 1.15, ppMult: 2.25 },
+  { level: 8,  name: 'Board Member',      desc: 'Arrest window 50-80%. Targets 30% higher.', secDecayMult: 0.6, secHitMult: 1.35, arrestMin: 50, arrestMax: 80, feeMult: 1.5, targetMult: 1.3, ppMult: 2.5 },
+  { level: 9,  name: 'The Whale',         desc: 'Targets 50% higher. Fees doubled.', secDecayMult: 0.6, secHitMult: 1.35, arrestMin: 50, arrestMax: 80, feeMult: 2.0, targetMult: 1.5, ppMult: 2.75 },
+  { level: 10, name: 'Time Criminal',     desc: 'Everything, turned up. Good luck.', secDecayMult: 0.45, secHitMult: 1.5, arrestMin: 45, arrestMax: 75, feeMult: 2.5, targetMult: 1.75, ppMult: 3.25 },
+];
+
+function getAscension(level) {
+  const idx = Math.max(0, Math.min(level || 0, ASCENSION_LEVELS.length - 1));
+  return ASCENSION_LEVELS[idx];
+}
+
+// The active run's ascension mods. Set by Game.startRun; read by sec.js,
+// quarterly.js, trading.js and progression.js. Not persisted.
+let RUN_ASCENSION = getAscension(0);
+function setRunAscension(level) {
+  RUN_ASCENSION = getAscension(level);
+}

@@ -4022,3 +4022,43 @@ body {
   pointer-events: none;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
 }
+
+/* Ascension difficulty picker on year select (v2) */
+.ascension-picker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  margin: 14px auto;
+  padding: 10px 16px;
+  max-width: 640px;
+  background: var(--rh-panel);
+  border: 1px solid var(--rh-border);
+  border-radius: 8px;
+}
+.ascension-label {
+  font-family: 'Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--rh-text-secondary);
+}
+.ascension-level {
+  font-family: 'Plex Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--rh-yellow);
+  min-width: 24px;
+  text-align: center;
+}
+.ascension-name {
+  font-family: 'Plex Sans', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--rh-text);
+}
+.ascension-desc {
+  font-family: 'Plex Sans', sans-serif;
+  font-size: 11.5px;
+  color: var(--rh-text-secondary);
+}
+.ascension-picker .btn:disabled { opacity: 0.35; cursor: default; }

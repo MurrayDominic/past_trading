@@ -13,8 +13,9 @@ class SECSystem {
     this.pendingTips = [];       // insider tips waiting to resolve
     this.activeIllegalActions = [];
     this.warningShown = false;
-    // Randomize arrest threshold between 60-100%
-    this.arrestThreshold = 60 + Math.random() * 40;
+    // Randomize arrest threshold inside the ascension window (base 60-100%)
+    this.arrestThreshold = (RUN_ASCENSION.arrestMin || 60)
+      + Math.random() * ((RUN_ASCENSION.arrestMax || 100) - (RUN_ASCENSION.arrestMin || 60));
   }
 
   init() {
@@ -27,8 +28,9 @@ class SECSystem {
     this.pendingTips = [];
     this.activeIllegalActions = [];
     this.warningShown = false;
-    // Randomize arrest threshold between 60-100%
-    this.arrestThreshold = 60 + Math.random() * 40;
+    // Randomize arrest threshold inside the ascension window (base 60-100%)
+    this.arrestThreshold = (RUN_ASCENSION.arrestMin || 60)
+      + Math.random() * ((RUN_ASCENSION.arrestMax || 100) - (RUN_ASCENSION.arrestMin || 60));
     // Survival unlock tracking
     this.fallGuyUsed = false;
     this.bailFundUsed = false;
@@ -40,7 +42,7 @@ class SECSystem {
     this._meta = metaProgression;
 
     // Natural decay
-    let decay = CONFIG.SEC_DECAY_PER_DAY;
+    let decay = CONFIG.SEC_DECAY_PER_DAY * (RUN_ASCENSION.secDecayMult || 1);
 
     // Passive decay bonus from unlocks
     if (metaProgression) {
@@ -137,13 +139,13 @@ class SECSystem {
   }
 
   isArrested() {
-    // No arrest possible below 60%
-    if (this.attention < 60) return false;
+    // No arrest possible below the ascension window's floor (base 60%)
+    if (this.attention < (RUN_ASCENSION.arrestMin || 60)) return false;
 
     // Guarantee arrest at 95%+
     if (this.attention >= 95) return true;
 
-    // Between 60-95%, arrest when threshold is reached
+    // Inside the window, arrest when the hidden threshold is reached
     return this.attention >= this.arrestThreshold;
   }
 
@@ -162,7 +164,7 @@ class SECSystem {
   }
 
   addAttention(amount, reason) {
-    this.attention = Math.min(100, this.attention + amount);
+    this.attention = Math.min(100, this.attention + amount * (RUN_ASCENSION.secHitMult || 1));
     this.activeIllegalActions.push({ amount, reason, day: 0 });
     // Keep only recent 20
     if (this.activeIllegalActions.length > 20) {
