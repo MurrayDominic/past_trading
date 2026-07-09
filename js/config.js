@@ -914,6 +914,8 @@ const JUMP_PERKS = [
     desc: 'A whistleblower-grade tip waiting for you on arrival. Clean hands, no heat.' },
   { id: 'aperture', icon: '🔭', name: 'Wider Aperture', costPct: 0.06, costMin: 600,
     desc: 'Overcharge the machine: reveal one extra destination window right now.' },
+  { id: 'pilot', icon: '🧭', name: 'Pilot License', costPct: 0.12, costMin: 1500,
+    desc: 'Take the wheel: set the destination year yourself. The month is still up to physics.' },
 ];
 
 // Crypto era hints (v2 Phase 4): shown on crypto destination windows

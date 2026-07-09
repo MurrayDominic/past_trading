@@ -31,6 +31,7 @@ class QuarterScreen {
         </div>
         <div class="quarter-stamp hidden">TARGET MET · ${Math.round(pct)}%</div>
         ${data.mandate ? `<div class="quarter-mandate ${data.mandate.satisfied ? 'passed' : 'failed'}">BOARD MANDATE · ${data.mandate.name} · ${data.mandate.satisfied ? `PASSED, BONUS ${Juice.formatMoney(data.mandate.bonus)}` : 'FAILED, NO BONUS'}</div>` : ''}
+        ${data.liquidated ? `<div class="quarter-mandate passed">TEMPORAL TRANSIT · ${data.liquidated} POSITION${data.liquidated === 1 ? '' : 'S'} SETTLED INTO CASH</div>` : ''}
         ${data.boss ? `<div class="quarter-boss"><div class="quarter-boss-title">${data.boss.title}</div><div class="quarter-boss-msg">${data.boss.message}</div></div>` : ''}
         ${data.nextTarget ? `<div class="quarter-next">NEXT TARGET <span>${Juice.formatMoney(data.nextTarget)}</span> · 91 DAYS</div>` : `<div class="quarter-next quarter-next-final">RIDE OUT THE CLOCK. THE BILLION IS YOURS.</div>`}
         <button class="btn btn-primary btn-large" id="quarter-continue-btn">BACK TO THE DESK</button>

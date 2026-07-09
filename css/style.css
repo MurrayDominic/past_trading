@@ -4404,3 +4404,25 @@ body {
 
 #advanced-toggle { display: block; margin: 12px auto 0; }
 #advanced-options { margin-top: 6px; }
+
+/* Pilot License steering card (v2) */
+.dest-option.dest-steering {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  border-color: rgba(245, 197, 66, 0.55);
+  cursor: default;
+}
+.steer-year {
+  background: #0B0E14;
+  color: #F5C542;
+  border: 1px solid #2A3247;
+  border-radius: 6px;
+  font-family: 'Plex Mono', monospace;
+  font-size: 22px;
+  font-weight: 700;
+  padding: 6px 10px;
+  text-align: center;
+}
+#shop-respec-btn { width: 100%; margin: 8px 0 12px; }

@@ -5,7 +5,8 @@
 class LeaderboardSystem {
   constructor() {
     this.boards = {
-      highScore: [],    // Personal best net worth
+      highScore: [],    // Career: personal best net worth
+      timeMachine: [],  // Time Machine runs rank separately (v2)
     };
   }
 
@@ -15,10 +16,13 @@ class LeaderboardSystem {
       if (parsed) {
         // Migration: if old format, keep highScore or convert longestSurvival
         if (parsed.highScore) {
-          this.boards = { highScore: parsed.highScore };
+          this.boards = {
+            highScore: parsed.highScore,
+            timeMachine: parsed.timeMachine || [],
+          };
         } else {
           // Old save - start fresh
-          this.boards = { highScore: [] };
+          this.boards = { highScore: [], timeMachine: [] };
         }
       }
     } catch (e) {
@@ -34,7 +38,7 @@ class LeaderboardSystem {
     }
   }
 
-  submitRun(tradingEngine, currentDay, wasArrested, runNumber) {
+  submitRun(tradingEngine, currentDay, wasArrested, runNumber, format = 'career') {
     const netWorth = tradingEngine.netWorth;
     const profit = netWorth - CONFIG.STARTING_CASH;
     const stats = tradingEngine.stats;
@@ -44,8 +48,11 @@ class LeaderboardSystem {
       date: new Date().toLocaleDateString(),
     };
 
-    // Personal high score by net worth
-    this.addEntry('highScore', {
+    // Time Machine runs rank on their own board (v2)
+    const boardName = format === 'timeMachine' ? 'timeMachine' : 'highScore';
+    if (!this.boards[boardName]) this.boards[boardName] = [];
+
+    this.addEntry(boardName, {
       ...entry,
       score: netWorth,
       display: formatMoney(netWorth),
@@ -55,7 +62,7 @@ class LeaderboardSystem {
     }, (a, b) => b.score - a.score);
 
     // Store direct reference to the entry (if it made the board)
-    this._lastEntry = this.boards.highScore.find(e => e.run === runNumber) || null;
+    this._lastEntry = this.boards[boardName].find(e => e.run === runNumber) || null;
     this.save();
   }
 
@@ -80,12 +87,13 @@ class LeaderboardSystem {
 
   getBoardNames() {
     return {
-      highScore: 'Personal High Scores',
+      highScore: 'Career High Scores',
+      timeMachine: 'Time Machine High Scores',
     };
   }
 
   clearAll() {
-    this.boards = { highScore: [] };
+    this.boards = { highScore: [], timeMachine: [] };
     this.save();
   }
 

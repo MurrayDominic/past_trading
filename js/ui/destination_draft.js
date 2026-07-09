@@ -42,19 +42,41 @@ class DestinationDraft {
   _renderOffers() {
     const row = this._el.querySelector('#dest-row');
     const badge = (m) => m === 'crypto' ? '₿ CRYPTO · ' : m === 'commodities' ? '🛢️ COMMODITIES · ' : m === 'forex' ? '💱 FOREX · ' : '';
-    row.innerHTML = this._offers.map((d, i) => `
+    const yearOptions = () => {
+      let opts = '';
+      for (let y = 2000; y <= 2023; y++) opts += `<option value="${y}">${y}</option>`;
+      return opts;
+    };
+    row.innerHTML = this._offers.map((d, i) => d.steering ? `
+      <div class="dest-option dest-steering">
+        <div class="dest-phase">🧭 MANUAL COORDINATES</div>
+        <select id="steer-year" class="steer-year">${yearOptions()}</select>
+        <div class="dest-hint">You bought the wheel. Point the machine anywhere.</div>
+        <button class="btn btn-primary btn-small" id="steer-go">Set course</button>
+      </div>` : `
       <button class="dest-option ${d.market && d.market !== 'stocks' ? 'dest-' + d.market : ''}" data-idx="${i}">
         <div class="dest-year">${d.year}</div>
         <div class="dest-phase">${badge(d.market)}${d.phase.toUpperCase()} IN THE YEAR</div>
         <div class="dest-hint">${d.hint}</div>
       </button>`).join('');
-    row.querySelectorAll('.dest-option').forEach(btn => {
+    row.querySelectorAll('.dest-option[data-idx]').forEach(btn => {
       btn.addEventListener('click', () => {
         const dest = this._offers[parseInt(btn.dataset.idx)];
         this.dismiss();
         this._onPick(dest);
       });
     });
+    const steerGo = row.querySelector('#steer-go');
+    if (steerGo) {
+      steerGo.addEventListener('click', () => {
+        const year = parseInt(row.querySelector('#steer-year').value);
+        const month = Math.floor(Math.random() * 12);
+        const phase = month < 4 ? 'Early' : month < 8 ? 'Mid' : 'Late';
+        const dest = { year, month, phase, market: 'stocks', hint: ERA_HINTS[year] || 'The past. Probably.' };
+        this.dismiss();
+        this._onPick(dest);
+      });
+    }
   }
 
   _renderPerks(perkCtx) {
@@ -81,6 +103,10 @@ class DestinationDraft {
           if (audio && audio.playTone) audio.playTone(660, 0.12, 'triangle', 0.2);
           if (result.extraOffer) {
             this._offers.push(result.extraOffer);
+            this._renderOffers();
+          }
+          if (result.steering && !this._offers.some(o => o.steering)) {
+            this._offers.push({ steering: true });
             this._renderOffers();
           }
         }

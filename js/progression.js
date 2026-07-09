@@ -164,6 +164,13 @@ class ProgressionSystem {
     // Ascension payout multiplier (v2): harder runs pay more
     creditsEarned *= (getAscension(ascensionLevel).ppMult || 1);
 
+    // Participation floor (v2 shop rebalance): every run funds progress so a
+    // new player can buy something after a handful of runs even when the
+    // trading went badly. First-pass values, tune with playtest data.
+    const completed = quarterlySystem ? (quarterlySystem.completedLevels || 0) : 0;
+    const floor = 400 + 800 * completed + 4 * currentDay;
+    creditsEarned = Math.max(creditsEarned, floor);
+
     creditsEarned = Math.floor(creditsEarned);
 
     this.data.upgradeCredits += creditsEarned;
@@ -290,6 +297,26 @@ class ProgressionSystem {
         }
       }
     }
+  }
+
+  // v2 shop rebalance: free full-refund respec (Hades-style). Refunds every
+  // purchased unlock at full price and clears both owned and equipped maps.
+  // Modes and tools are separate purchase paths and are not touched.
+  respecUnlocks() {
+    let refund = 0;
+    for (const id of Object.keys(this.data.ownedUnlocks)) {
+      if (this.data.ownedUnlocks[id] && UNLOCKS[id] && typeof UNLOCKS[id].cost === 'number') {
+        refund += UNLOCKS[id].cost;
+      }
+    }
+    if (refund === 0) {
+      return { success: false, message: 'Nothing to refund' };
+    }
+    this.data.ownedUnlocks = {};
+    this.data.unlocks = {};
+    this.data.upgradeCredits += refund;
+    this.save();
+    return { success: true, message: `Respec complete: ${formatMoney(refund)} refunded`, refund };
   }
 
   purchaseUnlock(unlockId) {

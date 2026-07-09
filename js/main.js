@@ -365,6 +365,18 @@ class Game {
       }
       this.ui.flashQuarterlyLevelUp();
 
+      // Time Machine: the cash-out is part of the ceremony, not an
+      // afterthought. Liquidate BEFORE the review so the settled number is
+      // what gets celebrated (v2 polish).
+      let liquidatedCount = 0;
+      if (this.runFormat === 'timeMachine' && !info.allComplete) {
+        const sold = this.trading.liquidateAll(this.market, this.progression.data, this.currentDay);
+        liquidatedCount = sold.length;
+        if (liquidatedCount) {
+          this.news.addTradeNews(`Temporal transit: ${liquidatedCount} position${liquidatedCount === 1 ? '' : 's'} liquidated`, this.currentDay);
+        }
+      }
+
       if (info.mandateResult && info.mandateResult.satisfied) {
         this.news.addNews(
           `BOARD MANDATE MET: ${info.mandateResult.name}. Compliance bonus ${formatMoney(info.mandateResult.bonus)} paid.`,
@@ -381,6 +393,7 @@ class Game {
         nextTarget,
         allComplete: info.allComplete,
         mandate: info.mandateResult,
+        liquidated: liquidatedCount,
         boss: this.getBossMessage(info.level, nextTarget),
         onContinue: () => {
           if (this.runFormat === 'timeMachine' && !info.allComplete) {
@@ -880,16 +893,20 @@ class Game {
       this.isDailyRun = false;
     }
 
-    // Submit to leaderboard
+    // Submit to leaderboard (Time Machine runs rank on their own board, v2)
     this.leaderboard.submitRun(
       this.trading,
       this.currentDay,
       reason === 'arrested',
-      this.progression.data.runCount
+      this.progression.data.runCount,
+      this.runFormat
     );
 
     // Get ranking
-    const ranking = this.leaderboard.getRankForScore(this.trading.netWorth, 'highScore');
+    const ranking = this.leaderboard.getRankForScore(
+      this.trading.netWorth,
+      this.runFormat === 'timeMachine' ? 'timeMachine' : 'highScore'
+    );
 
     this.ui.showRunEnd(this, result, ranking);
   }
@@ -1024,11 +1041,9 @@ class Game {
   // draft a destination, re-init the market in the new era, resume.
   // Ticker is already stopped (quarter screen).
   beginJump() {
-    // You cannot carry positions (or informants) through time
-    const sold = this.trading.liquidateAll(this.market, this.progression.data, this.currentDay);
-    if (sold.length) {
-      this.news.addTradeNews(`Temporal transit: ${sold.length} position${sold.length === 1 ? '' : 's'} liquidated`, this.currentDay);
-    }
+    // Positions were liquidated at the quarter ceremony; this is a safety
+    // net for any opened since. Informants don't travel either.
+    this.trading.liquidateAll(this.market, this.progression.data, this.currentDay);
     this.tips.activeTips = [];
 
     const offers = this.timeMachine.offerDestinations(this.progression.data.unlocks);
@@ -1158,6 +1173,10 @@ class Game {
     if (id === 'aperture') {
       const extra = this.timeMachine.offerDestinations()[0];
       return { success: true, message: 'Window revealed', extraOffer: extra };
+    }
+    if (id === 'pilot') {
+      this.news.addTradeNews(`Bought a pilot license (${formatMoney(cost)}). The machine grumbles.`, this.currentDay);
+      return { success: true, message: 'Coordinates unlocked', steering: true };
     }
     return { success: false, message: 'Unknown perk' };
   }

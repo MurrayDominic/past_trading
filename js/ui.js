@@ -441,6 +441,18 @@ class GameUI {
       });
     }
 
+    // Shop respec (v2 rebalance): full refund, always free
+    const respecBtn = document.getElementById('shop-respec-btn');
+    if (respecBtn) {
+      respecBtn.addEventListener('click', () => {
+        this.showConfirm('Respec', 'Refund every purchased unlock at full price and start your build over?', () => {
+          const result = this.game.progression.respecUnlocks();
+          this.game.showToast(result.success ? '↺ Respec' : 'Respec', result.message, 'info', 6000);
+          this.renderShop();
+        }, 'Refund everything');
+      });
+    }
+
     // Cold wallet toggle (v2 crypto)
     const coldBtn = document.getElementById('cold-wallet-btn');
     if (coldBtn) {
@@ -1132,19 +1144,27 @@ class GameUI {
 
   renderLeaderboards() {
     const lb = this.game.leaderboard;
-    const entries = lb.getBoard('highScore');
-    let html = '<h4>Personal High Scores</h4>';
+    const names = lb.getBoardNames();
+    let html = '';
+    let anyEntries = false;
 
-    if (entries.length === 0) {
-      html += '<p class="muted">No runs completed yet</p>';
-    } else {
+    for (const [boardKey, title] of Object.entries(names)) {
+      const entries = lb.getBoard(boardKey);
+      html += `<h4>${title}</h4>`;
+      if (entries.length === 0) {
+        html += '<p class="muted">No runs completed yet</p>';
+        continue;
+      }
+      anyEntries = true;
       html += '<ol class="leaderboard-list">';
       for (const e of entries.slice(0, 10)) {
         const nameLabel = e.name ? `<strong>${e.name}</strong> - ` : '';
         html += `<li>${nameLabel}${e.display} <span class="muted">Run #${e.run} (${e.date})</span></li>`;
       }
       html += '</ol>';
-      html += '<button class="btn btn-danger" id="clear-leaderboard-btn" style="margin-top: 16px;">Clear Leaderboard</button>';
+    }
+    if (anyEntries) {
+      html += '<button class="btn btn-danger" id="clear-leaderboard-btn" style="margin-top: 16px;">Clear Leaderboards</button>';
     }
 
     this.el.menuLeaderboards.innerHTML = html;
