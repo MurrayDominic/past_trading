@@ -347,9 +347,9 @@
               <div id="shares-preview" class="shares-preview">~0 shares</div>
             </div>
             <div class="trade-button-column">
-              <button class="btn btn-primary" id="buy-btn">Buy</button>
-              <button class="btn btn-accent" id="sell-btn">Sell</button>
-              <button class="btn btn-danger" id="short-btn">Short</button>
+              <button class="btn btn-primary" id="buy-btn" data-tip="Go long for the dollar amount above. You profit when the price rises. A small fee is charged per trade.">Buy</button>
+              <button class="btn btn-accent" id="sell-btn" data-tip="Close your oldest position in the selected stock and realize its profit or loss.">Sell</button>
+              <button class="btn btn-danger" id="short-btn" data-tip="Bet against the stock for the amount above. You profit when the price FALLS. Losses are unlimited if it rises.">Short</button>
             </div>
             <div id="trade-result"></div>
           </div>
@@ -377,7 +377,7 @@
           <canvas id="net-worth-graph"></canvas>
         </div>
         <div class="meters-row">
-          <div class="meter">
+          <div class="meter" data-tip="Every open position adds risk, and leverage multiplies it. Hit 100% and the firm fires you on the spot.">
             <div class="meter-label">
               <span class="meter-name">Internal Risk</span>
               <span class="meter-value" id="risk-value">0%</span>
@@ -386,7 +386,7 @@
               <div class="meter-fill risk" id="risk-fill" style="width: 0%"></div>
             </div>
           </div>
-          <div class="meter">
+          <div class="meter" data-tip="Rises with suspicious profits, big positions, and crimes. Decays slowly each day. The arrest threshold is hidden, somewhere between 60% and 100%, and it moves every run.">
             <div class="meter-label">
               <span class="meter-name">SEC Attention</span>
               <span class="meter-value" id="sec-value">0%</span>
@@ -531,6 +531,7 @@
   <script src="js/chart_manager.js"></script>
   <script src="js/audio_engine.js"></script>
   <script src="js/ui/juice.js"></script>
+  <script src="js/ui/tooltip.js"></script>
   <script src="js/ui/tally.js"></script>
   <script src="js/ui/quarter_screen.js"></script>
   <script src="js/ui.js"></script>

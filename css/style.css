@@ -4005,3 +4005,20 @@ body {
   line-height: 1.45;
   color: var(--rh-text-secondary);
 }
+
+/* Instant tooltips (DESIGN.md section 9: tooltips beat tutorials) */
+#v2-tooltip {
+  position: fixed;
+  z-index: 2000;
+  max-width: 280px;
+  background: rgba(11, 14, 20, 0.98);
+  border: 1px solid var(--rh-border-strong);
+  border-radius: 6px;
+  padding: 8px 11px;
+  font-family: 'Plex Sans', sans-serif;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--rh-text);
+  pointer-events: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+}

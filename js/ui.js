@@ -123,6 +123,7 @@ class GameUI {
     this.tradeTally = new TradeTally(this.juice);
     this.tradeTally.attach(this.el.gameScreen);
     this.quarterScreen = new QuarterScreen(this.juice);
+    InstantTooltip.init();
 
     this.bindEvents();
 
