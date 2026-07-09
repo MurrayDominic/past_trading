@@ -43,6 +43,12 @@ class Market {
         availableAssets = availableAssets.concat(cryptoAssets);
       }
 
+      // Commodities Desk unlock appends the futures list (v2)
+      if (progression.data.unlocks && progression.data.unlocks.commoditiesTrading) {
+        const commodityAssets = (TRADING_MODES.commodities && TRADING_MODES.commodities.assets) || [];
+        availableAssets = availableAssets.concat(commodityAssets);
+      }
+
       console.log(`Filtered to ${availableAssets.length} unlocked assets`);
     }
 

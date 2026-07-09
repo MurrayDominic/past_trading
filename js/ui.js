@@ -1750,8 +1750,7 @@ class GameUI {
     let html = '';
     for (const asset of assets) {
       // Category emoji
-      const assetDef = SP500_ASSETS.find(a => a.ticker === asset.ticker)
-        || (TRADING_MODES.crypto && TRADING_MODES.crypto.assets.find(a => a.ticker === asset.ticker));
+      const assetDef = findAssetDef(asset.ticker);
       const category = assetDef ? (assetDef.category || 'consumer') : 'consumer';
       const categoryIcon = STOCK_CATEGORIES[category] ? STOCK_CATEGORIES[category].icon : '';
 
@@ -1959,9 +1958,7 @@ class GameUI {
       filtered = filtered.filter(asset => wl.includes(asset.ticker));
     } else if (this.currentCategoryFilter !== 'all') {
       filtered = filtered.filter(asset => {
-        // Get category from SP500_ASSETS or crypto assets by ticker
-        const assetDef = SP500_ASSETS.find(a => a.ticker === asset.ticker)
-          || (TRADING_MODES.crypto && TRADING_MODES.crypto.assets.find(a => a.ticker === asset.ticker));
+        const assetDef = findAssetDef(asset.ticker);
         const category = assetDef ? (assetDef.category || 'consumer') : 'consumer';
         return category === this.currentCategoryFilter;
       });

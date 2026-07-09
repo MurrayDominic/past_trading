@@ -152,6 +152,13 @@ const STOCK_CATEGORIES = {
     icon: '₿',
     unlocked: false,
     sortOrder: 9
+  },
+  commodities: {
+    name: 'Commodities',
+    description: 'Oil, gold, gas. Real futures prices, real negative oil.',
+    icon: '🛢️',
+    unlocked: false,
+    sortOrder: 10
   }
 };
 
@@ -223,19 +230,17 @@ const TRADING_MODES = {
   },
   commodities: {
     name: 'Commodities',
-    description: 'Oil, gold, wheat. Geopolitics is your friend.',
-    comingSoon: true,
-    unlockRun: 4,
-    unlockCost: 7500000,
+    description: 'Oil, gold, gas. Geopolitics is your friend.',
+    comingSoon: false,
     volatilityMod: 1.2,
     feeMod: 1.2,
     secHeatMod: 0.7,
     assets: [
-      { ticker: 'GOLD', name: 'Gold', basePrice: 1950 },
-      { ticker: 'OIL', name: 'Crude Oil', basePrice: 78 },
-      { ticker: 'SLVR', name: 'Silver', basePrice: 24 },
-      { ticker: 'WHEAT', name: 'Wheat', basePrice: 6.50 },
-      { ticker: 'NAT.G', name: 'Natural Gas', basePrice: 2.80 },
+      { ticker: 'WTI', name: 'Crude Oil (WTI)', basePrice: 78,   category: 'commodities', dataCategory: 'commodities' },
+      { ticker: 'GC', name: 'Gold',            basePrice: 1950, category: 'commodities', dataCategory: 'commodities' },
+      { ticker: 'SI', name: 'Silver',          basePrice: 24,   category: 'commodities', dataCategory: 'commodities' },
+      { ticker: 'NG', name: 'Natural Gas',     basePrice: 2.80, category: 'commodities', dataCategory: 'commodities' },
+      { ticker: 'HG', name: 'Copper',          basePrice: 3.80, category: 'commodities', dataCategory: 'commodities' },
     ]
   },
   crypto: {
@@ -331,10 +336,18 @@ const UNLOCKS = {
   cryptoTrading: {
     name: 'Crypto Trading',
     cost: 50000,
-    description: 'Add BTC, ETH, SOL and more to your asset list. Real prices, max volatility.',
+    description: 'Add BTC, ETH, SOL and more to your asset list. Real prices, max volatility. Time Machine gains crypto destinations.',
     category: 'sectors',
     unlocksCategory: 'crypto',
     requires: 'memeStocks'
+  },
+  commoditiesTrading: {
+    name: 'Commodities Desk',
+    cost: 100000,
+    description: 'Oil, gold, silver, gas and copper join your list. Real futures prices, including the day oil went negative. Time Machine gains commodity destinations.',
+    category: 'sectors',
+    unlocksCategory: 'commodities',
+    requires: 'cryptoTrading'
   },
   lowerSurv2:    { name: 'Low Profile II', cost: 200000, description: 'SEC attention grows 40% slower', category: 'stealth', survReduction: 0.40, requires: 'lowerSurv1' },
   fundManager:   { name: 'Fund Manager', cost: 200000, description: 'Manage OPM. AUM bonuses.', category: 'career', repLevel: 4, requires: 'hedgeFund' },
@@ -819,7 +832,7 @@ const BOARD_MANDATES = [
 ];
 
 function getTickerCategory(ticker) {
-  const def = SP500_ASSETS.find(a => a.ticker === ticker);
+  const def = findAssetDef(ticker);
   return def ? (def.category || null) : null;
 }
 
@@ -915,3 +928,13 @@ const CRYPTO_COLLAPSES = [
   { date: '2016-08-02', name: 'Bitfinex', lossPct: 0.36 },
   { date: '2022-11-11', name: 'FTX', lossPct: 0.90 },
 ];
+
+// v2: central asset-definition lookup across ALL mode lists, so category
+// filters and icons work for crypto, commodities and forex tickers too
+function findAssetDef(ticker) {
+  return SP500_ASSETS.find(a => a.ticker === ticker)
+    || (TRADING_MODES.crypto && TRADING_MODES.crypto.assets.find(a => a.ticker === ticker))
+    || (TRADING_MODES.commodities && TRADING_MODES.commodities.assets.find(a => a.ticker === ticker))
+    || (TRADING_MODES.forex && TRADING_MODES.forex.assets.find(a => a.ticker === ticker))
+    || null;
+}

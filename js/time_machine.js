@@ -42,12 +42,18 @@ class TimeMachine {
     }
     const offers = years.map(y => this._makeDestination(y));
 
+    // Unlocked modes join the machine's deck, each claiming one window
+    const specials = [];
     if (unlocks && unlocks.cryptoTrading) {
       // BTC data has full depth from 2015 onward
-      const cryptoYear = 2015 + Math.floor(Math.random() * 9);
-      offers[Math.floor(Math.random() * offers.length)] =
-        this._makeDestination(cryptoYear, 'crypto');
+      specials.push(this._makeDestination(2015 + Math.floor(Math.random() * 9), 'crypto'));
     }
+    if (unlocks && unlocks.commoditiesTrading) {
+      // Futures data runs from 2001 onward
+      specials.push(this._makeDestination(2001 + Math.floor(Math.random() * 23), 'commodities'));
+    }
+    const slots = [0, 1, 2].sort(() => Math.random() - 0.5);
+    specials.slice(0, offers.length - 1).forEach((s, i) => { offers[slots[i]] = s; });
     return offers;
   }
 

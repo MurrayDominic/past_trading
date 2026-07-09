@@ -4318,3 +4318,11 @@ body {
   font-size: 12px;
 }
 #cold-wallet-amount { color: var(--rh-blue); font-family: 'Plex Mono', monospace; }
+
+/* Commodity + forex destination windows (v2) */
+.dest-option.dest-commodities { border-color: rgba(92, 168, 255, 0.45); }
+.dest-option.dest-commodities .dest-year { color: #5CA8FF; text-shadow: 0 0 14px rgba(92, 168, 255, 0.35); }
+.dest-option.dest-commodities:hover { border-color: #5CA8FF; box-shadow: 0 0 20px rgba(92, 168, 255, 0.15); }
+.dest-option.dest-forex { border-color: rgba(51, 214, 159, 0.45); }
+.dest-option.dest-forex .dest-year { color: #33D69F; text-shadow: 0 0 14px rgba(51, 214, 159, 0.35); }
+.dest-option.dest-forex:hover { border-color: #33D69F; box-shadow: 0 0 20px rgba(51, 214, 159, 0.15); }
