@@ -2266,7 +2266,7 @@ class GameUI {
       // Earnings Calendar extends preview to 5 days (from 3)
       const previewDays = game.progression.data.unlocks.earningsCalendar
         ? UNLOCKS.earningsCalendar.previewDays : 3;
-      const upcoming = game.news.getUpcomingEvents(game.currentDay, previewDays);
+      const upcoming = game.news.getUpcomingEvents(game.currentDay, previewDays, game.market);
       for (const event of upcoming) {
         const daysAway = event.day - game.currentDay;
         html += `<div class="news-item almanac">

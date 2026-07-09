@@ -143,15 +143,36 @@ class DataLoader {
     return data.ohlc[day];
   }
 
-  getEventsForDay(day) {
+  // v2 fix: events are matched by real DATE against the current game date.
+  // The old day-offset matching was written for a fixed 2020 start and fired
+  // pandemic headlines in 2007 runs.
+  _gameDateStr(gameStartDate, day) {
+    const d = new Date(gameStartDate.getTime() + day * 24 * 60 * 60 * 1000);
+    return d.toISOString().slice(0, 10);
+  }
+
+  getEventsForDay(day, gameStartDate = null) {
     if (!this.newsEvents) return [];
-    return this.newsEvents.filter(e => e.day === day);
+    if (!gameStartDate) return this.newsEvents.filter(e => e.day === day);
+    const dateStr = this._gameDateStr(gameStartDate, day);
+    return this.newsEvents.filter(e => e.date === dateStr);
   }
 
   // Time Traveler's Almanac: get events in a future range
-  getUpcomingEvents(currentDay, daysAhead) {
+  getUpcomingEvents(currentDay, daysAhead, gameStartDate = null) {
     if (!this.newsEvents) return [];
-    return this.newsEvents.filter(e => e.day > currentDay && e.day <= currentDay + daysAhead);
+    if (!gameStartDate) {
+      return this.newsEvents.filter(e => e.day > currentDay && e.day <= currentDay + daysAhead);
+    }
+    const from = this._gameDateStr(gameStartDate, currentDay);
+    const to = this._gameDateStr(gameStartDate, currentDay + daysAhead);
+    // Attach the relative day so the Almanac can show "in Nd"
+    return this.newsEvents
+      .filter(e => e.date > from && e.date <= to)
+      .map(e => ({
+        ...e,
+        day: currentDay + Math.round((new Date(e.date) - new Date(from)) / (24 * 60 * 60 * 1000)),
+      }));
   }
 
   getStartDate() {

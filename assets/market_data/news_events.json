@@ -1,11 +1,711 @@
 {
   "market_events": [
     {
-      "day": 59,
-      "date": "2020-02-29",
+      "day": 0,
+      "date": "2000-01-10",
+      "type": "corporate",
+      "severity": "medium",
+      "headline": "AOL to buy Time Warner in the largest merger ever. Old media surrenders to the internet",
+      "tickers_affected": [],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2000-03-10",
       "type": "macro",
       "severity": "high",
-      "headline": "Fed signals potential rate cuts amid virus concerns",
+      "headline": "NASDAQ closes above 5,000. Analysts agree: valuations are a social construct",
+      "tickers_affected": [
+        "CSCO",
+        "INTC",
+        "MSFT",
+        "QQQ"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2000-04-14",
+      "type": "crash",
+      "severity": "high",
+      "headline": "Tech stocks in freefall. The geniuses are suddenly asking a lot of questions",
+      "tickers_affected": [
+        "CSCO",
+        "INTC",
+        "MSFT",
+        "QQQ"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2001-01-03",
+      "type": "macro",
+      "severity": "medium",
+      "headline": "Surprise Fed rate cut. The market parties like the problem is solved",
+      "tickers_affected": [],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2001-09-17",
+      "type": "crash",
+      "severity": "high",
+      "headline": "Markets reopen after the September 11 attacks. Heaviest selling in decades",
+      "tickers_affected": [
+        "SPY",
+        "DIA"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2001-12-02",
+      "type": "corporate",
+      "severity": "high",
+      "headline": "Enron files for bankruptcy. The smartest guys in the room were lying",
+      "tickers_affected": [],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2002-07-21",
+      "type": "corporate",
+      "severity": "high",
+      "headline": "WorldCom collapses in the largest bankruptcy in US history. Auditors shocked, shocked",
+      "tickers_affected": [],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2002-10-09",
+      "type": "macro",
+      "severity": "medium",
+      "headline": "Markets hit multi-year lows. Nobody rings a bell at the bottom, but this was it",
+      "tickers_affected": [
+        "SPY",
+        "QQQ"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2003-03-20",
+      "type": "macro",
+      "severity": "medium",
+      "headline": "Invasion of Iraq begins. Oil traders very busy",
+      "tickers_affected": [
+        "XOM",
+        "CVX"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2004-08-19",
+      "type": "corporate",
+      "severity": "medium",
+      "headline": "Google goes public at $85. Founders wear hoodies to the stock exchange",
+      "tickers_affected": [
+        "GOOG"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2005-08-29",
+      "type": "macro",
+      "severity": "high",
+      "headline": "Hurricane Katrina devastates the Gulf Coast. Energy prices surge",
+      "tickers_affected": [
+        "XOM",
+        "CVX"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2006-05-10",
+      "type": "macro",
+      "severity": "low",
+      "headline": "Housing prices hit record highs. Your taxi driver owns four condos in Vegas",
+      "tickers_affected": [],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2007-02-08",
+      "type": "macro",
+      "severity": "medium",
+      "headline": "HSBC warns on subprime losses. A very boring press release everyone should have read",
+      "tickers_affected": [
+        "C",
+        "BAC"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2007-08-09",
+      "type": "macro",
+      "severity": "high",
+      "headline": "BNP Paribas freezes funds. The mortgage machine makes a horrible grinding noise",
+      "tickers_affected": [
+        "C",
+        "BAC",
+        "LEH"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2007-10-09",
+      "type": "macro",
+      "severity": "medium",
+      "headline": "Stocks close at all-time highs. The music is still playing",
+      "tickers_affected": [
+        "SPY",
+        "DIA"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2008-03-16",
+      "type": "corporate",
+      "severity": "high",
+      "headline": "Bear Stearns sold for $2 a share. Its building is worth more than the company",
+      "tickers_affected": [
+        "LEH",
+        "GS",
+        "MS",
+        "C"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2008-09-07",
+      "type": "macro",
+      "severity": "high",
+      "headline": "Fannie Mae and Freddie Mac nationalized. Nothing to see here",
+      "tickers_affected": [
+        "C",
+        "BAC",
+        "WFC"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2008-09-15",
+      "type": "crash",
+      "severity": "high",
+      "headline": "LEHMAN BROTHERS FILES FOR BANKRUPTCY. The music stops",
+      "tickers_affected": [
+        "LEH",
+        "GS",
+        "MS",
+        "C",
+        "BAC",
+        "AIG",
+        "SPY"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2008-09-16",
+      "type": "corporate",
+      "severity": "high",
+      "headline": "AIG bailed out with $85 billion hours after Lehman was allowed to die. Rules are feelings",
+      "tickers_affected": [
+        "AIG"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2008-09-29",
+      "type": "crash",
+      "severity": "high",
+      "headline": "Congress rejects the bailout. Dow drops 777 points while lawmakers check their portfolios",
+      "tickers_affected": [
+        "SPY",
+        "DIA",
+        "C",
+        "BAC"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2008-10-03",
+      "type": "macro",
+      "severity": "high",
+      "headline": "The $700 billion bailout passes on the second try. Amazing what a crash does for votes",
+      "tickers_affected": [
+        "SPY",
+        "C",
+        "BAC"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2008-11-20",
+      "type": "crash",
+      "severity": "high",
+      "headline": "Markets hit new lows. Citigroup trades like a penny stock with a marble lobby",
+      "tickers_affected": [
+        "C",
+        "SPY"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2009-03-09",
+      "type": "macro",
+      "severity": "high",
+      "headline": "Stocks touch a 12-year low. This, it turns out, was the bottom of the crisis",
+      "tickers_affected": [
+        "SPY",
+        "QQQ",
+        "C",
+        "BAC"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2010-04-20",
+      "type": "macro",
+      "severity": "high",
+      "headline": "Deepwater Horizon explodes in the Gulf. BP about to learn what liability means",
+      "tickers_affected": [
+        "XOM",
+        "CVX"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2010-05-06",
+      "type": "crash",
+      "severity": "high",
+      "headline": "FLASH CRASH: the Dow drops 9% in minutes, then mostly recovers. Nobody knows why",
+      "tickers_affected": [
+        "SPY",
+        "DIA",
+        "QQQ"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2011-08-05",
+      "type": "macro",
+      "severity": "high",
+      "headline": "S&P strips America of its AAA rating. America responds by buying more Treasuries",
+      "tickers_affected": [
+        "SPY",
+        "DIA"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2012-05-18",
+      "type": "corporate",
+      "severity": "medium",
+      "headline": "Facebook IPO stumbles out of the gate. Early investors describe feelings of feelings",
+      "tickers_affected": [
+        "META"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2012-07-26",
+      "type": "macro",
+      "severity": "medium",
+      "headline": "Draghi promises \"whatever it takes\" to save the euro. Three words move trillions",
+      "tickers_affected": [],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2013-04-01",
+      "type": "crypto",
+      "severity": "medium",
+      "headline": "Bitcoin crosses $100. Your most annoying friend becomes more annoying",
+      "tickers_affected": [
+        "BTC"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2013-05-22",
+      "type": "macro",
+      "severity": "medium",
+      "headline": "The Fed hints at easing off the money printer. Markets throw the Taper Tantrum",
+      "tickers_affected": [
+        "SPY",
+        "QQQ"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2013-11-27",
+      "type": "crypto",
+      "severity": "high",
+      "headline": "Bitcoin crosses $1,000. Magic internet money refuses to stop existing",
+      "tickers_affected": [
+        "BTC"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2014-02-07",
+      "type": "crypto",
+      "severity": "medium",
+      "headline": "Mt. Gox halts withdrawals, citing \"technical issues.\" Nothing says fine like frozen funds",
+      "tickers_affected": [
+        "BTC"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2014-02-24",
+      "type": "crypto",
+      "severity": "high",
+      "headline": "MT. GOX GOES DARK. 850,000 bitcoins are just... gone",
+      "tickers_affected": [
+        "BTC"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2014-11-27",
+      "type": "macro",
+      "severity": "high",
+      "headline": "OPEC declines to cut production. Oil begins a historic collapse",
+      "tickers_affected": [
+        "XOM",
+        "CVX"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2015-08-24",
+      "type": "crash",
+      "severity": "high",
+      "headline": "China fears trigger a global rout. The Dow opens down 1,000 points",
+      "tickers_affected": [
+        "SPY",
+        "QQQ",
+        "DIA"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2016-06-24",
+      "type": "macro",
+      "severity": "high",
+      "headline": "BREXIT: Britain votes to leave the EU. Pollsters and pounds both collapse",
+      "tickers_affected": [
+        "SPY",
+        "DIA"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2016-07-09",
+      "type": "crypto",
+      "severity": "low",
+      "headline": "The second Bitcoin halving. Supply drops; almost nobody notices",
+      "tickers_affected": [
+        "BTC"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2016-08-02",
+      "type": "crypto",
+      "severity": "high",
+      "headline": "Bitfinex hacked: 120,000 BTC stolen. Every account takes a 36% haircut",
+      "tickers_affected": [
+        "BTC"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2016-11-09",
+      "type": "macro",
+      "severity": "high",
+      "headline": "Election shock: futures crash overnight, then stage a face-ripping reversal by lunch",
+      "tickers_affected": [
+        "SPY",
+        "DIA"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2017-09-04",
+      "type": "crypto",
+      "severity": "medium",
+      "headline": "China bans ICOs and exchanges. Crypto dips, shrugs, continues",
+      "tickers_affected": [
+        "BTC",
+        "ETH"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2017-11-28",
+      "type": "crypto",
+      "severity": "high",
+      "headline": "Bitcoin crosses $10,000. CNBC now has a coin ticker. Your uncle is all-in",
+      "tickers_affected": [
+        "BTC",
+        "ETH",
+        "LTC"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2017-12-17",
+      "type": "crypto",
+      "severity": "high",
+      "headline": "Bitcoin touches $19,800 as futures launch. This is the top, though nobody says it out loud",
+      "tickers_affected": [
+        "BTC",
+        "ETH",
+        "LTC",
+        "XRP"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2018-01-16",
+      "type": "crypto",
+      "severity": "high",
+      "headline": "Crypto winter arrives: everything is down 50% from the highs and still falling",
+      "tickers_affected": [
+        "BTC",
+        "ETH",
+        "LTC",
+        "XRP"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2018-02-05",
+      "type": "crash",
+      "severity": "high",
+      "headline": "VOLMAGEDDON: volatility products implode and take the market with them",
+      "tickers_affected": [
+        "SPY",
+        "QQQ"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2018-12-24",
+      "type": "crash",
+      "severity": "medium",
+      "headline": "The worst Christmas Eve in market history. Santa sells everything",
+      "tickers_affected": [
+        "SPY",
+        "QQQ"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2019-09-17",
+      "type": "macro",
+      "severity": "medium",
+      "headline": "Repo rates spike overnight. The plumbing of finance briefly screams",
+      "tickers_affected": [],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2020-02-19",
+      "type": "macro",
+      "severity": "medium",
+      "headline": "Markets close at record highs. A virus is in the news, but it is very far away",
+      "tickers_affected": [
+        "SPY",
+        "QQQ"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2020-02-24",
+      "type": "crash",
+      "severity": "high",
+      "headline": "Virus fears go global. The fastest correction in history begins",
       "tickers_affected": [
         "SPY",
         "QQQ",
@@ -13,129 +713,425 @@
         "IWM"
       ],
       "impact_range": [
-        -0.02,
-        0.05
+        0,
+        0
       ]
     },
     {
-      "day": 67,
-      "date": "2020-03-08",
-      "type": "macro",
-      "severity": "critical",
-      "headline": "Fed announces emergency rate cut to near zero",
+      "day": 0,
+      "date": "2020-03-09",
+      "type": "crash",
+      "severity": "high",
+      "headline": "Oil war plus virus: circuit breakers halt trading. Twice in one week",
+      "tickers_affected": [
+        "SPY",
+        "XOM",
+        "CVX"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2020-03-12",
+      "type": "crash",
+      "severity": "high",
+      "headline": "Worst day since 1987. The word \"unprecedented\" loses all meaning",
       "tickers_affected": [
         "SPY",
         "QQQ",
-        "DIA",
-        "IWM",
-        "GOLD"
+        "DIA"
       ],
       "impact_range": [
-        -0.08,
-        0.02
+        0,
+        0
       ]
     },
     {
-      "day": 74,
-      "date": "2020-03-15",
-      "type": "macro",
-      "severity": "critical",
+      "day": 0,
+      "date": "2020-03-16",
+      "type": "crash",
+      "severity": "high",
       "headline": "Markets plunge on pandemic fears, circuit breakers triggered",
       "tickers_affected": [
         "SPY",
         "QQQ",
         "DIA",
-        "IWM",
-        "AAPL",
-        "TSLA",
-        "AMZN"
+        "IWM"
       ],
       "impact_range": [
-        -0.12,
-        -0.05
+        0,
+        0
       ]
     },
     {
-      "day": 91,
-      "date": "2020-04-01",
+      "day": 0,
+      "date": "2020-03-23",
       "type": "macro",
       "severity": "high",
-      "headline": "Congress passes $2 trillion stimulus package",
+      "headline": "The Fed goes unlimited. This, it turns out, was the bottom",
       "tickers_affected": [
         "SPY",
-        "QQQ",
-        "DIA",
-        "IWM"
+        "QQQ"
       ],
       "impact_range": [
-        0.03,
-        0.08
+        0,
+        0
       ]
     },
     {
-      "day": 150,
-      "date": "2020-05-30",
-      "type": "tech",
-      "severity": "medium",
-      "headline": "Tech stocks rally on work-from-home demand",
-      "tickers_affected": [
-        "QQQ",
-        "AAPL",
-        "AMZN",
-        "GOOG",
-        "NFLX"
-      ],
-      "impact_range": [
-        0.02,
-        0.06
-      ]
-    },
-    {
-      "day": 245,
-      "date": "2020-09-02",
-      "type": "tech",
-      "severity": "medium",
-      "headline": "Apple announces 4-for-1 stock split",
-      "tickers_affected": [
-        "AAPL"
-      ],
-      "impact_range": [
-        0.03,
-        0.07
-      ]
-    },
-    {
-      "day": 305,
-      "date": "2020-11-01",
-      "type": "politics",
+      "day": 0,
+      "date": "2020-04-20",
+      "type": "crash",
       "severity": "high",
-      "headline": "Election week volatility hits markets",
+      "headline": "OIL GOES NEGATIVE. Sellers pay buyers to take barrels. Economics textbooks weep",
       "tickers_affected": [
-        "SPY",
-        "QQQ",
-        "DIA",
-        "IWM"
+        "XOM",
+        "CVX"
       ],
       "impact_range": [
-        -0.04,
-        0.04
+        0,
+        0
       ]
     },
     {
-      "day": 350,
-      "date": "2020-12-16",
-      "type": "macro",
+      "day": 0,
+      "date": "2020-05-11",
+      "type": "crypto",
       "severity": "medium",
-      "headline": "Vaccine approval sends markets to record highs",
+      "headline": "The third Bitcoin halving. The believers whisper: it is happening again",
+      "tickers_affected": [
+        "BTC"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2020-11-09",
+      "type": "macro",
+      "severity": "high",
+      "headline": "Vaccine works: the greatest sector rotation in a decade happens before lunch",
       "tickers_affected": [
         "SPY",
-        "QQQ",
         "DIA",
         "IWM"
       ],
       "impact_range": [
-        0.04,
-        0.08
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2021-01-27",
+      "type": "meme",
+      "severity": "high",
+      "headline": "GAMESTOP GOES VERTICAL. A subreddit turns short sellers into paste",
+      "tickers_affected": [
+        "GME",
+        "AMC"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2021-02-08",
+      "type": "crypto",
+      "severity": "high",
+      "headline": "Tesla buys $1.5 billion of Bitcoin. Corporate treasuries discover the casino",
+      "tickers_affected": [
+        "BTC",
+        "DOGE"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2021-03-26",
+      "type": "corporate",
+      "severity": "medium",
+      "headline": "Archegos implodes: block trades vaporize $20 billion nobody knew existed",
+      "tickers_affected": [
+        "GS",
+        "MS"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2021-04-14",
+      "type": "crypto",
+      "severity": "high",
+      "headline": "Coinbase goes public. The casino now has a ticker symbol",
+      "tickers_affected": [
+        "BTC",
+        "ETH"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2021-05-08",
+      "type": "meme",
+      "severity": "high",
+      "headline": "Dogecoin peaks as its champion hosts Saturday Night Live. Sell the joke",
+      "tickers_affected": [
+        "DOGE"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2021-09-07",
+      "type": "crypto",
+      "severity": "medium",
+      "headline": "El Salvador adopts Bitcoin as legal tender. IMF very unamused",
+      "tickers_affected": [
+        "BTC"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2021-11-08",
+      "type": "macro",
+      "severity": "low",
+      "headline": "Everything is at all-time highs. This is fine. Everything is fine",
+      "tickers_affected": [
+        "SPY",
+        "QQQ"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2021-11-10",
+      "type": "crypto",
+      "severity": "high",
+      "headline": "Bitcoin touches $69,000. The number is a joke; the top is not",
+      "tickers_affected": [
+        "BTC",
+        "ETH",
+        "SOL",
+        "ADA"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2022-02-24",
+      "type": "macro",
+      "severity": "high",
+      "headline": "Russia invades Ukraine. Commodities convulse; wheat and oil go vertical",
+      "tickers_affected": [
+        "XOM",
+        "CVX"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2022-05-09",
+      "type": "crypto",
+      "severity": "high",
+      "headline": "TERRA/LUNA DEATH SPIRAL: a $40 billion \"stablecoin\" discovers gravity",
+      "tickers_affected": [
+        "BTC",
+        "ETH",
+        "SOL",
+        "ADA"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2022-06-12",
+      "type": "crypto",
+      "severity": "high",
+      "headline": "Celsius freezes withdrawals. The yield was never real",
+      "tickers_affected": [
+        "BTC",
+        "ETH"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2022-06-15",
+      "type": "macro",
+      "severity": "high",
+      "headline": "The Fed hikes 75 basis points, the biggest since 1994. The bill for free money arrives",
+      "tickers_affected": [
+        "SPY",
+        "QQQ"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2022-11-02",
+      "type": "crypto",
+      "severity": "medium",
+      "headline": "A leaked balance sheet raises questions about FTX. The questions have teeth",
+      "tickers_affected": [
+        "BTC",
+        "ETH",
+        "SOL"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2022-11-08",
+      "type": "crypto",
+      "severity": "high",
+      "headline": "FTX halts withdrawals. The white knight of crypto needs a knight",
+      "tickers_affected": [
+        "BTC",
+        "ETH",
+        "SOL"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2022-11-10",
+      "type": "macro",
+      "severity": "high",
+      "headline": "Cool inflation print: the market has its best day in two years",
+      "tickers_affected": [
+        "SPY",
+        "QQQ"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2022-11-11",
+      "type": "crypto",
+      "severity": "high",
+      "headline": "FTX FILES FOR BANKRUPTCY. Eight billion dollars of customer money is missing",
+      "tickers_affected": [
+        "BTC",
+        "ETH",
+        "SOL",
+        "ADA",
+        "DOGE"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2023-01-14",
+      "type": "crypto",
+      "severity": "medium",
+      "headline": "Bitcoin quietly reclaims $20,000. The survivors start buying",
+      "tickers_affected": [
+        "BTC",
+        "ETH"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2023-03-10",
+      "type": "crash",
+      "severity": "high",
+      "headline": "Silicon Valley Bank collapses in 48 hours. Venture capitalists discover bank runs via group chat",
+      "tickers_affected": [
+        "C",
+        "BAC",
+        "WFC"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2023-05-24",
+      "type": "corporate",
+      "severity": "high",
+      "headline": "NVIDIA guides so far above estimates that analysts assume a typo. The AI era begins",
+      "tickers_affected": [
+        "NVDA",
+        "QQQ"
+      ],
+      "impact_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "day": 0,
+      "date": "2024-01-10",
+      "type": "crypto",
+      "severity": "high",
+      "headline": "Spot Bitcoin ETFs approved after a decade of rejections. Wall Street joins the casino",
+      "tickers_affected": [
+        "BTC",
+        "ETH"
+      ],
+      "impact_range": [
+        0,
+        0
       ]
     }
   ]
