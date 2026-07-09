@@ -128,12 +128,18 @@ class GameUI {
     InstantTooltip.init();
 
     // Active tips list lives under the meters (created here to avoid
-    // touching the HTML grid)
+    // touching the HTML grid). Clicking a tip selects that stock.
     const metersRow = this.el.secFill ? this.el.secFill.closest('.meters-row') : null;
     if (metersRow && !document.getElementById('active-tips')) {
       const tipsDiv = document.createElement('div');
       tipsDiv.id = 'active-tips';
       metersRow.parentNode.insertBefore(tipsDiv, metersRow.nextSibling);
+      tipsDiv.addEventListener('click', (e) => {
+        const chip = e.target.closest('.active-tip');
+        if (chip && chip.dataset.ticker) {
+          this.game.selectAsset(chip.dataset.ticker);
+        }
+      });
     }
 
     this.bindEvents();
@@ -716,6 +722,14 @@ class GameUI {
     this.setAscension(this.game.ascensionLevel);
     this.cycleArchetype(0);
     this.renderMarketsStrip();
+
+    // Difficulty and archetypes only mean something after a first completed
+    // ladder; until then they are noise, so hide them (v2 playtest feedback)
+    const isVeteran = (this.game.progression.data.ascension || { maxUnlocked: 0 }).maxUnlocked >= 1;
+    const veteranOptions = document.getElementById('veteran-options');
+    const veteranNote = document.getElementById('veteran-locked-note');
+    if (veteranOptions) veteranOptions.style.display = isVeteran ? '' : 'none';
+    if (veteranNote) veteranNote.style.display = isVeteran ? 'none' : '';
   }
 
   // v2: show which markets exist and how to get them (they join runs as
@@ -726,17 +740,31 @@ class GameUI {
     const u = this.game.progression.data.unlocks || {};
     const items = [
       { icon: '📈', name: 'Stocks', on: true, tip: '733 real S&P 500 tickers. Always in.' },
-      { icon: '₿', name: 'Crypto', on: !!u.cryptoTrading,
-        tip: u.cryptoTrading ? 'Unlocked: real coins in your list, crypto eras in the Time Machine.' : 'Unlock Crypto Trading in the Shop (50K credits).' },
-      { icon: '🛢️', name: 'Commodities', on: !!u.commoditiesTrading,
-        tip: u.commoditiesTrading ? 'Unlocked: real futures, including the day oil went negative.' : 'Unlock the Commodities Desk in the Shop (100K credits).' },
-      { icon: '💱', name: 'Forex', on: !!u.forexTrading,
-        tip: u.forexTrading ? 'Unlocked: five major pairs of real macro history.' : 'Unlock the FX Desk in the Shop (250K credits).' },
+      { icon: '₿', name: 'Crypto', on: !!u.cryptoTrading, price: '50K',
+        tip: u.cryptoTrading ? 'Unlocked: real coins in your list, crypto eras in the Time Machine.' : 'Click to open the Shop. Crypto Trading costs 50K credits.' },
+      { icon: '🛢️', name: 'Commodities', on: !!u.commoditiesTrading, price: '100K',
+        tip: u.commoditiesTrading ? 'Unlocked: real futures, including the day oil went negative.' : 'Click to open the Shop. The Commodities Desk costs 100K credits.' },
+      { icon: '💱', name: 'Forex', on: !!u.forexTrading, price: '250K',
+        tip: u.forexTrading ? 'Unlocked: five major pairs of real macro history.' : 'Click to open the Shop. The FX Desk costs 250K credits.' },
       { icon: '⚡', name: 'Day Trading', on: false, soon: true, tip: 'Coming in update 2.1.' },
     ];
-    el.innerHTML = '<span class="markets-label">MARKETS</span>' + items.map(m =>
-      `<span class="market-badge ${m.on ? 'on' : 'off'}" data-tip="${m.tip}">${m.icon} ${m.name}${m.on ? '' : (m.soon ? ' · soon' : ' 🔒')}</span>`
-    ).join('');
+    el.innerHTML = '<span class="markets-label">MARKETS</span>' + items.map(m => {
+      const state = m.on ? ' ✓' : (m.soon ? ' · soon' : ` · ${m.price} 🔒`);
+      const cls = m.on ? 'on' : (m.soon ? 'soon' : 'off locked');
+      return `<span class="market-badge ${cls}" data-tip="${m.tip}">${m.icon} ${m.name}${state}</span>`;
+    }).join('');
+
+    // Locked badges are shortcuts to the Shop
+    if (!el._shopClickBound) {
+      el._shopClickBound = true;
+      el.addEventListener('click', (e) => {
+        const badge = e.target.closest('.market-badge.locked');
+        if (!badge) return;
+        this.game.showMenu();
+        const shopTab = document.getElementById('open-shop-btn');
+        if (shopTab) shopTab.click();
+      });
+    }
   }
 
   // v2 archetypes: cycle through run identities (locked until the ladder has
@@ -1235,6 +1263,8 @@ class GameUI {
           { id: 'techStocks', name: 'Tech', icon: '💻', cost: UNLOCKS.techStocks.cost },
           { id: 'memeStocks', name: 'Meme', icon: '🚀', cost: UNLOCKS.memeStocks.cost, requires: [UNLOCKS.memeStocks.requires] },
           { id: 'cryptoTrading', name: 'Crypto', icon: '₿', cost: UNLOCKS.cryptoTrading.cost, requires: [UNLOCKS.cryptoTrading.requires] },
+          { id: 'commoditiesTrading', name: 'Commodities', icon: '🛢️', cost: UNLOCKS.commoditiesTrading.cost, requires: [UNLOCKS.commoditiesTrading.requires] },
+          { id: 'forexTrading', name: 'Forex', icon: '💱', cost: UNLOCKS.forexTrading.cost, requires: [UNLOCKS.forexTrading.requires] },
         ]
       },
       {
@@ -1820,7 +1850,7 @@ class GameUI {
     if (tipsEl && game.tips) {
       const active = game.tips.getActiveTips();
       const html = active.map(t =>
-        `<div class="active-tip" data-tip="${t.sourceName} says ${t.ticker} moves ${t.direction.toUpperCase()} by day ${t.expiresDay}. Price when issued: ${formatPrice(t.startPrice)}.">${t.icon} <b>${t.ticker}</b> ${t.direction === 'up' ? '<span class="positive">▲</span>' : '<span class="negative">▼</span>'} <span class="active-tip-day">by day ${t.expiresDay}</span></div>`
+        `<div class="active-tip" data-ticker="${t.ticker}" data-tip="${t.sourceName} says ${t.ticker} moves ${t.direction.toUpperCase()} by day ${t.expiresDay}. Price when issued: ${formatPrice(t.startPrice)}. Click to view the chart.">${t.icon} <b>${t.ticker}</b> ${t.direction === 'up' ? '<span class="positive">▲</span>' : '<span class="negative">▼</span>'} <span class="active-tip-day">by day ${t.expiresDay}</span></div>`
       ).join('');
       if (tipsEl._html !== html) { tipsEl.innerHTML = html; tipsEl._html = html; }
     }
