@@ -12,8 +12,11 @@ class DestinationDraft {
     this._cinematic = null;
   }
 
-  show(offers, onPick) {
+  show(offers, onPick, perkCtx = null) {
     this.dismiss();
+    this._offers = [...offers];
+    this._onPick = onPick;
+    this._bought = new Set();
 
     const el = document.createElement('div');
     el.id = 'destination-overlay';
@@ -21,15 +24,9 @@ class DestinationDraft {
       <div class="dest-card">
         <div class="quarter-kicker">TEMPORAL DRIVE CHARGED</div>
         <div class="dest-title">WHERE TO NEXT?</div>
-        <div class="dest-sub">The machine found three stable windows. Positions cannot travel; everything liquidates on departure.</div>
-        <div class="dest-row">
-          ${offers.map((d, i) => `
-            <button class="dest-option" data-idx="${i}">
-              <div class="dest-year">${d.year}</div>
-              <div class="dest-phase">${d.phase.toUpperCase()} IN THE YEAR</div>
-              <div class="dest-hint">${d.hint}</div>
-            </button>`).join('')}
-        </div>
+        <div class="dest-sub">Your portfolio was liquidated for transit. Spend cash on supplies below, then pick a window.</div>
+        ${perkCtx ? '<div class="perk-row" id="jump-perk-row"></div>' : ''}
+        <div class="dest-row" id="dest-row"></div>
       </div>
     `;
     document.body.appendChild(el);
@@ -38,11 +35,55 @@ class DestinationDraft {
     const audio = this.juice._getAudio();
     if (audio && audio.playTone) audio.playTone(330, 0.2, 'sine', 0.22);
 
-    el.querySelectorAll('.dest-option').forEach(btn => {
+    this._renderOffers();
+    if (perkCtx) this._renderPerks(perkCtx);
+  }
+
+  _renderOffers() {
+    const row = this._el.querySelector('#dest-row');
+    row.innerHTML = this._offers.map((d, i) => `
+      <button class="dest-option" data-idx="${i}">
+        <div class="dest-year">${d.year}</div>
+        <div class="dest-phase">${d.phase.toUpperCase()} IN THE YEAR</div>
+        <div class="dest-hint">${d.hint}</div>
+      </button>`).join('');
+    row.querySelectorAll('.dest-option').forEach(btn => {
       btn.addEventListener('click', () => {
-        const dest = offers[parseInt(btn.dataset.idx)];
+        const dest = this._offers[parseInt(btn.dataset.idx)];
         this.dismiss();
-        onPick(dest);
+        this._onPick(dest);
+      });
+    });
+  }
+
+  _renderPerks(perkCtx) {
+    const row = this._el.querySelector('#jump-perk-row');
+    if (!row) return;
+    const perks = perkCtx.getPerks();
+    row.innerHTML = perks.map(p => {
+      const bought = this._bought.has(p.def.id);
+      const disabled = bought || !p.affordable;
+      return `
+        <button class="jump-perk ${disabled ? 'perk-disabled' : ''}" data-perk="${p.def.id}" ${disabled ? 'disabled' : ''}
+                data-tip="${p.def.desc}">
+          <span class="perk-icon">${p.def.icon}</span>
+          <span class="perk-name">${p.def.name}</span>
+          <span class="perk-cost">${bought ? 'BOUGHT' : Juice.formatMoney(p.cost)}</span>
+        </button>`;
+    }).join('');
+    row.querySelectorAll('.jump-perk:not(.perk-disabled)').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const result = perkCtx.buy(btn.dataset.perk);
+        if (result && result.success) {
+          this._bought.add(btn.dataset.perk);
+          const audio = this.juice._getAudio();
+          if (audio && audio.playTone) audio.playTone(660, 0.12, 'triangle', 0.2);
+          if (result.extraOffer) {
+            this._offers.push(result.extraOffer);
+            this._renderOffers();
+          }
+        }
+        this._renderPerks(perkCtx);
       });
     });
   }

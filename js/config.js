@@ -875,3 +875,17 @@ const ERA_HINTS = {
   2022: 'The bill arrives. Rates go up, everything else goes down.',
   2023: 'Machines that talk are suddenly worth trillions.',
 };
+
+// ============================================================================
+// V2 JUMP PERKS (Phase 3)
+// Run-scoped boons purchasable with cash at the destination draft. Costs are
+// computed from net worth at purchase time (never hardcoded dollar amounts).
+// ============================================================================
+const JUMP_PERKS = [
+  { id: 'greasedPalms', icon: '🤝', name: 'Greased Palms', costPct: 0.05, costMin: 500,
+    desc: 'A quiet word with the right regulator. SEC attention -15 before you jump.' },
+  { id: 'dossier', icon: '🗂️', name: 'Insider Dossier', costPct: 0.08, costMin: 800,
+    desc: 'A whistleblower-grade tip waiting for you on arrival. Clean hands, no heat.' },
+  { id: 'aperture', icon: '🔭', name: 'Wider Aperture', costPct: 0.06, costMin: 600,
+    desc: 'Overcharge the machine: reveal one extra destination window right now.' },
+];

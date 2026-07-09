@@ -2488,8 +2488,8 @@ class GameUI {
     this.tipDraft.show(offer, tips, onPick, onSkip);
   }
 
-  showDestinationDraft(offers, onPick) {
-    this.destinationDraft.show(offers, onPick);
+  showDestinationDraft(offers, onPick, perkCtx = null) {
+    this.destinationDraft.show(offers, onPick, perkCtx);
   }
 
   showJumpCinematic(dest) {
@@ -2654,6 +2654,8 @@ class GameUI {
     };
     const shareText = `Second Chance at a Billion: I went back to ${startYear} with ${formatMoney(startCash)}, reached ${formatMoney(rec.netWorth)} in ${rec.days} days, then ${reasonStory[game.runEndReason] || 'it ended'}.`
       + (bestTrade && bestTrade.profit > 0 ? ` Best call: ${TradeTally.formatPnL(bestTrade.profit)} on ${bestTrade.ticker}.` : '')
+      + (game.runFormat === 'timeMachine' && game.timeMachine && game.timeMachine.visited.length
+        ? ` Route: ${game.timeMachine.visited.join(' → ')}.` : '')
       + (ranking && ranking.isRanked ? ` Rank #${ranking.rank}.` : '');
 
     this.el.runEndStats.innerHTML = `

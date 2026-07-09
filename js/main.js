@@ -792,19 +792,27 @@ class Game {
     this.ui.update(this);
   }
 
-  // Time Machine jump (v2): draft a destination, liquidate, re-init the
-  // market in the new era, resume. Ticker is already stopped (quarter screen).
+  // Time Machine jump (v2): liquidate first (cash funds the perk shop),
+  // draft a destination, re-init the market in the new era, resume.
+  // Ticker is already stopped (quarter screen).
   beginJump() {
+    // You cannot carry positions (or informants) through time
+    const sold = this.trading.liquidateAll(this.market, this.progression.data, this.currentDay);
+    if (sold.length) {
+      this.news.addTradeNews(`Temporal transit: ${sold.length} position${sold.length === 1 ? '' : 's'} liquidated`, this.currentDay);
+    }
+    this.tips.activeTips = [];
+
     const offers = this.timeMachine.offerDestinations();
+    const perkCtx = {
+      getPerks: () => JUMP_PERKS.map(def => {
+        const cost = Math.max(def.costMin, Math.floor(this.trading.netWorth * def.costPct));
+        return { def, cost, affordable: this.trading.cash >= cost };
+      }),
+      buy: (id) => this.applyJumpPerk(id),
+    };
     this.ui.showDestinationDraft(offers, async (dest) => {
       try {
-        // You cannot carry positions (or informants) through time
-        const sold = this.trading.liquidateAll(this.market, this.progression.data, this.currentDay);
-        if (sold.length) {
-          this.news.addTradeNews(`Temporal transit: ${sold.length} position${sold.length === 1 ? '' : 's'} liquidated`, this.currentDay);
-        }
-        this.tips.activeTips = [];
-
         this.ui.showJumpCinematic(dest);
         await this.market.init(this.selectedMode, this.dataLoader, this.progression, dest.year, dest.year + 1, dest.month);
         this.timeMachine.recordJump(dest);
@@ -812,6 +820,16 @@ class Game {
         const assets = this.market.getAllAssets();
         this.selectedAsset = assets.length ? assets[0].ticker : null;
         this.news.addNews(`ARRIVAL: ${dest.phase} ${dest.year}. ${dest.hint}`, 'milestone', this.currentDay);
+
+        // Insider Dossier perk: a clean whistleblower-grade tip on arrival
+        if (this._pendingDossier) {
+          this._pendingDossier = false;
+          const tip = this.tips.acceptSource('whistleblower', this.market, null, this.currentDay);
+          if (tip) {
+            const days = tip.expiresDay - tip.issuedDay;
+            this.news.addNews(`DOSSIER: ${tip.ticker} moves ${tip.direction.toUpperCase()} within ${days} days.`, 'milestone', this.currentDay);
+          }
+        }
 
         this.ui.hideJumpCinematic();
         if (this.isPlaying()) this.startTicker();
@@ -821,7 +839,34 @@ class Game {
         this.ui.hideJumpCinematic();
         if (this.isPlaying()) this.startTicker();
       }
-    });
+    }, perkCtx);
+  }
+
+  // Jump perk purchase (v2): costs computed from net worth at purchase time
+  applyJumpPerk(id) {
+    const def = JUMP_PERKS.find(p => p.id === id);
+    if (!def) return { success: false, message: 'Unknown perk' };
+    const cost = Math.max(def.costMin, Math.floor(this.trading.netWorth * def.costPct));
+    if (this.trading.cash < cost) {
+      return { success: false, message: `Need ${formatMoney(cost)} cash` };
+    }
+    this.trading.cash -= cost;
+
+    if (id === 'greasedPalms') {
+      this.sec.attention = Math.max(0, this.sec.attention - 15);
+      this.news.addSecNews(`Greased palms: SEC attention eased (${formatMoney(cost)})`, this.currentDay);
+      return { success: true, message: 'SEC attention -15' };
+    }
+    if (id === 'dossier') {
+      this._pendingDossier = true;
+      this.news.addTradeNews(`Bought an insider dossier (${formatMoney(cost)})`, this.currentDay);
+      return { success: true, message: 'Tip on arrival' };
+    }
+    if (id === 'aperture') {
+      const extra = this.timeMachine.offerDestinations()[0];
+      return { success: true, message: 'Window revealed', extraOffer: extra };
+    }
+    return { success: false, message: 'Unknown perk' };
   }
 
   // Tip draft (v2): pause, offer 3 informants, resume on choice or skip
