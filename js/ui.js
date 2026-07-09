@@ -124,6 +124,7 @@ class GameUI {
     this.tradeTally.attach(this.el.gameScreen);
     this.quarterScreen = new QuarterScreen(this.juice);
     this.tipDraft = new TipDraft(this.juice);
+    this.destinationDraft = new DestinationDraft(this.juice);
     InstantTooltip.init();
 
     // Active tips list lives under the meters (created here to avoid
@@ -301,6 +302,14 @@ class GameUI {
       yearSelectStartBtn.addEventListener('click', () => {
         if (this._pendingMode) {
           this.game.startRun(this._pendingMode);
+        }
+      });
+    }
+    const timeMachineStartBtn = document.getElementById('time-machine-start-btn');
+    if (timeMachineStartBtn) {
+      timeMachineStartBtn.addEventListener('click', () => {
+        if (this._pendingMode) {
+          this.game.startRun(this._pendingMode, 'timeMachine');
         }
       });
     }
@@ -2477,6 +2486,18 @@ class GameUI {
 
   showTipDraft(offer, tips, onPick, onSkip) {
     this.tipDraft.show(offer, tips, onPick, onSkip);
+  }
+
+  showDestinationDraft(offers, onPick) {
+    this.destinationDraft.show(offers, onPick);
+  }
+
+  showJumpCinematic(dest) {
+    this.destinationDraft.showCinematic(dest);
+  }
+
+  hideJumpCinematic() {
+    this.destinationDraft.hideCinematic();
   }
 
   // "You called it" banner: player was positioned before a historical event

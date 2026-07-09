@@ -12,16 +12,17 @@ class Market {
     this.dataLoader = null;   // Historical data loader
   }
 
-  async init(mode, dataLoader, progression, startYear = null, endYear = null) {
+  async init(mode, dataLoader, progression, startYear = null, endYear = null, startMonth = 0) {
     this.currentMode = mode;
     this.assets = {};
     this.dayCount = 0;
     this.dataLoader = dataLoader;
 
-    // Calculate start date and offset (random year 2000-2024 if not specified)
+    // Calculate start date and offset (random year 2000-2024 if not specified).
+    // startMonth (0-11) lets Time Machine jumps land mid-year (v2).
     this.startYear = startYear || 2000 + Math.floor(Math.random() * 25);
     this.endYear = endYear || this.startYear;
-    this.startDate = new Date(this.startYear, 0, 1);
+    this.startDate = new Date(this.startYear, startMonth || 0, 1);
 
     console.log(`Starting market simulation from ${this.startDate.toDateString()} to year ${this.endYear}`);
 

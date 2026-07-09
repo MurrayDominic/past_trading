@@ -844,3 +844,34 @@ const TIP_SOURCES = [
   { id: 'exColleague', name: 'Barry from Risk', icon: '🍺', accuracyRange: [0.55, 0.85], secHeat: 2,
     desc: 'Laid off in the last purge. Still bitter. Still has his old logins.' },
 ];
+
+// ============================================================================
+// V2 ERA HINTS (Phase 3, Time Machine)
+// Vague flavor shown on destination cards. Evocative, never explicit.
+// ============================================================================
+const ERA_HINTS = {
+  2000: 'Everyone you meet is a genius. The champagne is warm and nobody notices.',
+  2001: 'The hangover arrives. Some pillars of the economy look shakier than others.',
+  2002: 'The rubble is still smoking. Accountants are the new villains.',
+  2003: 'Cheap money, loud trucks, and a market finding its feet again.',
+  2004: 'A social network just launched from a dorm room. The suburbs sprawl.',
+  2005: 'Everyone owns three houses. What could possibly go wrong?',
+  2006: 'The mortgage machine is humming beautifully. Do not look inside it.',
+  2007: 'The music is still playing, so everyone is still dancing.',
+  2008: 'Buckle up.',
+  2009: 'Blood in the streets. Generational bargains, if you have the stomach.',
+  2010: 'Flash crashes and a slow, ugly climb out of the crater.',
+  2011: 'Europe is wobbling. Gold bugs are insufferable.',
+  2012: 'The world was supposed to end. It merely got more expensive.',
+  2013: 'Money printers hum. A strange internet coin crosses $100.',
+  2014: 'Oil is about to have a very bad year. Ask questions.',
+  2015: 'A rough patch dressed as a crisis. Or is it the reverse?',
+  2016: 'Politics gets loud. Markets pretend not to listen, then panic, then party.',
+  2017: 'Everything only goes up. Your barber has coin recommendations.',
+  2018: 'Volatility wakes up angry in February. December is worse.',
+  2019: 'A calm, pleasant climb. Enjoy it. Seriously, enjoy it.',
+  2020: 'You know exactly what happens here. The question is timing.',
+  2021: 'Apes, rockets, and free money. The casino has never been louder.',
+  2022: 'The bill arrives. Rates go up, everything else goes down.',
+  2023: 'Machines that talk are suddenly worth trillions.',
+};

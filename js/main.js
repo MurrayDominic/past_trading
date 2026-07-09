@@ -13,7 +13,9 @@ class Game {
     this.dataLoader = new DataLoader();
     this.audio = new AudioEngine();
     this.quarterly = new QuarterlyTargetSystem();
-    this.tips = new TipSystem();   // v2 informant drafting
+    this.tips = new TipSystem();          // v2 informant drafting
+    this.timeMachine = new TimeMachine(); // v2 flagship run format
+    this.runFormat = 'career';            // 'career' | 'timeMachine'
     this.ui = null; // set after UI init
 
     this.state = 'menu';     // menu | playing | paused | runEnd | loading
@@ -78,7 +80,7 @@ class Game {
     this.ui.showMenu();
   }
 
-  async startRun(mode) {
+  async startRun(mode, format = 'career') {
     // Bug Fix #6: Race condition - prevent concurrent startRun calls
     if (this.state === 'loading') {
       console.warn('Already loading, ignoring duplicate startRun');
@@ -88,6 +90,7 @@ class Game {
     // Stop any existing ticker first
     this.stopTicker();
 
+    this.runFormat = format;
     this.selectedMode = mode;
     this.currentDay = 0;
     this.speed = 1;
@@ -112,6 +115,16 @@ class Game {
       this.totalDays = 1;  // Single day
       this.currentTime = new Date();
       this.currentTime.setHours(CONFIG.MARKET_OPEN_HOUR, CONFIG.MARKET_OPEN_MINUTE, 0, 0);
+    } else if (format === 'timeMachine') {
+      // Time Machine (v2): 8 quarters, each in a different era. The machine
+      // picks the first insertion point; later jumps are drafted.
+      this.timeMachine.start();
+      const dest = this.timeMachine.randomDestination();
+      this.timeMachine.recordJump(dest);
+      this.selectedYears = { start: dest.year, end: dest.year + 1 };
+      this.totalDays = CONFIG.TOTAL_QUARTERS * CONFIG.QUARTER_DAYS;
+      this.currentTime = null;
+      console.log(`Time Machine run: first insertion ${dest.phase} ${dest.year} (month ${dest.month})`);
     } else {
       // Calculate extra years from "Time in the Market" unlocks
       let extraYears = 0;
@@ -154,15 +167,19 @@ class Game {
       // Init subsystems (market.init is now async) with timeout
       // Pass selected year range from year selection UI
       await Promise.race([
-        this.market.init(mode, this.dataLoader, this.progression, this.selectedYears.start, this.selectedYears.end),
+        this.market.init(mode, this.dataLoader, this.progression, this.selectedYears.start, this.selectedYears.end,
+          format === 'timeMachine' ? this.timeMachine.currentDest.month : 0),
         timeoutPromise
       ]);
       this.trading.init(CONFIG.STARTING_CASH, this.progression.data);
       // Extra years are added at the START as a head start before targets begin
+      // (career only; Time Machine is always exactly 8 quarters)
       let extraYearDays = 0;
-      if (this.progression.data.unlocks.timeInMarket3) extraYearDays = 3 * 365;
-      else if (this.progression.data.unlocks.timeInMarket2) extraYearDays = 2 * 365;
-      else if (this.progression.data.unlocks.timeInMarket1) extraYearDays = 1 * 365;
+      if (format !== 'timeMachine') {
+        if (this.progression.data.unlocks.timeInMarket3) extraYearDays = 3 * 365;
+        else if (this.progression.data.unlocks.timeInMarket2) extraYearDays = 2 * 365;
+        else if (this.progression.data.unlocks.timeInMarket1) extraYearDays = 1 * 365;
+      }
       this.quarterly.init(CONFIG.STARTING_CASH, extraYearDays);
       setRunAscension(this.ascensionLevel);
     this.sec.init();
@@ -174,6 +191,10 @@ class Game {
       }
 
       this.news.init(this.dataLoader);
+      if (format === 'timeMachine') {
+        const d = this.timeMachine.currentDest;
+        this.news.addNews(`INSERTION: ${d.phase} ${d.year}. ${d.hint}`, 'milestone', 0);
+      }
 
       // Bug Fix #25: Validate assets loaded before selecting
       const assets = this.market.getAllAssets();
@@ -348,7 +369,13 @@ class Game {
         allComplete: info.allComplete,
         mandate: info.mandateResult,
         boss: this.getBossMessage(info.level, nextTarget),
-        onContinue: () => { if (this.isPlaying()) this.startTicker(); }
+        onContinue: () => {
+          if (this.runFormat === 'timeMachine' && !info.allComplete) {
+            this.beginJump();
+          } else if (this.isPlaying()) {
+            this.startTicker();
+          }
+        }
       });
     }
 
@@ -763,6 +790,38 @@ class Game {
 
     this.ui.showTradeResult(result);
     this.ui.update(this);
+  }
+
+  // Time Machine jump (v2): draft a destination, liquidate, re-init the
+  // market in the new era, resume. Ticker is already stopped (quarter screen).
+  beginJump() {
+    const offers = this.timeMachine.offerDestinations();
+    this.ui.showDestinationDraft(offers, async (dest) => {
+      try {
+        // You cannot carry positions (or informants) through time
+        const sold = this.trading.liquidateAll(this.market, this.progression.data, this.currentDay);
+        if (sold.length) {
+          this.news.addTradeNews(`Temporal transit: ${sold.length} position${sold.length === 1 ? '' : 's'} liquidated`, this.currentDay);
+        }
+        this.tips.activeTips = [];
+
+        this.ui.showJumpCinematic(dest);
+        await this.market.init(this.selectedMode, this.dataLoader, this.progression, dest.year, dest.year + 1, dest.month);
+        this.timeMachine.recordJump(dest);
+
+        const assets = this.market.getAllAssets();
+        this.selectedAsset = assets.length ? assets[0].ticker : null;
+        this.news.addNews(`ARRIVAL: ${dest.phase} ${dest.year}. ${dest.hint}`, 'milestone', this.currentDay);
+
+        this.ui.hideJumpCinematic();
+        if (this.isPlaying()) this.startTicker();
+        this.ui.update(this);
+      } catch (e) {
+        console.error('Jump failed:', e);
+        this.ui.hideJumpCinematic();
+        if (this.isPlaying()) this.startTicker();
+      }
+    });
   }
 
   // Tip draft (v2): pause, offer 3 informants, resume on choice or skip

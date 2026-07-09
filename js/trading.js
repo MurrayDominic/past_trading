@@ -328,6 +328,17 @@ class TradingEngine {
     return { success: true, message: `Sold ${pos.quantity} ${pos.ticker} @ ${formatPrice(asset.price)} (${profit >= 0 ? '+' : ''}${formatMoney(profit)})`, trade, profit };
   }
 
+  // v2 Time Machine: you cannot carry positions through time. Sells every
+  // open position at market through the normal sell path (fees, stats, P&L).
+  liquidateAll(market, metaProgression, currentDay) {
+    const results = [];
+    for (let i = this.positions.length - 1; i >= 0; i--) {
+      const r = this.sell(this.positions[i].ticker, i, market, metaProgression, currentDay);
+      if (r.success) results.push(r);
+    }
+    return results;
+  }
+
   short(ticker, dollarAmount, market, metaProgression, currentDay) {
     const asset = market.getAsset(ticker);
     if (!asset) return { success: false, message: 'Asset not found' };
