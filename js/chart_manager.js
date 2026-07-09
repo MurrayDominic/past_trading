@@ -97,7 +97,7 @@ class ChartManager {
     });
   }
 
-  renderActiveChart(market, currentDay, mode, positions = []) {
+  renderActiveChart(market, currentDay, mode, positions = [], tradeHistory = []) {
     const activeTab = this.tabs.find(t => t.active);
     if (!activeTab) return;
 
@@ -114,7 +114,7 @@ class ChartManager {
     if (mode === 'dayTrading' && asset.ohlcHistory && asset.ohlcHistory.length > 1) {
       this.renderCandlestickChart(activeTab, asset, positions, market.startDate, currentDay);
     } else if (asset.history && asset.history.length > 1) {
-      this.renderLineChart(activeTab, asset, positions, market.startDate, currentDay);
+      this.renderLineChart(activeTab, asset, positions, market.startDate, currentDay, tradeHistory);
     } else {
       // Show "Loading..." message when data is insufficient
       const ctx = activeTab.canvas.getContext('2d');
@@ -285,7 +285,7 @@ class ChartManager {
     }
   }
 
-  renderLineChart(tab, asset, positions = [], startDate = null, currentDay = 0) {
+  renderLineChart(tab, asset, positions = [], startDate = null, currentDay = 0, tradeHistory = []) {
     const ctx = tab.ctx;
     const canvas = tab.canvas;
     const w = canvas.width;
@@ -399,6 +399,40 @@ class ChartManager {
       ctx.fillStyle = 'rgba(245, 197, 66, 0.9)';
       ctx.textAlign = 'left';
       ctx.fillText(`Entry: ${this.formatPrice(position.entryPrice)}`, padding + 10, entryY - 6);
+    }
+
+    // v2 chart-as-stage: the player's own trades marked on the chart.
+    // Opens are money-gold triangles (up = buy, down = short); closes are
+    // dots colored by realized P&L. X mapping assumes one history entry per
+    // game day, so a sanity check hides markers that would land off-line
+    // (late-IPO assets can have shorter histories).
+    if (tradeHistory && tradeHistory.length && currentDay > 0) {
+      const visibleStart = asset.history.length - data.length;
+      const markers = tradeHistory.filter(t => t.ticker === asset.ticker).slice(-60);
+      for (const t of markers) {
+        const idx = asset.history.length - 1 - (currentDay - t.day);
+        const vis = idx - visibleStart;
+        if (vis < 0 || vis >= data.length) continue;
+        if (Math.abs(data[vis] - t.price) / t.price > 0.25) continue;
+        const x = padding + vis * spacing;
+        const y = toY(t.price);
+        if (t.action === 'BUY') {
+          ctx.fillStyle = PALETTE.money;
+          ctx.beginPath();
+          ctx.moveTo(x, y + 5); ctx.lineTo(x - 5, y + 13); ctx.lineTo(x + 5, y + 13);
+          ctx.closePath(); ctx.fill();
+        } else if (t.action === 'SHORT') {
+          ctx.fillStyle = PALETTE.money;
+          ctx.beginPath();
+          ctx.moveTo(x, y - 5); ctx.lineTo(x - 5, y - 13); ctx.lineTo(x + 5, y - 13);
+          ctx.closePath(); ctx.fill();
+        } else {
+          ctx.fillStyle = (t.profit || 0) >= 0 ? PALETTE.profit : PALETTE.loss;
+          ctx.beginPath();
+          ctx.arc(x, y, 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
     }
 
     // Current price label

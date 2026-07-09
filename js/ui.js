@@ -133,7 +133,8 @@ class GameUI {
         if (this.chartManager) {
           this.chartManager.renderActiveChart(
             this.game.market, this.game.currentDay,
-            this.game.selectedMode, this.game.trading.positions
+            this.game.selectedMode, this.game.trading.positions,
+            this.game.trading.tradeHistory
           );
         }
       }
@@ -409,7 +410,8 @@ class GameUI {
               this.game.market,
               this.game.currentDay,
               this.game.selectedMode,
-              this.game.trading.positions
+              this.game.trading.positions,
+              this.game.trading.tradeHistory
             );
           }
         }
@@ -1565,7 +1567,7 @@ class GameUI {
 
     // Chart manager
     if (this.chartManager) {
-      this.chartManager.renderActiveChart(game.market, game.currentDay, game.selectedMode, game.trading.positions);
+      this.chartManager.renderActiveChart(game.market, game.currentDay, game.selectedMode, game.trading.positions, game.trading.tradeHistory);
     }
 
     // Quarterly target panel
