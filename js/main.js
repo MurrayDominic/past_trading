@@ -528,8 +528,172 @@ class Game {
       }
     }
 
+    // Autosave every 7 game days (v2): long runs must survive crashes
+    if (this.currentDay % 7 === 0) this.saveRunState();
+
     // Update UI
     this.ui.update(this);
+  }
+
+  // ---- Mid-run autosave / resume (v2, Phase 3) ----
+
+  _buildAutosave() {
+    return {
+      version: 1,
+      runFormat: this.runFormat,
+      mode: this.selectedMode,
+      selectedYears: this.selectedYears,
+      ascensionLevel: this.ascensionLevel,
+      currentDay: this.currentDay,
+      totalDays: this.totalDays,
+      selectedAsset: this.selectedAsset,
+      lastNetWorth: this.lastNetWorth,
+      market: {
+        startYear: this.market.startYear,
+        endYear: this.market.endYear,
+        startMonth: this.market.startDate ? this.market.startDate.getMonth() : 0,
+        dayCount: this.market.dayCount,
+      },
+      trading: {
+        cash: this.trading.cash,
+        netWorth: this.trading.netWorth,
+        positions: this.trading.positions,
+        tradeHistory: this.trading.tradeHistory,
+        netWorthHistory: this.trading.netWorthHistory,
+        stats: this.trading.stats,
+        lastTradedTicker: this.trading.lastTradedTicker,
+      },
+      sec: {
+        attention: this.sec.attention,
+        arrestThreshold: this.sec.arrestThreshold,
+        donationCount: this.sec.donationCount,
+        totalDonations: this.sec.totalDonations,
+        tradeRestricted: this.sec.tradeRestricted,
+      },
+      quarterly: {
+        currentQuarter: this.quarterly.currentQuarter,
+        completedLevels: this.quarterly.completedLevels,
+        fired: this.quarterly.fired,
+        dayOffset: this.quarterly.dayOffset,
+        mandateId: this.quarterly.mandate ? this.quarterly.mandate.id : null,
+        mandateViolated: this.quarterly.mandateViolated,
+        mandateProgress: this.quarterly.mandateProgress,
+        mandateStartDay: this.quarterly.mandateStartDay,
+      },
+      tips: {
+        sources: this.tips.sources.map(s => ({ id: s.id, accuracy: s.accuracy, correct: s.correct, total: s.total })),
+        activeTips: this.tips.activeTips,
+        lastDraftQuarter: this.tips.lastDraftQuarter,
+      },
+      timeMachine: {
+        active: this.timeMachine.active,
+        visited: this.timeMachine.visited,
+        jumpCount: this.timeMachine.jumpCount,
+        currentDest: this.timeMachine.currentDest,
+      },
+    };
+  }
+
+  saveRunState() {
+    if (!this.isPlayingOrPaused() || this.isIntraday) return;
+    try {
+      saveManager.save('pastTrading_autosave', this._buildAutosave());
+    } catch (e) {
+      console.warn('Autosave failed:', e);
+    }
+  }
+
+  clearRunState() {
+    try { saveManager.remove('pastTrading_autosave'); } catch (e) { /* best effort */ }
+  }
+
+  hasAutosave() {
+    try { return !!saveManager.load('pastTrading_autosave'); } catch (e) { return false; }
+  }
+
+  async resumeRun() {
+    if (this.state === 'loading') return;
+    const save = saveManager.load('pastTrading_autosave');
+    if (!save || save.version !== 1) return;
+
+    this.stopTicker();
+    this.runFormat = save.runFormat || 'career';
+    this.selectedMode = save.mode || 'stocks';
+    this.selectedYears = save.selectedYears;
+    this.ascensionLevel = save.ascensionLevel || 0;
+    this.isIntraday = false;
+    this.currentDay = save.currentDay;
+    this.totalDays = save.totalDays;
+    this.lastNetWorth = save.lastNetWorth || CONFIG.STARTING_CASH;
+    this.runEndReason = '';
+    this.speed = 1;
+
+    this.state = 'loading';
+    this.ui.showLoading();
+    try {
+      await this.dataLoader.loadNewsEvents();
+      await this.market.init(this.selectedMode, this.dataLoader, this.progression,
+        save.market.startYear, save.market.endYear, save.market.startMonth);
+      this.market.fastForward(save.market.dayCount);
+
+      this.trading.init(CONFIG.STARTING_CASH, this.progression.data);
+      this.trading.cash = save.trading.cash;
+      this.trading.netWorth = save.trading.netWorth;
+      this.trading.positions = save.trading.positions || [];
+      this.trading.tradeHistory = save.trading.tradeHistory || [];
+      this.trading.netWorthHistory = save.trading.netWorthHistory || [];
+      this.trading.lastTradedTicker = save.trading.lastTradedTicker || null;
+      Object.assign(this.trading.stats, save.trading.stats || {});
+
+      setRunAscension(this.ascensionLevel);
+      this.sec.init();
+      Object.assign(this.sec, save.sec || {});
+
+      this.quarterly.init(CONFIG.STARTING_CASH, save.quarterly.dayOffset || 0);
+      this.quarterly.currentQuarter = save.quarterly.currentQuarter;
+      this.quarterly.completedLevels = save.quarterly.completedLevels;
+      this.quarterly.fired = save.quarterly.fired;
+      this.quarterly.mandate = BOARD_MANDATES.find(m => m.id === save.quarterly.mandateId) || null;
+      this.quarterly.mandateViolated = save.quarterly.mandateViolated;
+      this.quarterly.mandateProgress = save.quarterly.mandateProgress;
+      this.quarterly.mandateStartDay = save.quarterly.mandateStartDay;
+
+      this.tips.init();
+      this.tips.sources.forEach(s => {
+        const savedSrc = (save.tips.sources || []).find(x => x.id === s.id);
+        if (savedSrc) { s.accuracy = savedSrc.accuracy; s.correct = savedSrc.correct; s.total = savedSrc.total; }
+      });
+      this.tips.activeTips = save.tips.activeTips || [];
+      this.tips.lastDraftQuarter = save.tips.lastDraftQuarter != null ? save.tips.lastDraftQuarter : -1;
+
+      this.timeMachine.reset();
+      Object.assign(this.timeMachine, save.timeMachine || {});
+
+      this.news.init(this.dataLoader);
+      this.news.addNews(`Run resumed on day ${this.currentDay}. The machine remembers.`, 'system', this.currentDay);
+
+      const assets = this.market.getAllAssets();
+      this.selectedAsset = (save.selectedAsset && this.market.getAsset(save.selectedAsset))
+        ? save.selectedAsset
+        : (assets.length ? assets[0].ticker : null);
+
+      this.rocketShown = true;
+      this.confettiShown = true;
+      this.shownSecWarnings = new Set();
+      this.shownRiskWarnings = new Set();
+
+      this.audio.resume();
+      this.audio.startMusic();
+      this.state = 'playing';
+      this.ui.showGame();
+      this.ui.update(this);
+      this.startTicker();
+    } catch (e) {
+      console.error('Resume failed:', e);
+      this.clearRunState();
+      this.ui.showAlert('Error', 'Could not resume the saved run.');
+      this.showMenu();
+    }
   }
 
   tickIntraday() {
@@ -651,6 +815,9 @@ class Game {
       this.quarterly,
       this.ascensionLevel
     );
+
+    // The run is over; the autosave must not survive it
+    this.clearRunState();
 
     // Submit to leaderboard
     this.leaderboard.submitRun(

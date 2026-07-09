@@ -245,6 +245,18 @@ class Market {
     }
   }
 
+  // v2 autosave: rebuild price state by replaying the real data day by day
+  // up to a saved point. Prices are pure historical data, so this is exact.
+  fastForward(days) {
+    for (let d = 0; d < days; d++) {
+      this.dayCount++;
+      for (const ticker in this.assets) {
+        this.updateAssetPrice(this.assets[ticker], 0, null);
+      }
+    }
+    this._topMoversCache = null;
+  }
+
   // v2 tips: peek at the REAL future close N trading days ahead.
   // Returns null when data is unavailable (late IPO, end of data).
   peekFutureClose(ticker, daysAhead) {

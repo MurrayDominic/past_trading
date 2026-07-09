@@ -833,6 +833,13 @@ class GameUI {
       this.el.playBtn.onclick = () => this.showYearSelect('stocks');
     }
 
+    // Resume autosaved run (v2)
+    const resumeBtn = document.getElementById('resume-run-btn');
+    if (resumeBtn) {
+      resumeBtn.style.display = this.game.hasAutosave() ? '' : 'none';
+      resumeBtn.onclick = () => this.game.resumeRun();
+    }
+
     // Unlock shop - MOVED TO SHOP SCREEN, COMMENTING OUT OLD CODE
     /*
     const unlocks = prog.getAvailableUnlocks();
