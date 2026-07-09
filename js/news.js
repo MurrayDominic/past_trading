@@ -21,8 +21,10 @@ class NewsSystem {
 
   tick(day, market, secSystem) {
     // Load historical events for this day
+    this.todaysEvents = [];
     if (this.dataLoader) {
       const events = this.dataLoader.getEventsForDay(day);
+      this.todaysEvents = events;   // exposed for "You called it" checks (v2)
       events.forEach(event => {
         this.addNews(event.headline, 'market', day);
         if (event.tickers_affected) {

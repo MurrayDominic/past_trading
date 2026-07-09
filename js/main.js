@@ -396,6 +396,33 @@ class Game {
     // News tick
     this.news.tick(this.currentDay, this.market, this.sec);
 
+    // "You called it" (v2): a historical event just fired and the player was
+    // already positioned to profit from it. Celebrate the foresight.
+    if (this.news.todaysEvents && this.news.todaysEvents.length) {
+      for (const ev of this.news.todaysEvents) {
+        if (!ev.tickers_affected || !ev.tickers_affected.length) continue;
+        for (const pos of this.trading.positions) {
+          if (!ev.tickers_affected.includes(pos.ticker)) continue;
+          const daysBefore = this.currentDay - pos.entryDay;
+          if (daysBefore < 3) continue;
+          const asset = this.market.getAsset(pos.ticker);
+          if (!asset) continue;
+          const pnl = pos.type === 'long'
+            ? (asset.price - pos.entryPrice) * pos.quantity
+            : (pos.entryPrice - asset.price) * pos.quantity;
+          if (pnl <= 0) continue;
+          this.ui.showCalledIt({
+            headline: ev.headline,
+            ticker: pos.ticker,
+            type: pos.type,
+            daysBefore,
+            pnl,
+          });
+          break; // one celebration per event
+        }
+      }
+    }
+
     // Milestone news
     this.news.addMilestoneNews(this.trading.netWorth, this.currentDay);
 

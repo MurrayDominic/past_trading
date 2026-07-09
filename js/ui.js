@@ -2298,6 +2298,34 @@ class GameUI {
     this.quarterScreen.show(data);
   }
 
+  // "You called it" banner: player was positioned before a historical event
+  // (DESIGN.md section 3, moment 4). Throttled to one visible at a time.
+  showCalledIt(data) {
+    if (this._calledItEl && this._calledItEl.parentNode) return;
+
+    const el = document.createElement('div');
+    el.className = 'called-it';
+    el.innerHTML = `
+      <div class="called-it-stamp">YOU CALLED IT</div>
+      <div class="called-it-headline">${data.headline}</div>
+      <div class="called-it-detail">${data.type === 'short' ? 'SHORT' : 'LONG'} ${data.ticker} opened
+        <span>${data.daysBefore} days</span> before this · <span>${TradeTally.formatPnL(data.pnl)}</span> and counting</div>
+    `;
+    this.el.gameScreen.appendChild(el);
+    this._calledItEl = el;
+
+    const audio = this.game && this.game.audio;
+    if (audio && audio.playPitchLadder) audio.playPitchLadder(6, 659, 100);
+    this.juice.shake(3);
+    this.juice.pulseSec();
+
+    setTimeout(() => el.classList.add('called-it-out'), 4200);
+    setTimeout(() => {
+      if (el.parentNode) el.parentNode.removeChild(el);
+      if (this._calledItEl === el) this._calledItEl = null;
+    }, 4800);
+  }
+
   // ---- Run End Screen ----
 
   showRunEnd(game, result, ranking = null) {
