@@ -80,6 +80,7 @@ class TradeTally {
       counter.snap(0);
       counter.set(trade.profit);
       if (audio && audio.playTone) audio.playTone(523 * 2, 0.16, 'triangle', 0.24);
+      if (tier >= 2 && trade.profit > 0) this.juice.pulseSec();
       if (tier >= 3) {
         totalEl.classList.add('tally-fire');
         this.juice.shake(3);

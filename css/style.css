@@ -3881,3 +3881,39 @@ body {
   font-family: 'Plex Mono', monospace;
   font-variant-numeric: tabular-nums;
 }
+
+/* One-click trading buttons in asset rows (v2) */
+.asset-quick {
+  display: inline-flex;
+  gap: 3px;
+  margin-left: 6px;
+}
+.quick-b, .quick-s {
+  width: 20px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--rh-border);
+  border-radius: 3px;
+  background: var(--rh-panel-hover);
+  font-family: 'Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.quick-b { color: var(--rh-green); }
+.quick-s { color: var(--rh-text-tertiary); cursor: default; }
+.quick-s.has-pos { color: var(--rh-red); cursor: pointer; }
+.quick-b:hover { border-color: var(--rh-green); }
+.quick-s.has-pos:hover { border-color: var(--rh-red); }
+
+/* SEC telegraph: celebrations pulse the attention meter (DESIGN.md) */
+.sec-telegraph {
+  animation: sec-telegraph 0.7s ease-out;
+}
+@keyframes sec-telegraph {
+  0%   { box-shadow: 0 0 0 rgba(185, 92, 255, 0); filter: brightness(1); }
+  30%  { box-shadow: 0 0 16px rgba(185, 92, 255, 0.9); filter: brightness(1.8); }
+  100% { box-shadow: 0 0 0 rgba(185, 92, 255, 0); filter: brightness(1); }
+}

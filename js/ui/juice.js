@@ -87,6 +87,17 @@ class Juice {
 
   attachShakeTarget(el) { this.shakeEl = el; }
   attachPopupLayer(el) { this.popupLayer = el; }
+  attachSecMeter(el) { this.secEl = el; }
+
+  // Juice as risk telegraph (DESIGN.md): the celebration itself pulses the
+  // SEC meter, teaching that spectacle attracts attention.
+  pulseSec() {
+    if (!this.secEl) return;
+    this.secEl.classList.remove('sec-telegraph');
+    void this.secEl.offsetWidth;
+    this.secEl.classList.add('sec-telegraph');
+    setTimeout(() => this.secEl.classList.remove('sec-telegraph'), 750);
+  }
 
   counter(el, formatFn) { return new RollingCounter(el, formatFn); }
 
@@ -141,6 +152,7 @@ class Juice {
       ? `${sign}${Juice.formatMoney(agg.sum)} ×${agg.count}`
       : `${sign}${Juice.formatMoney(agg.sum)}`;
 
+    if (tier >= 2 && agg.sum > 0) this.pulseSec();
     if (tier >= 3) {
       this.shake(3);
       const audio = this._getAudio();

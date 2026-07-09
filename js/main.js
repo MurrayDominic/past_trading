@@ -713,6 +713,29 @@ class Game {
     this.ui.update(this);
   }
 
+  // One-click trading from asset rows (v2)
+  quickBuy(ticker) {
+    if (!this.isPlayingOrPaused() || !ticker) return;
+    this.selectAsset(ticker);
+    const amount = parseFloat(this.ui.el.tradeQuantity.value) || 1000;
+    this.buyAsset(amount);
+  }
+
+  quickSell(ticker) {
+    if (!this.isPlayingOrPaused() || !ticker) return;
+    // Close the newest open position for this ticker
+    let pos = null;
+    for (let i = this.trading.positions.length - 1; i >= 0; i--) {
+      if (this.trading.positions[i].ticker === ticker) { pos = this.trading.positions[i]; break; }
+    }
+    if (!pos) {
+      this.ui.showTradeResult({ success: false, message: `No open ${ticker} position` });
+      return;
+    }
+    this.selectAsset(ticker);
+    this.sellPositionByIdentifier(pos.ticker, pos.type, pos.entryDay);
+  }
+
   doInsiderTrade() {
     if (!this.isPlayingOrPaused()) return;
     if (!this.sec.canDoIllegalAction('insiderTrading', this.progression.data, this.progression.data.runCount)) {

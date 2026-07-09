@@ -117,6 +117,7 @@ class GameUI {
     this.juice = new Juice(() => this.game && this.game.audio);
     this.juice.attachShakeTarget(this.el.gameScreen);
     this.juice.attachPopupLayer(this.el.gameScreen);
+    this.juice.attachSecMeter(this.el.secFill);
     this.cashCounter = this.juice.counter(this.el.cashDisplay);
     this.netWorthCounter = this.juice.counter(this.el.netWorthDisplay);
     this.tradeTally = new TradeTally(this.juice);
@@ -349,6 +350,25 @@ class GameUI {
         this.currentSearchTerm = e.target.value;  // Store term
         this.filterAssets(e.target.value);
       });
+    }
+
+    // One-click trading from asset rows (v2). Delegated in the CAPTURE phase:
+    // rows re-render every tick, and capture lets us intercept before the
+    // row's own select-asset handler fires.
+    if (this.el.assetSelector) {
+      this.el.assetSelector.addEventListener('click', (e) => {
+        const qb = e.target.closest('.quick-b');
+        const qs = e.target.closest('.quick-s');
+        if (qb) {
+          e.stopPropagation();
+          e.preventDefault();
+          this.game.quickBuy(qb.dataset.ticker);
+        } else if (qs) {
+          e.stopPropagation();
+          e.preventDefault();
+          this.game.quickSell(qs.dataset.ticker);
+        }
+      }, true);
     }
 
     // Add chart button
@@ -1657,6 +1677,7 @@ class GameUI {
 
       const isStarred = game.progression.data.watchlist.includes(asset.ticker);
       const starClass = isStarred ? 'starred' : '';
+      const hasPos = game.trading.positions.some(p => p.ticker === asset.ticker);
 
       html += `
         <button class="asset-btn ${selected} ${impactClass}" data-ticker="${asset.ticker}">
@@ -1674,6 +1695,10 @@ class GameUI {
             ${trendHtml}
             <span class="asset-price">${formatPrice(asset.price)}</span>
             <span class="asset-change ${changeClass}">${(change >= 0 ? '+' : '')}${(change * 100).toFixed(1)}%</span>
+            <span class="asset-quick">
+              <span class="quick-b" role="button" data-ticker="${asset.ticker}" title="Buy at the current trade amount">B</span>
+              <span class="quick-s ${hasPos ? 'has-pos' : ''}" role="button" data-ticker="${asset.ticker}" title="${hasPos ? 'Close newest position' : 'No open position'}">S</span>
+            </span>
           </div>
         </button>
       `;
