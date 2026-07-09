@@ -3967,3 +3967,41 @@ body {
   from { opacity: 0; transform: translateX(-50%) translateY(-14px) scale(0.92); }
   to   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
 }
+
+/* Run endings v2: near-miss callout + shareable run story */
+.near-miss {
+  background: rgba(255, 92, 92, 0.08);
+  border: 1px solid rgba(255, 92, 92, 0.45);
+  border-radius: 8px;
+  padding: 10px 16px;
+  margin: 10px auto;
+  max-width: 640px;
+  text-align: center;
+  font-family: 'Plex Sans', sans-serif;
+  font-size: 14px;
+  color: var(--rh-text);
+}
+.near-miss span {
+  font-family: 'Plex Mono', monospace;
+  font-weight: 700;
+  color: var(--rh-yellow);
+}
+.run-story {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--rh-panel);
+  border: 1px solid var(--rh-border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 8px auto 14px;
+  max-width: 640px;
+}
+.run-story-text {
+  flex: 1;
+  text-align: left;
+  font-family: 'Plex Sans', sans-serif;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--rh-text-secondary);
+}

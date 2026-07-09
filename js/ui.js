@@ -2364,6 +2364,21 @@ class GameUI {
 
     const rec = result.runRecord;
 
+    // v2 endings: near-miss callout (the retention research's emotional core)
+    let nearMissHTML = '';
+    if (game.runEndReason === 'quarterFail' && game.quarterly && !game.quarterly.isAllComplete()) {
+      const failedTarget = game.quarterly.getCurrentTarget();
+      if (failedTarget && failedTarget.target > 0) {
+        const pct = Math.min(99, Math.round((rec.netWorth / failedTarget.target) * 100));
+        nearMissHTML = `<div class="near-miss">You were <span>${pct}%</span> of the way to ${failedTarget.label} (${formatMoney(failedTarget.target)}).${pct >= 90 ? ' One more trade would have done it.' : ''}</div>`;
+      }
+    } else if (game.runEndReason === 'arrested') {
+      const crimeLine = rec.illegalActions > 0
+        ? `${rec.illegalActions} illegal action${rec.illegalActions === 1 ? '' : 's'} finally caught up with you.`
+        : 'You never even broke the law. You were just too good.';
+      nearMissHTML = `<div class="near-miss">The SEC got you on day ${rec.days}, holding <span>${formatMoney(rec.netWorth)}</span>. ${crimeLine}</div>`;
+    }
+
     // Add ranking info if available
     let rankingHTML = '';
     if (ranking && ranking.isRanked) {
@@ -2423,8 +2438,28 @@ class GameUI {
       tradeTableHtml += '</tbody></table></div>';
     }
 
+    // v2 endings: one-line run story, built for retelling (copy to clipboard)
+    const startYear = game.market && game.market.startDate ? game.market.startDate.getFullYear() : '?';
+    const startCash = (game.trading.netWorthHistory && game.trading.netWorthHistory[0]) || CONFIG.STARTING_CASH;
+    let bestTrade = null;
+    for (const t of trades) {
+      if (t.profit !== undefined && (!bestTrade || t.profit > bestTrade.profit)) bestTrade = t;
+    }
+    const reasonStory = {
+      arrested: 'got arrested by the SEC',
+      bankrupt: 'went bankrupt',
+      timeUp: 'made it out with everything',
+      fired: 'got fired for blowing the risk limit',
+      quarterFail: 'got fired for missing the numbers'
+    };
+    const shareText = `Second Chance at a Billion: I went back to ${startYear} with ${formatMoney(startCash)}, reached ${formatMoney(rec.netWorth)} in ${rec.days} days, then ${reasonStory[game.runEndReason] || 'it ended'}.`
+      + (bestTrade && bestTrade.profit > 0 ? ` Best call: ${TradeTally.formatPnL(bestTrade.profit)} on ${bestTrade.ticker}.` : '')
+      + (ranking && ranking.isRanked ? ` Rank #${ranking.rank}.` : '');
+
     this.el.runEndStats.innerHTML = `
       ${rankingHTML}
+      ${nearMissHTML}
+      <div class="run-story"><span class="run-story-text">${shareText}</span><button class="btn btn-small" id="copy-run-story">Copy</button></div>
 
       <div class="run-end-tabs">
         <button class="run-end-tab active" data-tab="stats">Stats</button>
@@ -2517,6 +2552,19 @@ class GameUI {
         if (content) content.classList.add('active');
       });
     });
+
+    // Copy run story to clipboard
+    const copyBtn = document.getElementById('copy-run-story');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', () => {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(shareText).then(() => {
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => { copyBtn.textContent = 'Copy'; }, 1500);
+          }).catch(() => {});
+        }
+      });
+    }
 
     // New achievements
     let achHtml = '';
