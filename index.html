@@ -209,9 +209,23 @@
   <div id="year-select-screen" class="hidden">
     <div class="year-select-container">
       <button class="btn btn-small" id="year-select-back-btn">&larr; Back to Menu</button>
-      <h1 class="year-select-title">Select Starting Year</h1>
-      <p class="section-subtitle" id="year-section-subtitle">Choose when to start your run (2000-2023)</p>
-      <div class="year-selection-container">
+      <h1 class="year-select-title">New Run</h1>
+      <p class="section-subtitle" id="year-section-subtitle">How do you want to travel?</p>
+
+      <div class="format-row">
+        <button class="format-card active" id="format-career" data-tip="The classic run: two years in the era you choose, eight quarterly targets, $10K to $1B.">
+          <span class="format-icon">🗓️</span>
+          <span class="format-name">Career</span>
+          <span class="format-desc">Pick your year. Two years to build a billion.</span>
+        </button>
+        <button class="format-card" id="format-tm" data-tip="Pass a quarter, draft your next era from three windows. Positions liquidate at every jump. Your SEC file travels with you.">
+          <span class="format-icon">🕰️</span>
+          <span class="format-name">Time Machine</span>
+          <span class="format-desc">The machine picks. 8 quarters, 8 random eras.</span>
+        </button>
+      </div>
+
+      <div class="year-selection-container" id="career-options">
         <div class="year-range-display">
           <div class="year-display-box">
             <label>Start Year</label>
@@ -226,7 +240,6 @@
         <div class="year-slider-container">
           <input type="range" id="start-year-slider" min="2000" max="2023" value="2020" class="year-slider">
         </div>
-        <p class="demo-year-label">Choose a historical era to trade through:</p>
         <div class="year-presets">
           <button class="btn btn-small year-preset-btn" data-start="2007">2008 Crisis</button>
           <button class="btn btn-small year-preset-btn" data-start="2020">2020 Pandemic</button>
@@ -236,28 +249,38 @@
           <button class="btn btn-small" id="random-year-btn">🎲 Random Year</button>
         </div>
       </div>
-      <div class="ascension-picker" data-tip="Higher levels sharpen the SEC and raise targets, but pay more credits. Complete all 8 quarters at your top level to unlock the next.">
-        <span class="ascension-label">DIFFICULTY</span>
-        <button class="btn btn-small" id="asc-down">−</button>
-        <span class="ascension-level" id="asc-level">0</span>
-        <button class="btn btn-small" id="asc-up">+</button>
-        <span class="ascension-name" id="asc-name">Intern</span>
-        <span class="ascension-desc" id="asc-desc">The baseline experience.</span>
+      <div class="tm-blurb" id="tm-blurb" style="display: none;">
+        You don't choose when you go. Survive the quarter, then draft your next era.
+        Unlocked markets (crypto, commodities, forex) appear as destination windows.
       </div>
-      <div class="ascension-picker" id="archetype-picker" data-tip="Run identities that change the rules. Unlocked by completing all 8 quarters once.">
-        <span class="ascension-label">ARCHETYPE</span>
-        <button class="btn btn-small" id="arch-prev">‹</button>
-        <span class="ascension-name" id="arch-name">👔 The Associate</span>
-        <button class="btn btn-small" id="arch-next">›</button>
-        <span class="ascension-desc" id="arch-desc">The standard deal: your money, your problem.</span>
-      </div>
-      <div class="ascension-picker" data-tip="Extras for people who want the machine to surprise them.">
-        <span class="ascension-label">EXTRAS</span>
-        <button class="btn btn-small" id="mystery-year-btn">🎭 Mystery Year: OFF</button>
-        <button class="btn btn-small" id="daily-run-btn" data-tip="One attempt per real day. Same secret insertion point for everyone. Mystery year forced on.">📅 Daily Challenge</button>
-      </div>
+
+      <div class="markets-strip" id="markets-strip"></div>
+
       <button class="btn btn-primary btn-large" id="year-select-start-btn">Start Run</button>
-      <button class="btn btn-large" id="time-machine-start-btn" data-tip="8 quarters, each in a random era the machine picks. You draft your next window at every quarter review. Positions liquidate at each jump. Your SEC file travels with you.">🕰️ Time Machine Run</button>
+
+      <button class="btn btn-small btn-muted" id="advanced-toggle">More options ▾</button>
+      <div id="advanced-options" style="display: none;">
+        <div class="ascension-picker" data-tip="Higher levels sharpen the SEC and raise targets, but pay more credits. Complete all 8 quarters at your top level to unlock the next.">
+          <span class="ascension-label">DIFFICULTY</span>
+          <button class="btn btn-small" id="asc-down">−</button>
+          <span class="ascension-level" id="asc-level">0</span>
+          <button class="btn btn-small" id="asc-up">+</button>
+          <span class="ascension-name" id="asc-name">Intern</span>
+          <span class="ascension-desc" id="asc-desc">The baseline experience.</span>
+        </div>
+        <div class="ascension-picker" id="archetype-picker" data-tip="Run identities that change the rules. Unlocked by completing all 8 quarters once.">
+          <span class="ascension-label">ARCHETYPE</span>
+          <button class="btn btn-small" id="arch-prev">‹</button>
+          <span class="ascension-name" id="arch-name">👔 The Associate</span>
+          <button class="btn btn-small" id="arch-next">›</button>
+          <span class="ascension-desc" id="arch-desc">The standard deal: your money, your problem.</span>
+        </div>
+        <div class="ascension-picker" data-tip="Extras for people who want the machine to surprise them.">
+          <span class="ascension-label">EXTRAS</span>
+          <button class="btn btn-small" id="mystery-year-btn">🎭 Mystery Year: OFF</button>
+          <button class="btn btn-small" id="daily-run-btn" data-tip="One attempt per real day. Same secret insertion point for everyone. Mystery year forced on.">📅 Daily Challenge</button>
+        </div>
+      </div>
     </div>
   </div>
 

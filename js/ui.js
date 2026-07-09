@@ -297,25 +297,44 @@ class GameUI {
       ascDown.addEventListener('click', () => this.setAscension(this.game.ascensionLevel - 1));
       ascUp.addEventListener('click', () => this.setAscension(this.game.ascensionLevel + 1));
     }
+    // One start button; the format cards decide career vs Time Machine (v2)
+    this._selectedFormat = 'career';
+    const formatCareer = document.getElementById('format-career');
+    const formatTm = document.getElementById('format-tm');
+    const selectFormat = (fmt) => {
+      this._selectedFormat = fmt;
+      if (formatCareer) formatCareer.classList.toggle('active', fmt === 'career');
+      if (formatTm) formatTm.classList.toggle('active', fmt === 'timeMachine');
+      const careerOpts = document.getElementById('career-options');
+      const tmBlurb = document.getElementById('tm-blurb');
+      if (careerOpts) careerOpts.style.display = fmt === 'career' ? '' : 'none';
+      if (tmBlurb) tmBlurb.style.display = fmt === 'timeMachine' ? '' : 'none';
+      const startBtn = document.getElementById('year-select-start-btn');
+      if (startBtn) startBtn.textContent = fmt === 'timeMachine' ? 'Engage the Machine' : 'Start Run';
+    };
+    if (formatCareer) formatCareer.addEventListener('click', () => selectFormat('career'));
+    if (formatTm) formatTm.addEventListener('click', () => selectFormat('timeMachine'));
+
     const yearSelectStartBtn = document.getElementById('year-select-start-btn');
     if (yearSelectStartBtn) {
       yearSelectStartBtn.addEventListener('click', () => {
         if (this._pendingMode) {
           this.game.isDailyRun = false;
           this.game.startMonth = 0;
-          this.game.startRun(this._pendingMode);
+          if (this._selectedFormat === 'timeMachine') this.game.mysteryYear = false;
+          this.game.startRun(this._pendingMode, this._selectedFormat);
         }
       });
     }
-    const timeMachineStartBtn = document.getElementById('time-machine-start-btn');
-    if (timeMachineStartBtn) {
-      timeMachineStartBtn.addEventListener('click', () => {
-        if (this._pendingMode) {
-          this.game.isDailyRun = false;
-          this.game.startMonth = 0;
-          this.game.mysteryYear = false;
-          this.game.startRun(this._pendingMode, 'timeMachine');
-        }
+
+    // Advanced options fold (v2 simplification)
+    const advToggle = document.getElementById('advanced-toggle');
+    const advPanel = document.getElementById('advanced-options');
+    if (advToggle && advPanel) {
+      advToggle.addEventListener('click', () => {
+        const open = advPanel.style.display !== 'none';
+        advPanel.style.display = open ? 'none' : '';
+        advToggle.textContent = open ? 'More options ▾' : 'Fewer options ▴';
       });
     }
 
@@ -684,6 +703,28 @@ class GameUI {
     }
     this.setAscension(this.game.ascensionLevel);
     this.cycleArchetype(0);
+    this.renderMarketsStrip();
+  }
+
+  // v2: show which markets exist and how to get them (they join runs as
+  // asset classes and Time Machine destinations, not separate menu modes)
+  renderMarketsStrip() {
+    const el = document.getElementById('markets-strip');
+    if (!el) return;
+    const u = this.game.progression.data.unlocks || {};
+    const items = [
+      { icon: '📈', name: 'Stocks', on: true, tip: '733 real S&P 500 tickers. Always in.' },
+      { icon: '₿', name: 'Crypto', on: !!u.cryptoTrading,
+        tip: u.cryptoTrading ? 'Unlocked: real coins in your list, crypto eras in the Time Machine.' : 'Unlock Crypto Trading in the Shop (50K credits).' },
+      { icon: '🛢️', name: 'Commodities', on: !!u.commoditiesTrading,
+        tip: u.commoditiesTrading ? 'Unlocked: real futures, including the day oil went negative.' : 'Unlock the Commodities Desk in the Shop (100K credits).' },
+      { icon: '💱', name: 'Forex', on: !!u.forexTrading,
+        tip: u.forexTrading ? 'Unlocked: five major pairs of real macro history.' : 'Unlock the FX Desk in the Shop (250K credits).' },
+      { icon: '⚡', name: 'Day Trading', on: false, soon: true, tip: 'Coming in update 2.1.' },
+    ];
+    el.innerHTML = '<span class="markets-label">MARKETS</span>' + items.map(m =>
+      `<span class="market-badge ${m.on ? 'on' : 'off'}" data-tip="${m.tip}">${m.icon} ${m.name}${m.on ? '' : (m.soon ? ' · soon' : ' 🔒')}</span>`
+    ).join('');
   }
 
   // v2 archetypes: cycle through run identities (locked until the ladder has

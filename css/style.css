@@ -4326,3 +4326,81 @@ body {
 .dest-option.dest-forex { border-color: rgba(51, 214, 159, 0.45); }
 .dest-option.dest-forex .dest-year { color: #33D69F; text-shadow: 0 0 14px rgba(51, 214, 159, 0.35); }
 .dest-option.dest-forex:hover { border-color: #33D69F; box-shadow: 0 0 20px rgba(51, 214, 159, 0.15); }
+
+/* Simplified run setup (v2 playtest feedback) */
+.format-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin: 14px auto;
+  max-width: 640px;
+}
+.format-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 14px;
+  background: var(--rh-panel);
+  border: 1px solid var(--rh-border);
+  border-radius: 12px;
+  cursor: pointer;
+  color: var(--rh-text);
+  transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.12s, box-shadow 0.12s;
+}
+.format-card:hover { transform: translateY(-3px); }
+.format-card.active {
+  border-color: var(--rh-yellow);
+  box-shadow: 0 0 18px rgba(245, 197, 66, 0.18);
+}
+.format-icon { font-size: 28px; }
+.format-name {
+  font-family: Copperplate, 'Copperplate Gothic Bold', serif;
+  font-size: 16px;
+  letter-spacing: 0.08em;
+  color: var(--rh-yellow);
+}
+.format-desc { font-size: 11.5px; color: var(--rh-text-secondary); }
+
+.tm-blurb {
+  max-width: 640px;
+  margin: 10px auto;
+  padding: 14px 18px;
+  background: var(--rh-panel);
+  border: 1px solid var(--rh-border);
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--rh-text-secondary);
+}
+
+.markets-strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 640px;
+  margin: 10px auto;
+}
+.markets-label {
+  font-family: 'Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--rh-text-secondary);
+  margin-right: 4px;
+}
+.market-badge {
+  font-family: 'Plex Sans', sans-serif;
+  font-size: 12px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--rh-border);
+  background: var(--rh-panel);
+}
+.market-badge.on { border-color: rgba(51, 214, 159, 0.5); color: var(--rh-text); }
+.market-badge.off { opacity: 0.55; }
+
+#advanced-toggle { display: block; margin: 12px auto 0; }
+#advanced-options { margin-top: 6px; }
