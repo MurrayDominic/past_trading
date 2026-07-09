@@ -822,3 +822,25 @@ function getTickerCategory(ticker) {
   const def = SP500_ASSETS.find(a => a.ticker === ticker);
   return def ? (def.category || null) : null;
 }
+
+// ============================================================================
+// V2 TIP SOURCES (Phase 2)
+// Informants offered at quarter drafts. Each rolls a HIDDEN accuracy within
+// its range at run start; the player calibrates trust by watching the track
+// record. Tips are generated against real future data (a lie flips the
+// direction of a real move; nothing is invented).
+// ============================================================================
+const TIP_SOURCES = [
+  { id: 'whistleblower', name: 'The Whistleblower', icon: '📞', accuracyRange: [0.75, 0.95], secHeat: 4,
+    desc: 'Nervous voice, burner phone, uncomfortably specific. Knowing them is a liability.' },
+  { id: 'chatroom', name: 'HotStockTips4U', icon: '💬', accuracyRange: [0.45, 0.75], secHeat: 0,
+    desc: 'An anonymous forum of geniuses and idiots. Good luck telling which is which.' },
+  { id: 'astrologer', name: 'Madame Zorga', icon: '🔮', accuracyRange: [0.2, 0.8], secHeat: 0,
+    desc: 'Reads the market in the stars. Either a fraud or a miracle. Roll the dice.' },
+  { id: 'senatorSpouse', name: "The Senator's Spouse", icon: '🏛️', accuracyRange: [0.8, 0.95], secHeat: 7,
+    desc: 'Uncannily well-timed trades. Uncannily illegal to copy them.' },
+  { id: 'taxiDriver', name: 'Your Uber Driver', icon: '🚕', accuracyRange: [0.3, 0.6], secHeat: 0,
+    desc: 'Everyone talks in his cab. He remembers about half of it correctly.' },
+  { id: 'exColleague', name: 'Barry from Risk', icon: '🍺', accuracyRange: [0.55, 0.85], secHeat: 2,
+    desc: 'Laid off in the last purge. Still bitter. Still has his old logins.' },
+];

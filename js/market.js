@@ -244,6 +244,16 @@ class Market {
     }
   }
 
+  // v2 tips: peek at the REAL future close N trading days ahead.
+  // Returns null when data is unavailable (late IPO, end of data).
+  peekFutureClose(ticker, daysAhead) {
+    const asset = this.getAsset(ticker);
+    if (!asset || !asset.hasHistoricalData || !asset.historicalData || !asset.historicalData.ohlc) return null;
+    const idx = this.calculateDataDay(asset) + daysAhead;
+    if (idx < 0 || idx >= asset.historicalData.ohlc.length) return null;
+    return asset.historicalData.ohlc[idx].close;
+  }
+
   updateAssetPrice(asset, volatility, eventEffect) {
     // ============================================================================
     // CRITICAL: Use ONLY real historical prices - ZERO artificial modifications

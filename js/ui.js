@@ -123,7 +123,17 @@ class GameUI {
     this.tradeTally = new TradeTally(this.juice);
     this.tradeTally.attach(this.el.gameScreen);
     this.quarterScreen = new QuarterScreen(this.juice);
+    this.tipDraft = new TipDraft(this.juice);
     InstantTooltip.init();
+
+    // Active tips list lives under the meters (created here to avoid
+    // touching the HTML grid)
+    const metersRow = this.el.secFill ? this.el.secFill.closest('.meters-row') : null;
+    if (metersRow && !document.getElementById('active-tips')) {
+      const tipsDiv = document.createElement('div');
+      tipsDiv.id = 'active-tips';
+      metersRow.parentNode.insertBefore(tipsDiv, metersRow.nextSibling);
+    }
 
     this.bindEvents();
 
@@ -1649,6 +1659,16 @@ class GameUI {
     // News
     this.renderNews(game);
 
+    // Active tips under the meters (v2)
+    const tipsEl = document.getElementById('active-tips');
+    if (tipsEl && game.tips) {
+      const active = game.tips.getActiveTips();
+      const html = active.map(t =>
+        `<div class="active-tip" data-tip="${t.sourceName} says ${t.ticker} moves ${t.direction.toUpperCase()} by day ${t.expiresDay}. Price when issued: ${formatPrice(t.startPrice)}.">${t.icon} <b>${t.ticker}</b> ${t.direction === 'up' ? '<span class="positive">▲</span>' : '<span class="negative">▼</span>'} <span class="active-tip-day">by day ${t.expiresDay}</span></div>`
+      ).join('');
+      if (tipsEl._html !== html) { tipsEl.innerHTML = html; tipsEl._html = html; }
+    }
+
     // Cash and net worth displays (rolling counters, DESIGN.md precision tiers)
     this.cashCounter.set(game.trading.cash);
     this.netWorthCounter.set(game.trading.netWorth);
@@ -2453,6 +2473,10 @@ class GameUI {
   showQuarterScreen(data) {
     // Full-screen quarter evaluation ceremony (DESIGN.md section 3, moment 2)
     this.quarterScreen.show(data);
+  }
+
+  showTipDraft(offer, tips, onPick, onSkip) {
+    this.tipDraft.show(offer, tips, onPick, onSkip);
   }
 
   // "You called it" banner: player was positioned before a historical event

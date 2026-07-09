@@ -13,6 +13,7 @@ class Game {
     this.dataLoader = new DataLoader();
     this.audio = new AudioEngine();
     this.quarterly = new QuarterlyTargetSystem();
+    this.tips = new TipSystem();   // v2 informant drafting
     this.ui = null; // set after UI init
 
     this.state = 'menu';     // menu | playing | paused | runEnd | loading
@@ -165,6 +166,7 @@ class Game {
       this.quarterly.init(CONFIG.STARTING_CASH, extraYearDays);
       setRunAscension(this.ascensionLevel);
     this.sec.init();
+    this.tips.init();
 
       // TED Talk: start with reduced SEC attention
       if (this.progression.data.unlocks.tedTalk) {
@@ -405,6 +407,18 @@ class Game {
 
     // News tick
     this.news.tick(this.currentDay, this.market, this.sec);
+
+    // Tips: resolve expired ones against real outcomes (v2)
+    this.tips.tick(this.currentDay, this.market, this.news);
+
+    // Tip draft: once per quarter, 3 days in (v2)
+    const qNow = this.quarterly.currentQuarter;
+    if (!this.quarterly.isAllComplete() && !this.quarterly.fired
+        && this.tips.lastDraftQuarter < qNow
+        && this.currentDay >= this.quarterly.dayOffset + qNow * CONFIG.QUARTER_DAYS + 3) {
+      this.tips.lastDraftQuarter = qNow;
+      this.openTipDraft();
+    }
 
     // "You called it" (v2): a historical event just fired and the player was
     // already positioned to profit from it. Celebrate the foresight.
@@ -749,6 +763,34 @@ class Game {
 
     this.ui.showTradeResult(result);
     this.ui.update(this);
+  }
+
+  // Tip draft (v2): pause, offer 3 informants, resume on choice or skip
+  openTipDraft() {
+    if (!this.isPlaying()) return;
+    const offer = this.tips.offerDraft();
+    if (!offer.length) return;
+    this.stopTicker();
+    this.ui.showTipDraft(offer, this.tips,
+      (sourceId) => {
+        const tip = this.tips.acceptSource(sourceId, this.market, this.sec, this.currentDay);
+        if (tip) {
+          const days = tip.expiresDay - tip.issuedDay;
+          this.news.addNews(
+            `TIP (${tip.sourceName}): ${tip.ticker} moves ${tip.direction.toUpperCase()} within ${days} days.`,
+            'milestone', this.currentDay
+          );
+          this.showToast(
+            `${tip.icon} ${tip.sourceName}`,
+            `"${tip.ticker}. ${tip.direction === 'up' ? 'It goes up.' : 'It drops.'} Within ${days} days. That is all I know."`,
+            'info', 9000
+          );
+        }
+        if (this.isPlaying()) this.startTicker();
+        this.ui.update(this);
+      },
+      () => { if (this.isPlaying()) this.startTicker(); }
+    );
   }
 
   // One-click trading from asset rows (v2)
