@@ -42,9 +42,9 @@ class DestinationDraft {
   _renderOffers() {
     const row = this._el.querySelector('#dest-row');
     row.innerHTML = this._offers.map((d, i) => `
-      <button class="dest-option" data-idx="${i}">
+      <button class="dest-option ${d.market === 'crypto' ? 'dest-crypto' : ''}" data-idx="${i}">
         <div class="dest-year">${d.year}</div>
-        <div class="dest-phase">${d.phase.toUpperCase()} IN THE YEAR</div>
+        <div class="dest-phase">${d.market === 'crypto' ? '₿ CRYPTO · ' : ''}${d.phase.toUpperCase()} IN THE YEAR</div>
         <div class="dest-hint">${d.hint}</div>
       </button>`).join('');
     row.querySelectorAll('.dest-option').forEach(btn => {

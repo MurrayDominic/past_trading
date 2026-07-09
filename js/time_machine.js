@@ -26,8 +26,10 @@ class TimeMachine {
     return this._makeDestination(2000 + Math.floor(Math.random() * 24));
   }
 
-  // Offer 3 distinct destination windows, preferring unvisited years
-  offerDestinations() {
+  // Offer 3 distinct destination windows, preferring unvisited years.
+  // With the crypto unlock, one window is always a crypto era: the machine
+  // can reach the casino that never closes.
+  offerDestinations(unlocks = null) {
     const pool = [];
     for (let y = 2000; y <= 2023; y++) pool.push(y);
     const fresh = pool.filter(y => !this.visited.includes(y));
@@ -38,20 +40,26 @@ class TimeMachine {
       const y = source[Math.floor(Math.random() * source.length)];
       if (!years.includes(y)) years.push(y);
     }
-    return years.map(y => this._makeDestination(y));
+    const offers = years.map(y => this._makeDestination(y));
+
+    if (unlocks && unlocks.cryptoTrading) {
+      // BTC data has full depth from 2015 onward
+      const cryptoYear = 2015 + Math.floor(Math.random() * 9);
+      offers[Math.floor(Math.random() * offers.length)] =
+        this._makeDestination(cryptoYear, 'crypto');
+    }
+    return offers;
   }
 
-  _makeDestination(year) {
+  _makeDestination(year, market = 'stocks') {
     // Land at the start of a random month; the last quarter of a year still
     // needs ~4.3 calendar months of data, which endYear = year + 1 covers.
     const month = Math.floor(Math.random() * 12);
     const phase = month < 4 ? 'Early' : month < 8 ? 'Mid' : 'Late';
-    return {
-      year,
-      month,
-      phase,
-      hint: ERA_HINTS[year] || 'The past. Probably.',
-    };
+    const hint = market === 'crypto'
+      ? (CRYPTO_ERA_HINTS[year] || 'The casino never closes.')
+      : (ERA_HINTS[year] || 'The past. Probably.');
+    return { year, month, phase, market, hint };
   }
 
   recordJump(dest) {

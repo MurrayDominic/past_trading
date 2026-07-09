@@ -889,3 +889,16 @@ const JUMP_PERKS = [
   { id: 'aperture', icon: '🔭', name: 'Wider Aperture', costPct: 0.06, costMin: 600,
     desc: 'Overcharge the machine: reveal one extra destination window right now.' },
 ];
+
+// Crypto era hints (v2 Phase 4): shown on crypto destination windows
+const CRYPTO_ERA_HINTS = {
+  2015: 'Magic internet money is dead, they say. It is very cheap to disagree.',
+  2016: 'Something halves. Very few people are paying attention.',
+  2017: 'Your barber, your uncle, and your taxi driver all have coin picks.',
+  2018: 'The hangover after the greatest party in financial history.',
+  2019: 'The desert. Only the true believers are still here.',
+  2020: 'The money printer hums, and the coins are listening.',
+  2021: 'Apes. Lasers. Sixty-nine thousand dollars.',
+  2022: 'Empires are collapsing. Some of them were always fake.',
+  2023: 'The survivors crawl out of the rubble and start buying.',
+};

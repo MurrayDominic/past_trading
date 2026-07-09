@@ -4297,3 +4297,8 @@ body {
 .perk-icon { font-size: 18px; }
 .perk-name { font-family: 'Plex Sans', sans-serif; font-weight: 600; font-size: 12px; }
 .perk-cost { font-family: 'Plex Mono', monospace; font-size: 11px; color: #F5C542; }
+
+/* Crypto destination windows (v2) */
+.dest-option.dest-crypto { border-color: rgba(245, 158, 11, 0.5); }
+.dest-option.dest-crypto .dest-year { color: #F59E0B; text-shadow: 0 0 14px rgba(245, 158, 11, 0.4); }
+.dest-option.dest-crypto:hover { border-color: #F59E0B; box-shadow: 0 0 20px rgba(245, 158, 11, 0.18); }

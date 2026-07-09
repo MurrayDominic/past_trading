@@ -970,7 +970,7 @@ class Game {
     }
     this.tips.activeTips = [];
 
-    const offers = this.timeMachine.offerDestinations();
+    const offers = this.timeMachine.offerDestinations(this.progression.data.unlocks);
     const perkCtx = {
       getPerks: () => JUMP_PERKS.map(def => {
         const cost = Math.max(def.costMin, Math.floor(this.trading.netWorth * def.costPct));
@@ -981,6 +981,9 @@ class Game {
     this.ui.showDestinationDraft(offers, async (dest) => {
       try {
         this.ui.showJumpCinematic(dest);
+        // Modes are destinations (v2): a crypto window loads the crypto
+        // market for this quarter; a stock window loads stocks
+        this.selectedMode = dest.market || 'stocks';
         await this.market.init(this.selectedMode, this.dataLoader, this.progression, dest.year, dest.year + 1, dest.month);
         this.timeMachine.recordJump(dest);
 
