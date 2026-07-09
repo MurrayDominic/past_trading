@@ -1,3 +1,34 @@
+## Session: 2026-07-09 (playtest round 2)
+
+### What was done
+- Shipped the last of the deferred nice-to-haves (commit 4604ffd): free respec button in the shop, passive income floor that scales with progress, Time Machine leaderboard category, and the Pilot License jump perk (buy the wheel, pick your exact destination year).
+- Fixed all four points from Dominic's second playtest (commit 8020421):
+  1. Tip chips are now clickable and open that stock's chart.
+  2. Markets strip clarified: owned markets show a green tick, locked ones show their shop price in the badge, and clicking a locked badge jumps straight to the Shop. (Crypto showed "unlocked" for Dominic because his v1 save already owns it - that was correct, just unlabelled.)
+  3. Real bug: Commodities and Forex were missing from the shop's hardcoded node list, so they could never be bought. Now in the tree after Crypto (50K -> 100K -> 250K).
+  4. More Options simplified: Difficulty and Archetype rows hide behind one locked explainer line until the player completes all 8 quarters once; the Extras row got plain-English descriptions.
+- All changes browser-verified with screenshots (shop nodes render, strip shows prices/ticks, locked note shows on a fresh save).
+
+### What was changed
+- js/ui.js, index.html, css/style.css
+
+### What is broken or incomplete
+- Nothing known broken. Everything pushed through commit 8020421.
+- Note for playtesting: Dominic's own save will still show Difficulty/Archetype rows because he has completed runs - that is intended veteran behavior.
+
+### Next steps
+1. Dominic playtests again, especially: click a tip chip, buy Commodities/Forex in the shop, and give the Q1 ($15K in 91 days) difficulty verdict.
+2. Q1 verdict unblocks the shop rebalance (task #9).
+3. Decide data licensing (yfinance-sourced files vs clean re-source) before 2.0 publicity.
+4. Launch work together: Steam screenshots, trailer, store copy, build, SteamPipe upload, 2.0 announcement.
+
+### Open questions
+- Q1 difficulty verdict (drives shop rebalance)
+- Data licensing: keep yfinance-sourced files or re-source cleanly
+- Market gating: keep shop unlocks or open some markets by default
+
+---
+
 ## Session: 2026-07-09 (playtest round 1)
 
 ### What was done
