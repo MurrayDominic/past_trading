@@ -1,3 +1,30 @@
+## Session: 2026-07-09 (playtest round 1)
+
+### What was done
+- Dominic playtested v2 for the first time. Verdict so far: the design looks a lot better; the run setup screen had too many options; the other markets were invisible.
+- Rebuilt the run setup screen from that feedback: two format cards (Career / Time Machine), one start button, year picker only for Career, difficulty/archetype/extras folded behind a collapsed More Options toggle.
+- Added a MARKETS strip showing all five asset classes with lock state and shop prices, and Day Trading marked as coming in 2.1. This answers "where are the other modes": they are unlockable markets woven into runs, not separate menus.
+- Task list cleaned: phases 0-6 complete; leftovers tracked as "Shop rebalance" (blocked on the Q1 verdict) and "2.0 nice-to-haves".
+
+### What was changed
+- index.html, js/ui.js, css/style.css (setup screen restructure, markets strip)
+
+### What is broken or incomplete
+- Nothing known broken. All pushed through commit bb00af7.
+
+### Next steps
+1. Dominic keeps playtesting. The key verdict: does Q1 ($15K in 91 days) feel clearable on a fresh save? That unblocks the shop rebalance.
+2. Decide the data licensing question (v1 dataset is yfinance-sourced; clean replacements researched if wanted before 2.0 publicity).
+3. Consider whether markets should be less gated (e.g. crypto available from the start): one-line change per market.
+4. Launch work together: Steam screenshots, trailer, store copy, build, SteamPipe upload, 2.0 announcement.
+
+### Open questions
+- Q1 difficulty verdict (drives shop rebalance)
+- Data licensing: keep yfinance-sourced files or re-source cleanly
+- Market gating: keep shop unlocks or open some markets by default
+
+---
+
 ## Session: 2026-07-08 and 2026-07-09 (the V2 build)
 
 ### What was done
