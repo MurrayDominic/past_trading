@@ -1611,95 +1611,68 @@ class GameUI {
     this.netWorthCounter.set(game.trading.netWorth);
   }
 
+  // v2 perf: rows are BUILT only when the visible asset set or unlocks
+  // change; every tick just updates prices/indicators in place. This keeps
+  // rows stable for clicking at speed and kills per-tick innerHTML churn.
   renderAssetSelector(game, filteredAssets = null) {
     const assets = filteredAssets || game.market.getAllAssets();
     const modeConfig = TRADING_MODES[game.selectedMode];
 
     if (modeConfig && (modeConfig.isPassive || modeConfig.isAlgo)) {
-      this.el.assetSelector.innerHTML = `<div style="padding: 16px; color: var(--rh-text-secondary);">${modeConfig.name} - Passive Mode</div>`;
+      if (this._assetSig !== 'passive') {
+        this._assetSig = 'passive';
+        this.el.assetSelector.innerHTML = `<div style="padding: 16px; color: var(--rh-text-secondary);">${modeConfig.name} - Passive Mode</div>`;
+      }
       return;
     }
 
     if (assets.length === 0 && this.currentCategoryFilter === 'watchlist') {
-      this.el.assetSelector.innerHTML = '<div class="watchlist-empty">Click the \u2605 star on any stock to add it to your watchlist</div>';
+      if (this._assetSig !== 'watchlist-empty') {
+        this._assetSig = 'watchlist-empty';
+        this.el.assetSelector.innerHTML = '<div class="watchlist-empty">Click the \u2605 star on any stock to add it to your watchlist</div>';
+      }
       return;
     }
 
-    const hasBloomberg = game.progression.data.unlocks.bloombergTerminal;
+    const unlocks = game.progression.data.unlocks;
+    const flags = `${!!unlocks.bloombergTerminal}${!!unlocks.dejaVu}${!!unlocks.volatilityScanner}`;
+    const sig = assets.map(a => a.ticker).join(',') + '|' + flags;
+    if (sig !== this._assetSig) {
+      this._assetSig = sig;
+      this._buildAssetRows(game, assets);
+    }
+    this._updateAssetRows(game, assets);
+  }
 
+  _buildAssetRows(game, assets) {
+    const unlocks = game.progression.data.unlocks;
     let html = '';
     for (const asset of assets) {
-      const change = game.market.getPriceChange(asset.ticker);
-      const changeClass = change >= 0 ? 'positive' : 'negative';
-      const selected = asset.ticker === game.selectedAsset ? 'selected' : '';
-      const impacted = game.news.isTickerImpacted(asset.ticker);
-      const impactClass = impacted ? 'asset-impacted' : '';
-
       // Category emoji
       const assetDef = SP500_ASSETS.find(a => a.ticker === asset.ticker)
         || (TRADING_MODES.crypto && TRADING_MODES.crypto.assets.find(a => a.ticker === asset.ticker));
       const category = assetDef ? (assetDef.category || 'consumer') : 'consumer';
       const categoryIcon = STOCK_CATEGORIES[category] ? STOCK_CATEGORIES[category].icon : '';
 
-      // Bloomberg Terminal: 5-day trend arrow
-      let trendHtml = '';
-      if (hasBloomberg) {
-        const trend = game.market.get5DayTrend(asset.ticker);
-        trendHtml = `<span class="asset-trend trend-${trend.className}">${trend.arrow}</span>`;
-      }
-
-      // Deja Vu: 10-day price change %
-      let dejaVuHtml = '';
-      if (game.progression.data.unlocks.dejaVu && asset.history.length >= 10) {
-        const priceNow = asset.price;
-        const price10Ago = asset.history[asset.history.length - 10];
-        if (price10Ago > 0) {
-          const pctChange = ((priceNow - price10Ago) / price10Ago) * 100;
-          const dvClass = pctChange >= 0 ? 'positive' : 'negative';
-          dejaVuHtml = `<span class="deja-vu-indicator ${dvClass}" title="10-day change">${pctChange >= 0 ? '+' : ''}${pctChange.toFixed(1)}%</span>`;
-        }
-      }
-
-      // Volatility Scanner: show volatility rating
-      let volHtml = '';
-      if (game.progression.data.unlocks.volatilityScanner && asset.history.length >= 5) {
-        const recentPrices = asset.history.slice(-20);
-        let sumSqReturns = 0;
-        for (let j = 1; j < recentPrices.length; j++) {
-          const ret = (recentPrices[j] - recentPrices[j-1]) / recentPrices[j-1];
-          sumSqReturns += ret * ret;
-        }
-        const vol = Math.sqrt(sumSqReturns / (recentPrices.length - 1)) * 100;
-        let volLabel, volClass;
-        if (vol < 1.5) { volLabel = 'LOW'; volClass = 'vol-low'; }
-        else if (vol < 3.5) { volLabel = 'MED'; volClass = 'vol-med'; }
-        else { volLabel = 'HIGH'; volClass = 'vol-high'; }
-        volHtml = `<span class="vol-indicator ${volClass}" title="Volatility: ${vol.toFixed(1)}%">${volLabel}</span>`;
-      }
-
-      const isStarred = game.progression.data.watchlist.includes(asset.ticker);
-      const starClass = isStarred ? 'starred' : '';
-      const hasPos = game.trading.positions.some(p => p.ticker === asset.ticker);
-
       html += `
-        <button class="asset-btn ${selected} ${impactClass}" data-ticker="${asset.ticker}">
+        <button class="asset-btn" data-ticker="${asset.ticker}">
           <div class="asset-btn-left">
             <div class="asset-ticker-row">
-              <span class="asset-star ${starClass}" data-star-ticker="${asset.ticker}" title="${isStarred ? 'Remove from watchlist' : 'Add to watchlist'}">\u2605</span>
-              ${impacted ? '<span class="impact-indicator">📰</span>' : ''}
+              <span class="asset-star" data-star-ticker="${asset.ticker}">\u2605</span>
+              <span class="impact-indicator" style="display: none;">\uD83D\uDCF0</span>
               <span class="asset-ticker">${categoryIcon} ${asset.ticker}</span>
             </div>
             <span class="asset-name">${asset.name}</span>
           </div>
           <div class="asset-btn-right">
-            ${dejaVuHtml}
-            ${volHtml}
-            ${trendHtml}
-            <span class="asset-price">${formatPrice(asset.price)}</span>
-            <span class="asset-change ${changeClass}">${(change >= 0 ? '+' : '')}${(change * 100).toFixed(1)}%</span>
+            ${unlocks.dejaVu ? '<span class="deja-vu-indicator" title="10-day change"></span>' : ''}
+            ${unlocks.volatilityScanner ? '<span class="vol-indicator"></span>' : ''}
+            ${unlocks.bloombergTerminal ? '<span class="asset-trend"></span>' : ''}
+            <span class="asset-price"></span>
+            <span class="asset-change"></span>
             <span class="asset-quick">
               <span class="quick-b" role="button" data-ticker="${asset.ticker}" title="Buy at the current trade amount">B</span>
-              <span class="quick-s ${hasPos ? 'has-pos' : ''}" role="button" data-ticker="${asset.ticker}" title="${hasPos ? 'Close newest position' : 'No open position'}">S</span>
+              <span class="quick-s" role="button" data-ticker="${asset.ticker}">S</span>
             </span>
           </div>
         </button>
@@ -1708,7 +1681,7 @@ class GameUI {
     this.el.assetSelector.innerHTML = html;
 
     // Bind star buttons (before asset buttons so stopPropagation works)
-    document.querySelectorAll('.asset-star').forEach(star => {
+    this.el.assetSelector.querySelectorAll('.asset-star').forEach(star => {
       star.addEventListener('click', (e) => {
         e.stopPropagation();
         this.toggleWatchlist(star.dataset.starTicker);
@@ -1716,10 +1689,97 @@ class GameUI {
     });
 
     // Bind asset buttons
-    document.querySelectorAll('.asset-btn').forEach(btn => {
+    this.el.assetSelector.querySelectorAll('.asset-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         game.selectAsset(btn.dataset.ticker);
       });
+    });
+  }
+
+  _updateAssetRows(game, assets) {
+    const unlocks = game.progression.data.unlocks;
+    const byTicker = new Map(assets.map(a => [a.ticker, a]));
+    const watchlist = game.progression.data.watchlist;
+
+    this.el.assetSelector.querySelectorAll('.asset-btn').forEach(row => {
+      const asset = byTicker.get(row.dataset.ticker);
+      if (!asset) return;
+      const ticker = asset.ticker;
+
+      const change = game.market.getPriceChange(ticker);
+      const impacted = game.news.isTickerImpacted(ticker);
+
+      row.classList.toggle('selected', ticker === game.selectedAsset);
+      row.classList.toggle('asset-impacted', impacted);
+
+      const impactEl = row.querySelector('.impact-indicator');
+      if (impactEl) impactEl.style.display = impacted ? '' : 'none';
+
+      const starEl = row.querySelector('.asset-star');
+      const isStarred = watchlist.includes(ticker);
+      starEl.classList.toggle('starred', isStarred);
+      starEl.title = isStarred ? 'Remove from watchlist' : 'Add to watchlist';
+
+      row.querySelector('.asset-price').textContent = formatPrice(asset.price);
+      const changeEl = row.querySelector('.asset-change');
+      changeEl.textContent = `${change >= 0 ? '+' : ''}${(change * 100).toFixed(1)}%`;
+      changeEl.className = `asset-change ${change >= 0 ? 'positive' : 'negative'}`;
+
+      // Bloomberg Terminal: 5-day trend arrow
+      if (unlocks.bloombergTerminal) {
+        const trendEl = row.querySelector('.asset-trend');
+        if (trendEl) {
+          const trend = game.market.get5DayTrend(ticker);
+          trendEl.textContent = trend.arrow;
+          trendEl.className = `asset-trend trend-${trend.className}`;
+        }
+      }
+
+      // Deja Vu: 10-day price change %
+      if (unlocks.dejaVu) {
+        const dvEl = row.querySelector('.deja-vu-indicator');
+        if (dvEl) {
+          if (asset.history.length >= 10 && asset.history[asset.history.length - 10] > 0) {
+            const price10Ago = asset.history[asset.history.length - 10];
+            const pctChange = ((asset.price - price10Ago) / price10Ago) * 100;
+            dvEl.textContent = `${pctChange >= 0 ? '+' : ''}${pctChange.toFixed(1)}%`;
+            dvEl.className = `deja-vu-indicator ${pctChange >= 0 ? 'positive' : 'negative'}`;
+          } else {
+            dvEl.textContent = '';
+          }
+        }
+      }
+
+      // Volatility Scanner: volatility rating
+      if (unlocks.volatilityScanner) {
+        const volEl = row.querySelector('.vol-indicator');
+        if (volEl) {
+          if (asset.history.length >= 5) {
+            const recentPrices = asset.history.slice(-20);
+            let sumSqReturns = 0;
+            for (let j = 1; j < recentPrices.length; j++) {
+              const ret = (recentPrices[j] - recentPrices[j - 1]) / recentPrices[j - 1];
+              sumSqReturns += ret * ret;
+            }
+            const vol = Math.sqrt(sumSqReturns / (recentPrices.length - 1)) * 100;
+            let volLabel, volClass;
+            if (vol < 1.5) { volLabel = 'LOW'; volClass = 'vol-low'; }
+            else if (vol < 3.5) { volLabel = 'MED'; volClass = 'vol-med'; }
+            else { volLabel = 'HIGH'; volClass = 'vol-high'; }
+            volEl.textContent = volLabel;
+            volEl.className = `vol-indicator ${volClass}`;
+            volEl.title = `Volatility: ${vol.toFixed(1)}%`;
+          } else {
+            volEl.textContent = '';
+          }
+        }
+      }
+
+      // Quick-sell button reflects whether a position is open
+      const qs = row.querySelector('.quick-s');
+      const hasPos = game.trading.positions.some(p => p.ticker === ticker);
+      qs.classList.toggle('has-pos', hasPos);
+      qs.title = hasPos ? 'Close newest position' : 'No open position';
     });
   }
 
@@ -2011,34 +2071,48 @@ class GameUI {
     }
   }
 
+  // v2 perf: the panel DOM is rebuilt only when the SET of positions changes;
+  // every tick just updates the numbers in place. This keeps buttons stable
+  // for clicking at high speed and avoids innerHTML churn 10x per second.
   renderPortfolio(game) {
     const positions = game.trading.positions;
     if (positions.length === 0) {
-      this.el.portfolioList.innerHTML = '<div style="padding: 16px; color: var(--rh-text-secondary); text-align: center;">No open positions</div>';
+      if (this._portfolioSig !== 'empty') {
+        this._portfolioSig = 'empty';
+        this.el.portfolioList.innerHTML = '<div style="padding: 16px; color: var(--rh-text-secondary); text-align: center;">No open positions</div>';
+      }
       return;
     }
 
-    // Compute P&L for each position and sort by absolute P&L descending
+    const sig = positions.map(p => `${p.ticker}|${p.type}|${p.entryDay}|${p.quantity}`).join(';');
+    if (sig !== this._portfolioSig) {
+      this._portfolioSig = sig;
+      this._buildPortfolioDOM(game);
+    }
+    this._updatePortfolioValues(game);
+  }
+
+  _buildPortfolioDOM(game) {
+    const positions = game.trading.positions;
+    // Sort by absolute P&L at build time; order then stays stable so cards
+    // don't jump around under the cursor while values update.
     const positionsWithPnl = positions.map(pos => {
-      const { pnl, pnlPercent, currentPrice } = game.trading.getPositionPnL(pos, game.market);
-      return { pos, pnl, pnlPercent, currentPrice };
+      const { pnl } = game.trading.getPositionPnL(pos, game.market);
+      return { pos, pnl };
     }).sort((a, b) => Math.abs(b.pnl) - Math.abs(a.pnl));
 
     let html = '';
-    for (const { pos, pnl, pnlPercent, currentPrice } of positionsWithPnl) {
-      const pnlClass = pnl >= 0 ? 'positive' : 'negative';
-      const pnlBg = pnl >= 0 ? 'position-winning' : 'position-losing';
+    for (const { pos } of positionsWithPnl) {
       const typeLabel = pos.type === 'short' ? 'Short' : 'Long';
       const typeClass = pos.type === 'short' ? 'short' : 'long';
-      const pctSign = pnlPercent >= 0 ? '+' : '';
-      const pctStr = `${pctSign}${(pnlPercent * 100).toFixed(1)}%`;
+      const key = `${pos.ticker}|${pos.type}|${pos.entryDay}`;
 
       html += `
-        <div class="position-card ${pnlBg}">
+        <div class="position-card" data-key="${key}">
           <div class="position-header">
             <span class="position-ticker">${pos.ticker}</span>
             <div class="position-header-right">
-              <span class="position-pnl-pct ${pnlClass}">${pctStr}</span>
+              <span class="position-pnl-pct"></span>
               <span class="position-type ${typeClass}">${typeLabel}</span>
             </div>
           </div>
@@ -2053,11 +2127,11 @@ class GameUI {
             </div>
             <div class="position-detail-item">
               <span class="position-detail-label">Current</span>
-              <span class="position-detail-value">${formatPrice(currentPrice)}</span>
+              <span class="position-detail-value" data-field="current"></span>
             </div>
             <div class="position-detail-item">
               <span class="position-detail-label">P&L</span>
-              <span class="position-detail-value position-pnl-value ${pnlClass}">${pnl >= 0 ? '+' : ''}${formatMoney(pnl)}</span>
+              <span class="position-detail-value position-pnl-value"></span>
             </div>
           </div>
           ${pos.leverage > 1 ? `<div style="font-size: 11px; color: var(--rh-yellow); margin-bottom: 8px;">${pos.leverage}x Leverage</div>` : ''}
@@ -2072,13 +2146,36 @@ class GameUI {
     this.el.portfolioList.innerHTML = html;
 
     // Bind sell buttons using stable identifiers
-    document.querySelectorAll('.btn-sell').forEach(btn => {
+    this.el.portfolioList.querySelectorAll('.btn-sell').forEach(btn => {
       btn.addEventListener('click', () => {
         const ticker = btn.dataset.ticker;
         const type = btn.dataset.type;
         const entryDay = parseInt(btn.dataset.entryDay);
         game.sellPositionByIdentifier(ticker, type, entryDay);
       });
+    });
+  }
+
+  _updatePortfolioValues(game) {
+    const positions = game.trading.positions;
+    this.el.portfolioList.querySelectorAll('.position-card').forEach(card => {
+      const pos = positions.find(p => `${p.ticker}|${p.type}|${p.entryDay}` === card.dataset.key);
+      if (!pos) return;
+      const { pnl, pnlPercent, currentPrice } = game.trading.getPositionPnL(pos, game.market);
+      const pnlClass = pnl >= 0 ? 'positive' : 'negative';
+
+      card.classList.toggle('position-winning', pnl >= 0);
+      card.classList.toggle('position-losing', pnl < 0);
+
+      const pctEl = card.querySelector('.position-pnl-pct');
+      pctEl.textContent = `${pnlPercent >= 0 ? '+' : ''}${(pnlPercent * 100).toFixed(1)}%`;
+      pctEl.className = `position-pnl-pct ${pnlClass}`;
+
+      card.querySelector('[data-field="current"]').textContent = formatPrice(currentPrice);
+
+      const pnlEl = card.querySelector('.position-pnl-value');
+      pnlEl.textContent = `${pnl >= 0 ? '+' : ''}${formatMoney(pnl)}`;
+      pnlEl.className = `position-detail-value position-pnl-value ${pnlClass}`;
     });
   }
 
