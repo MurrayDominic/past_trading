@@ -65,22 +65,35 @@ The **GameUI** (`ui.js`) is a rendering-only layer:
 
 ### Script Load Order (Critical)
 
-Scripts must load in this exact order (see `index.html` lines 506-521):
+Scripts must load in this exact order (see the script block at the bottom of `index.html`):
 
 ```
 sp500_tickers.js → config.js → save_manager.js → data_loader.js →
-market.js → trading.js → sec.js → news.js → quarterly.js →
-progression.js → achievements.js → leaderboard.js → chart_manager.js →
-audio_engine.js → ui.js → main.js
+market.js → trading.js → sec.js → news.js → tips.js → time_machine.js →
+quarterly.js → progression.js → achievements.js → leaderboard.js →
+chart_manager.js → audio_engine.js → ui/juice.js → ui/tooltip.js →
+ui/tally.js → ui/quarter_screen.js → ui/tip_draft.js →
+ui/destination_draft.js → ui.js → main.js
 ```
 
 - `sp500_tickers.js` defines S&P 500 asset data used by config and market
-- `config.js` defines global constants used by all other modules
+- `config.js` defines global constants plus the v2 tables: `PALETTE`, `ASCENSION_LEVELS`, `ARCHETYPES`, `BOARD_MANDATES`, `TIP_SOURCES`, `JUMP_PERKS`, `ERA_HINTS`, `CRYPTO_COLLAPSES`, and the `findAssetDef` lookup
 - `save_manager.js` and `data_loader.js` provide persistence and data loading
-- Core systems (market, trading, sec, news, quarterly, progression, leaderboard) are independent
-- `chart_manager.js` and `audio_engine.js` are presentation systems
+- Core systems (market, trading, sec, news, tips, time_machine, quarterly, progression, leaderboard) are independent
+- `chart_manager.js`, `audio_engine.js` and the `js/ui/*` modules are presentation systems
 - `ui.js` reads from all systems but doesn't modify them
 - `main.js` instantiates everything and wires it together
+
+### V2 Systems (July 2026 overhaul)
+
+- **Run formats**: `main.runFormat` is `'career'` (continuous, year chosen) or `'timeMachine'` (8 quarters, each a drafted jump into a random era; positions liquidate at each jump). `js/time_machine.js` generates destination windows; unlocked modes (crypto/commodities/forex) claim windows in the draft.
+- **Run modifiers**: `RUN_ASCENSION` (difficulty ladder) and `RUN_ARCHETYPE` (run identity) are globals set by `setRunAscension`/`setRunArchetype` at run start; consumers multiply by their fields with `|| 1` defaults.
+- **Per-quarter systems**: board mandates (`quarterly.mandate`, compliance bonus paid at review) and informant drafting (`js/tips.js`, hidden accuracy, tips generated from REAL future data via `market.peekFutureClose`).
+- **Crypto risk**: `CRYPTO_COLLAPSES` fire on real dates in crypto mode, seizing exchange-held funds; `trading.coldWallet` survives and counts in net worth.
+- **Juice layer** (`js/ui/juice.js` etc.): rolling counters, tiered popups, staged sell tally, quarter ceremony, destination draft, jump cinematic. All event-gated, never per-tick (DESIGN.md section 7).
+- **Autosave**: run state saves every 7 game days (`main.saveRunState`), resumes from the menu; `market.fastForward` replays real data to the saved day.
+- **Design source of truth**: `DESIGN.md` (palette, typography, motion, juice spec). Canvas code colors come from `PALETTE` in config.js; CSS mirrors it via the `--rh-*` overrides.
+- **Data**: `assets/market_data/{stocks,etfs,crypto,commodities,forex}/TICKER.json`. Crypto rows are calendar days (day-mapping scale 1:1); everything else is trading days (252/365). Events in `news_events.json` are matched by real DATE against the era's own day counter.
 
 ## Key Data Structures
 

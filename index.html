@@ -522,7 +522,19 @@
           </div>
           <div class="tutorial-tip">
             <span class="tutorial-tip-icon">🔍</span>
-            <span><strong>SEC Attention:</strong> Trading too well raises suspicion. If SEC Attention hits 100%, you get arrested and the run ends.</span>
+            <span><strong>SEC Attention:</strong> Trading too well raises suspicion. The arrest threshold is hidden somewhere between 60% and 100%, and it moves every run.</span>
+          </div>
+          <div class="tutorial-tip">
+            <span class="tutorial-tip-icon">📋</span>
+            <span><strong>Board Mandates:</strong> Each quarter the board issues a directive. Comply and they pay a cash bonus at the quarterly review.</span>
+          </div>
+          <div class="tutorial-tip">
+            <span class="tutorial-tip-icon">📞</span>
+            <span><strong>Informants:</strong> Once a quarter, pick one of three sources. Their accuracy is hidden; their track record is not. Learn who to trust.</span>
+          </div>
+          <div class="tutorial-tip">
+            <span class="tutorial-tip-icon">🕰️</span>
+            <span><strong>Time Machine Runs:</strong> Eight quarters, each in a random era the machine picks. Positions liquidate at every jump. Your SEC file travels with you.</span>
           </div>
           <div class="tutorial-tip">
             <span class="tutorial-tip-icon">⏱️</span>
@@ -584,12 +596,8 @@
     You're playing the <strong>free demo</strong> — 2008 Financial Crisis era, limited upgrades.
   </div>
 
-  <!-- Activate demo mode if DEMO_MODE flag is set in config -->
-  <script>
-    if (typeof DEMO_MODE !== 'undefined' && DEMO_MODE) {
-      document.body.classList.add('demo-mode');
-    }
-  </script>
+  <!-- Activate demo mode if DEMO_MODE flag is set in config (external file: CSP blocks inline scripts) -->
+  <script src="js/demo_mode.js"></script>
 
 </body>
 </html>

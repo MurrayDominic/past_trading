@@ -1,3 +1,57 @@
+## Session: 2026-07-08 and 2026-07-09 (the V2 build)
+
+### What was done
+The full Version 2 build, from research to launch-ready. Roughly 30 commits, all pushed to origin.
+- Research: 5 reports + summary in docs/v2/ (Balatro feel, competitors, retention, UI patterns, mode data). Verified nobody else ships real data + foreknowledge.
+- Plans: docs/v2/V2_PLAN.md (two run formats) and IMPLEMENTATION_PLAN.md (phases, estimates, status log).
+- Phase 0: DESIGN.md, bundled IBM Plex fonts, cockpit mockups. Approved look: painted trading floor + subtle scanlines.
+- Phase 1 (feel): juice engine (rolling counters, tiered popups, shake), staged sell tally, quarter ceremony with the boss call, full palette re-skin, one-click B/S trading, chart trade markers, "You called it" banners, near-miss endings with copyable run story, instant tooltips, in-place panel rendering (fixed per-tick DOM churn).
+- Phase 2 (systems): ascension ladder (11 levels), board mandates with cash bonuses, informant tip drafting (hidden accuracy, real-data tips), balance bot (finding: passive play passes ZERO quarters; even a perfect single pick averages Q1.2/8).
+- Phase 3 (Time Machine): the flagship format. 8 quarters across drafted random eras, forced liquidation at jumps, jump perk shop (Greased Palms / Insider Dossier / Wider Aperture), jump cinematic, mid-run autosave + Resume button.
+- Phase 4 (markets): 75-event real history pack (fixed events firing in wrong eras), Exchange Exposure (Mt Gox/Bitfinex/FTX seize exchange funds on their real dates; cold wallet survives), commodities (incl. the real negative oil day; fixed CL ticker collision with Colgate), forex from ECB reference rates (cleanly licensed). All join the Time Machine as destination windows via a shop unlock chain.
+- Phase 5 (variety): chart memory bands (fuzzy cone of real future + insider ghost line), 5 archetypes, Mystery Year mode (dates show 20??), Daily Challenge (seeded, one attempt/day, local record).
+- Phase 6 (day trading): slipped to 2.1 as pre-agreed (intraday stock data not legally shippable).
+- Phase 7 partials: QA sweeps green across all formats, console now fully clean (moved the demo-mode inline script to a file), How to Play refreshed, CLAUDE.md updated to v2.
+
+### What is broken or incomplete
+- Nothing known broken. All increments browser-verified.
+- Deferred: shop rebalance (waiting on the Q1-feasibility playtest), Steam leaderboards for dailies (needs steamworks testing in Electron), exact-date steering perk, TM leaderboard category, "You called it" banner not yet seen live (needs a profitable pre-positioned trade).
+
+### Next steps (Dominic)
+1. PLAYTEST. Browser or Electron (clear Electron cache first). This closes the Phase 1 gate and answers whether Q1 ($15K) is clearable on a fresh save.
+2. Decide on the data licensing question: v1's dataset came from Yahoo Finance; research identified clean replacements if wanted before the bigger 2.0 spotlight.
+3. Launch work together: Steam screenshots/trailer/store copy, build, SteamPipe upload, 2.0 announcement.
+
+---
+
+## Session: 2026-07-01
+
+### What was done
+- Catchup on project status (no code changes since June 14)
+- Drafted a new Reddit post for r/smallstreetbets with a different angle: "would you still lose money with time travel?" challenge format
+- Discussed subreddit targeting: WSB is off limits (banned for self-promo), sticking with r/smallstreetbets
+- Post is ready to copy/paste, needs a screenshot attachment (ideally a funny failure: getting arrested or fired)
+
+### What was changed
+- No code files changed
+
+### What is broken or incomplete
+- Nothing broken
+- Reddit post not yet posted (needs screenshot and Dominic to post manually)
+
+### Next steps
+1. Pick a good screenshot to attach (getting arrested or fired is ideal for the "you'd still lose" angle)
+2. Post to r/smallstreetbets with the drafted copy, flair as Shitpost
+3. Consider posting variations to other subs (r/stocks, r/IndieGaming) if this one gets traction
+4. Still outstanding from previous sessions: update Steam store screenshots, replace header rocket logo, achievement icons
+
+### Open questions
+- Which screenshot to use for the post?
+- Worth trying other subreddits with variations of this angle?
+- Has the itch.io demo ever been confirmed working? (carried over from March sessions)
+
+---
+
 ## Session: 2026-06-14 (artwork)
 
 ### What was done
@@ -166,7 +220,6 @@
 - `index.html` — slider default value changed from 2008 → 2020
 - `css/style.css` — demo preset button greyout: swapped data-start="2020" (was locked) ↔ data-start="2007" (now locked)
 - `scripts/build_itchio.ps1` — date filter changed from 2005–2009 → 2020–2021
-- `itchio_build/SecondChanceAtABillion_Demo.zip` — rebuilt (not committed, build output)
 
 ### What is broken or incomplete
 - Changes not yet committed to git
@@ -177,7 +230,7 @@
 1. Commit the 4 changed source files (ui.js, index.html, style.css, build_itchio.ps1)
 2. Upload new itchio_build\SecondChanceAtABillion_Demo.zip to itch.io (delete old file first)
 3. Test the demo — confirm year is locked to 2020, 2020 Pandemic button is active, others are greyed/locked
-4. Post the devlog on itch.io (copy drafted this session)
+4. If it works: set itch.io page to Public, then post to r/WebGames, r/itchio, r/freegames
 5. Post Reddit reply to Homer00's comment (copy drafted this session)
 
 ### Open questions
