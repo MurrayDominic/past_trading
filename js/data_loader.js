@@ -166,12 +166,13 @@ class DataLoader {
     }
     const from = this._gameDateStr(gameStartDate, currentDay);
     const to = this._gameDateStr(gameStartDate, currentDay + daysAhead);
-    // Attach the relative day so the Almanac can show "in Nd"
+    // Attach daysAway so the Almanac can show "in Nd" regardless of which
+    // day counter the caller uses
     return this.newsEvents
       .filter(e => e.date > from && e.date <= to)
       .map(e => ({
         ...e,
-        day: currentDay + Math.round((new Date(e.date) - new Date(from)) / (24 * 60 * 60 * 1000)),
+        daysAway: Math.round((new Date(e.date) - new Date(from)) / (24 * 60 * 60 * 1000)),
       }));
   }
 

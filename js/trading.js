@@ -61,6 +61,7 @@ class TradingEngine {
     }
 
     this.cash = cash;
+    this.coldWallet = 0;   // v2 crypto: funds in cold storage survive exchange collapses but cannot trade
     this.netWorth = cash;
     this.netWorthHistory = [cash];
     this.positions = [];
@@ -499,7 +500,7 @@ class TradingEngine {
       pos.lowestPriceSinceEntry = Math.min(pos.lowestPriceSinceEntry, asset.price);
     }
 
-    this.netWorth = this.cash + totalPositionValue;
+    this.netWorth = this.cash + (this.coldWallet || 0) + totalPositionValue;
 
     // Bug Fix #24: Validate net worth before adding to history (prevent NaN)
     if (isNaN(this.netWorth) || !isFinite(this.netWorth)) {

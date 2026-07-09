@@ -20,10 +20,15 @@ class NewsSystem {
   }
 
   tick(day, market, secSystem) {
-    // Load historical events for this day (matched by real date, v2)
+    // Load historical events for this day (matched by real date, v2).
+    // Use the MARKET's day counter, not the game day: after a Time Machine
+    // jump they diverge, and dates belong to the era.
     this.todaysEvents = [];
     if (this.dataLoader) {
-      const events = this.dataLoader.getEventsForDay(day, market ? market.startDate : null);
+      const events = this.dataLoader.getEventsForDay(
+        market ? market.dayCount : day,
+        market ? market.startDate : null
+      );
       this.todaysEvents = events;   // exposed for "You called it" checks (v2)
       events.forEach(event => {
         this.addNews(event.headline, 'market', day);
@@ -102,7 +107,11 @@ class NewsSystem {
   // Time Traveler's Almanac: get upcoming events within N days
   getUpcomingEvents(currentDay, daysAhead, market = null) {
     if (!this.dataLoader) return [];
-    return this.dataLoader.getUpcomingEvents(currentDay, daysAhead, market ? market.startDate : null);
+    return this.dataLoader.getUpcomingEvents(
+      market ? market.dayCount : currentDay,
+      daysAhead,
+      market ? market.startDate : null
+    );
   }
 
   getNewsColor(type) {

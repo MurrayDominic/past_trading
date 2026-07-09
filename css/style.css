@@ -4302,3 +4302,19 @@ body {
 .dest-option.dest-crypto { border-color: rgba(245, 158, 11, 0.5); }
 .dest-option.dest-crypto .dest-year { color: #F59E0B; text-shadow: 0 0 14px rgba(245, 158, 11, 0.4); }
 .dest-option.dest-crypto:hover { border-color: #F59E0B; box-shadow: 0 0 20px rgba(245, 158, 11, 0.18); }
+
+/* Cold wallet panel (v2 crypto) */
+#cold-wallet-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(92, 168, 255, 0.06);
+  border: 1px solid rgba(92, 168, 255, 0.35);
+  border-radius: 6px;
+  font-family: 'Plex Sans', sans-serif;
+  font-size: 12px;
+}
+#cold-wallet-amount { color: var(--rh-blue); font-family: 'Plex Mono', monospace; }

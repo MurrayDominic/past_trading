@@ -16,6 +16,7 @@ class Game {
     this.tips = new TipSystem();          // v2 informant drafting
     this.timeMachine = new TimeMachine(); // v2 flagship run format
     this.runFormat = 'career';            // 'career' | 'timeMachine'
+    this._collapsesFired = new Set();     // v2 crypto exchange collapses
     this.ui = null; // set after UI init
 
     this.state = 'menu';     // menu | playing | paused | runEnd | loading
@@ -184,6 +185,7 @@ class Game {
       setRunAscension(this.ascensionLevel);
     this.sec.init();
     this.tips.init();
+    this._collapsesFired = new Set();
 
       // TED Talk: start with reduced SEC attention
       if (this.progression.data.unlocks.tedTalk) {
@@ -528,6 +530,18 @@ class Game {
       }
     }
 
+    // Exchange collapse check (v2 crypto): on the real dates, funds left on
+    // the exchange take the historical haircut. Cold wallet survives.
+    if (this.selectedMode === 'crypto') {
+      const dateStr = new Date(this.market.startDate.getTime() + this.market.dayCount * 24 * 60 * 60 * 1000)
+        .toISOString().slice(0, 10);
+      const collapse = CRYPTO_COLLAPSES.find(c => c.date === dateStr && !this._collapsesFired.has(c.date));
+      if (collapse) {
+        this._collapsesFired.add(collapse.date);
+        this.fireExchangeCollapse(collapse);
+      }
+    }
+
     // Autosave every 7 game days (v2): long runs must survive crashes
     if (this.currentDay % 7 === 0) this.saveRunState();
 
@@ -554,8 +568,10 @@ class Game {
         startMonth: this.market.startDate ? this.market.startDate.getMonth() : 0,
         dayCount: this.market.dayCount,
       },
+      collapsesFired: Array.from(this._collapsesFired),
       trading: {
         cash: this.trading.cash,
+        coldWallet: this.trading.coldWallet || 0,
         netWorth: this.trading.netWorth,
         positions: this.trading.positions,
         tradeHistory: this.trading.tradeHistory,
@@ -638,6 +654,8 @@ class Game {
 
       this.trading.init(CONFIG.STARTING_CASH, this.progression.data);
       this.trading.cash = save.trading.cash;
+      this.trading.coldWallet = save.trading.coldWallet || 0;
+      this._collapsesFired = new Set(save.collapsesFired || []);
       this.trading.netWorth = save.trading.netWorth;
       this.trading.positions = save.trading.positions || [];
       this.trading.tradeHistory = save.trading.tradeHistory || [];
@@ -1010,6 +1028,50 @@ class Game {
         if (this.isPlaying()) this.startTicker();
       }
     }, perkCtx);
+  }
+
+  // v2 crypto: all-or-nothing cold wallet toggle
+  toggleColdWallet() {
+    if (!this.isPlayingOrPaused()) return;
+    if (this.trading.cash > 0) {
+      this.trading.coldWallet += this.trading.cash;
+      this.news.addTradeNews(`Moved ${formatMoney(this.trading.cash)} to cold storage. Safe, but it cannot trade.`, this.currentDay);
+      this.trading.cash = 0;
+    } else if (this.trading.coldWallet > 0) {
+      this.trading.cash += this.trading.coldWallet;
+      this.news.addTradeNews(`Withdrew ${formatMoney(this.trading.coldWallet)} from cold storage to the exchange.`, this.currentDay);
+      this.trading.coldWallet = 0;
+    }
+    this.ui.update(this);
+  }
+
+  // v2 crypto: an exchange died on its real date. Open positions and
+  // exchange cash take the historical haircut; the cold wallet survives.
+  fireExchangeCollapse(collapse) {
+    this.trading.liquidateAll(this.market, this.progression.data, this.currentDay);
+    const exposed = this.trading.cash;
+    const seized = Math.floor(exposed * collapse.lossPct);
+    this.trading.cash -= seized;
+
+    if (seized > 0) {
+      this.news.addSecNews(
+        `EXCHANGE COLLAPSE: ${collapse.name} is gone, and ${formatMoney(seized)} of your funds went with it.`,
+        this.currentDay
+      );
+      this.showToast(`💀 ${collapse.name} COLLAPSED`,
+        `Your positions were force-closed and ${formatMoney(seized)} on the exchange is simply gone. ${this.trading.coldWallet > 0 ? 'Your cold wallet is untouched.' : 'A cold wallet would have saved it.'}`,
+        'danger', 12000);
+      this.audio.playLossSound();
+      this.ui.juice.shake(4);
+    } else {
+      this.news.addNews(
+        `EXCHANGE COLLAPSE: ${collapse.name} is gone. Your cold wallet just paid for itself.`,
+        'milestone', this.currentDay
+      );
+      this.showToast(`🧊 ${collapse.name} COLLAPSED`,
+        'You saw it coming and kept nothing on the exchange. The bagholders salute you.', 'info', 10000);
+    }
+    this.ui.update(this);
   }
 
   // Jump perk purchase (v2): costs computed from net worth at purchase time

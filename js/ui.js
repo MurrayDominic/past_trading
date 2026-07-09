@@ -391,6 +391,12 @@ class GameUI {
       });
     }
 
+    // Cold wallet toggle (v2 crypto)
+    const coldBtn = document.getElementById('cold-wallet-btn');
+    if (coldBtn) {
+      coldBtn.addEventListener('click', () => this.game.toggleColdWallet());
+    }
+
     // One-click trading from asset rows (v2). Delegated in the CAPTURE phase:
     // rows re-render every tick, and capture lets us intercept before the
     // row's own select-asset handler fires.
@@ -1675,6 +1681,22 @@ class GameUI {
     // News
     this.renderNews(game);
 
+    // Cold wallet panel: crypto mode only (v2)
+    const coldPanel = document.getElementById('cold-wallet-panel');
+    if (coldPanel) {
+      const inCrypto = game.selectedMode === 'crypto';
+      coldPanel.style.display = inCrypto ? '' : 'none';
+      if (inCrypto) {
+        const amt = document.getElementById('cold-wallet-amount');
+        const btn = document.getElementById('cold-wallet-btn');
+        if (amt) amt.textContent = Juice.formatMoney(game.trading.coldWallet || 0);
+        if (btn) {
+          btn.textContent = game.trading.cash > 0 ? 'Move cash to cold' : 'Withdraw to exchange';
+          btn.disabled = game.trading.cash <= 0 && (game.trading.coldWallet || 0) <= 0;
+        }
+      }
+    }
+
     // Active tips under the meters (v2)
     const tipsEl = document.getElementById('active-tips');
     if (tipsEl && game.tips) {
@@ -2268,7 +2290,7 @@ class GameUI {
         ? UNLOCKS.earningsCalendar.previewDays : 3;
       const upcoming = game.news.getUpcomingEvents(game.currentDay, previewDays, game.market);
       for (const event of upcoming) {
-        const daysAway = event.day - game.currentDay;
+        const daysAway = event.daysAway != null ? event.daysAway : event.day - game.currentDay;
         html += `<div class="news-item almanac">
           <span class="news-timestamp">in ${daysAway}d</span>
           <span class="almanac-tag">ALMANAC</span> ${event.headline}

@@ -902,3 +902,16 @@ const CRYPTO_ERA_HINTS = {
   2022: 'Empires are collapsing. Some of them were always fake.',
   2023: 'The survivors crawl out of the rubble and start buying.',
 };
+
+// ============================================================================
+// V2 EXCHANGE COLLAPSES (Phase 4, crypto risk system)
+// Real dated exchange failures. During a crypto quarter, funds on the
+// exchange (cash + open positions) take the historical haircut on these
+// dates; the cold wallet is untouched. The player's foreknowledge IS the
+// defense: everyone who was there knows the dates.
+// ============================================================================
+const CRYPTO_COLLAPSES = [
+  { date: '2014-02-24', name: 'Mt. Gox', lossPct: 0.85 },
+  { date: '2016-08-02', name: 'Bitfinex', lossPct: 0.36 },
+  { date: '2022-11-11', name: 'FTX', lossPct: 0.90 },
+];
