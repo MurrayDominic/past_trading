@@ -90,7 +90,10 @@ class Market {
         // If start date is AFTER data start, calculate correct offset
         let requestedOffset = 0;
         if (calendarDays > 0) {
-          requestedOffset = Math.floor(calendarDays * (252 / 365)); // Scale to trading days
+          // Crypto trades every calendar day (rows = calendar days); stocks
+          // only have trading-day rows, so calendar days scale by 252/365
+          const offsetScale = assetDef.dataCategory === 'crypto' ? 1 : (252 / 365);
+          requestedOffset = Math.floor(calendarDays * offsetScale);
         }
 
         // Clamp to available data range
@@ -132,6 +135,9 @@ class Market {
       this.assets[assetDef.ticker] = {
         ticker: assetDef.ticker,
         name: assetDef.name,
+        // Crypto series contain every calendar day; stock series contain
+        // trading days only. Day mapping needs to know which (v2).
+        dataCategory: assetDef.dataCategory || null,
         price: startPrice,
         previousPrice: startPrice,
         basePrice: assetDef.basePrice,
@@ -468,10 +474,11 @@ class Market {
     const elapsedMs = this.startDate - asset.actualDataStartDate;
     const calendarDaysSinceAssetStart = Math.floor(elapsedMs / (1000 * 60 * 60 * 24));
 
-    // Scale to trading days
+    // Scale to trading days. Crypto series have a row for EVERY calendar
+    // day (24/7 markets), so they map 1:1 to game days (v2).
     const TRADING_DAYS_PER_YEAR = 252;
     const GAME_DAYS_PER_YEAR = 365;
-    const scale = TRADING_DAYS_PER_YEAR / GAME_DAYS_PER_YEAR;
+    const scale = asset.dataCategory === 'crypto' ? 1 : (TRADING_DAYS_PER_YEAR / GAME_DAYS_PER_YEAR);
 
     // Calculate base offset (may be negative if game starts before asset IPO)
     const baseTradingDay = Math.floor(calendarDaysSinceAssetStart * scale);
