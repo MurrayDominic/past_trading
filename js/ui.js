@@ -301,6 +301,8 @@ class GameUI {
     if (yearSelectStartBtn) {
       yearSelectStartBtn.addEventListener('click', () => {
         if (this._pendingMode) {
+          this.game.isDailyRun = false;
+          this.game.startMonth = 0;
           this.game.startRun(this._pendingMode);
         }
       });
@@ -309,8 +311,37 @@ class GameUI {
     if (timeMachineStartBtn) {
       timeMachineStartBtn.addEventListener('click', () => {
         if (this._pendingMode) {
+          this.game.isDailyRun = false;
+          this.game.startMonth = 0;
+          this.game.mysteryYear = false;
           this.game.startRun(this._pendingMode, 'timeMachine');
         }
+      });
+    }
+
+    // Archetype picker (v2): cycles once unlocked by a completed ladder run
+    const archPrev = document.getElementById('arch-prev');
+    const archNext = document.getElementById('arch-next');
+    if (archPrev && archNext) {
+      archPrev.addEventListener('click', () => this.cycleArchetype(-1));
+      archNext.addEventListener('click', () => this.cycleArchetype(1));
+    }
+
+    // Mystery year toggle (v2)
+    const mysteryBtn = document.getElementById('mystery-year-btn');
+    if (mysteryBtn) {
+      mysteryBtn.addEventListener('click', () => {
+        this.game.mysteryYear = !this.game.mysteryYear;
+        mysteryBtn.textContent = `🎭 Mystery Year: ${this.game.mysteryYear ? 'ON' : 'OFF'}`;
+        mysteryBtn.classList.toggle('btn-primary', this.game.mysteryYear);
+      });
+    }
+
+    // Daily challenge (v2)
+    const dailyBtn = document.getElementById('daily-run-btn');
+    if (dailyBtn) {
+      dailyBtn.addEventListener('click', () => {
+        if (this._pendingMode) this.game.startDailyRun(this._pendingMode);
       });
     }
 
@@ -652,6 +683,28 @@ class GameUI {
       this.updateYearDisplay(startYear);
     }
     this.setAscension(this.game.ascensionLevel);
+    this.cycleArchetype(0);
+  }
+
+  // v2 archetypes: cycle through run identities (locked until the ladder has
+  // been completed once)
+  cycleArchetype(dir) {
+    const unlocked = (this.game.progression.data.ascension || { maxUnlocked: 0 }).maxUnlocked >= 1;
+    const nameEl = document.getElementById('arch-name');
+    const descEl = document.getElementById('arch-desc');
+    if (!nameEl || !descEl) return;
+
+    if (!unlocked) {
+      this.game.archetypeId = 'associate';
+      nameEl.textContent = '🔒 The Associate';
+      descEl.textContent = 'Complete all 8 quarters once to unlock archetypes.';
+      return;
+    }
+    const idx = ARCHETYPES.findIndex(a => a.id === this.game.archetypeId);
+    const next = ARCHETYPES[((idx < 0 ? 0 : idx) + dir + ARCHETYPES.length) % ARCHETYPES.length];
+    this.game.archetypeId = next.id;
+    nameEl.textContent = `${next.icon} ${next.name}`;
+    descEl.textContent = next.desc;
   }
 
   // Clamp and display the chosen ascension level (v2 difficulty ladder)
@@ -1591,13 +1644,16 @@ class GameUI {
         this.el.countdownTimer.style.color = 'var(--rh-red)';
       }
     } else {
-      // Daily mode: show calendar date
+      // Daily mode: show calendar date. In a mystery-year run (v2) the year
+      // is the puzzle, so it renders as 20??.
       const currentDate = game.getCurrentDate();
-      const dateStr = currentDate.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      });
+      const dateStr = game.mysteryYear
+        ? `${currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}, 20??`
+        : currentDate.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+          });
       this.el.dayCounter.textContent = dateStr;
 
       // Countdown timer
@@ -2162,7 +2218,9 @@ class GameUI {
           const actualDayIdx = startOffset + dayIdx;
           const date = new Date(game.market.startDate);
           date.setDate(date.getDate() + actualDayIdx);
-          const label = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+          const label = game.mysteryYear
+            ? date.toLocaleDateString('en-US', { month: 'short' }) + ' ??'
+            : date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
 
           ctx.fillText(label, x, padTop + drawH + 14);
         }
@@ -2506,6 +2564,7 @@ class GameUI {
     return {
       almanac: !!(game.progression && game.progression.data.unlocks.timeTravelersAlmanac),
       tips: game.tips ? game.tips.getActiveTips() : [],
+      hideDates: !!game.mysteryYear,
     };
   }
 

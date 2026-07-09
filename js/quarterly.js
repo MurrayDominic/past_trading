@@ -169,7 +169,7 @@ class QuarterlyTargetSystem {
   getCurrentTarget() {
     const idx = Math.min(this.currentQuarter, CONFIG.QUARTERLY_TARGETS.length - 1);
     const base = CONFIG.QUARTERLY_TARGETS[idx];
-    const mult = RUN_ASCENSION.targetMult || 1;
+    const mult = (RUN_ASCENSION.targetMult || 1) * (RUN_ARCHETYPE.targetMult || 1);
     if (mult === 1) return base;
     return { ...base, target: Math.round(base.target * mult) };
   }

@@ -536,11 +536,13 @@ class ChartManager {
           const x = padding + dataIdx * spacing;
           const y = h - padding + 20;
 
-          // Calculate date with year
+          // Calculate date with year (mystery-year runs hide the year, v2)
           const daysFromStart = currentDay - (visibleData.length - 1 - dataIdx);
           const date = new Date(startDate);
           date.setDate(date.getDate() + daysFromStart);
-          const label = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+          const label = (extras && extras.hideDates)
+            ? date.toLocaleDateString('en-US', { month: 'short' }) + ' ??'
+            : date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
 
           ctx.fillText(label, x, y);
         }

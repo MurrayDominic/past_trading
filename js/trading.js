@@ -46,13 +46,14 @@ class TradingEngine {
   }
 
   init(startingCash, metaProgression) {
-    // Apply starting cash bonuses (check highest tier first)
+    // Apply starting cash bonuses (check highest tier first). Multipliers
+    // apply to the PASSED base so archetype modifiers compose (v2).
     let cash = startingCash;
     if (metaProgression) {
-      if (metaProgression.unlocks.oligarchHeir) cash = CONFIG.STARTING_CASH * 25;
-      else if (metaProgression.unlocks.silverSpoon) cash = CONFIG.STARTING_CASH * 10;
-      else if (metaProgression.unlocks.startingCash5x) cash = CONFIG.STARTING_CASH * 5;
-      else if (metaProgression.unlocks.startingCash2x) cash = CONFIG.STARTING_CASH * 2;
+      if (metaProgression.unlocks.oligarchHeir) cash = startingCash * 25;
+      else if (metaProgression.unlocks.silverSpoon) cash = startingCash * 10;
+      else if (metaProgression.unlocks.startingCash5x) cash = startingCash * 5;
+      else if (metaProgression.unlocks.startingCash2x) cash = startingCash * 2;
 
       // Title bonuses
       if (metaProgression.equippedTitle === 'wolfOfWallSt') {
@@ -118,6 +119,9 @@ class TradingEngine {
   }
 
   buy(ticker, dollarAmount, market, metaProgression, currentDay) {
+    if (RUN_ARCHETYPE.shortsOnly) {
+      return { success: false, message: 'The Bear does not buy. Short something.' };
+    }
     const asset = market.getAsset(ticker);
     if (!asset) return { success: false, message: 'Asset not found' };
     if (!market.isAssetLive(asset)) return { success: false, message: `${ticker} is not yet publicly traded` };
@@ -136,7 +140,7 @@ class TradingEngine {
       return { success: false, message: 'Invalid trading mode' };
     }
 
-    const feePercent = CONFIG.BASE_FEE_PERCENT * modeConfig.feeMod * (1 - feeReduction) * (RUN_ASCENSION.feeMult || 1);
+    const feePercent = CONFIG.BASE_FEE_PERCENT * modeConfig.feeMod * (1 - feeReduction) * (RUN_ASCENSION.feeMult || 1) * (RUN_ARCHETYPE.feeMult || 1);
 
     // Calculate shares from dollar amount
     let fee = dollarAmount * feePercent / 100;
@@ -226,7 +230,7 @@ class TradingEngine {
 
     const feeReduction = this.getFeeReduction(metaProgression);
     const modeConfig = TRADING_MODES[market.currentMode];
-    const feePercent = CONFIG.BASE_FEE_PERCENT * modeConfig.feeMod * (1 - feeReduction) * (RUN_ASCENSION.feeMult || 1);
+    const feePercent = CONFIG.BASE_FEE_PERCENT * modeConfig.feeMod * (1 - feeReduction) * (RUN_ASCENSION.feeMult || 1) * (RUN_ARCHETYPE.feeMult || 1);
 
     const saleValue = asset.price * pos.quantity;
     const fee = saleValue * feePercent / 100;
@@ -352,7 +356,7 @@ class TradingEngine {
     const leverage = this.getLeverage(metaProgression);
     const feeReduction = this.getFeeReduction(metaProgression);
     const modeConfig = TRADING_MODES[market.currentMode];
-    const feePercent = CONFIG.BASE_FEE_PERCENT * modeConfig.feeMod * (1 - feeReduction) * (RUN_ASCENSION.feeMult || 1);
+    const feePercent = CONFIG.BASE_FEE_PERCENT * modeConfig.feeMod * (1 - feeReduction) * (RUN_ASCENSION.feeMult || 1) * (RUN_ARCHETYPE.feeMult || 1);
 
     const fee = dollarAmount * feePercent / 100;
     const collateral = dollarAmount / leverage + fee;

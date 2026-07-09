@@ -27,7 +27,11 @@ class Game {
     this.selectedMode = 'stocks';
     this.selectedAsset = null;
     this.selectedYears = { start: 2008, end: 2009 }; // Default: 2-year fixed run
-    this.ascensionLevel = 0;  // v2 difficulty ladder, chosen at year select
+    this.ascensionLevel = 0;   // v2 difficulty ladder, chosen at year select
+    this.archetypeId = 'associate'; // v2 run identity
+    this.mysteryYear = false;  // v2: hide WHEN you are; deduce it from the news
+    this.isDailyRun = false;   // v2 daily challenge flag
+    this.startMonth = 0;       // v2: mid-year insertions (daily challenge)
 
     // Intraday time tracking
     this.isIntraday = false;
@@ -98,7 +102,8 @@ class Game {
     this.runEndReason = '';
     this.pendingInsiderTips = [];
     this.activeInsiderTip = null;
-    this.lastNetWorth = CONFIG.STARTING_CASH;
+    setRunArchetype(this.archetypeId);
+    this.lastNetWorth = Math.floor(CONFIG.STARTING_CASH * (RUN_ARCHETYPE.cashMult || 1));
 
     // Reset speed button UI to 1x
     document.querySelectorAll('.speed-btn').forEach(btn => {
@@ -143,6 +148,11 @@ class Game {
 
       this.currentTime = null;
 
+      // Mystery year (v2): the machine picks; you deduce it from the news
+      if (this.mysteryYear) {
+        this.selectedYears.start = 2000 + Math.floor(Math.random() * 24);
+      }
+
       // Update end year to match actual run length
       this.selectedYears.end = this.selectedYears.start + runYears - 1;
 
@@ -169,10 +179,11 @@ class Game {
       // Pass selected year range from year selection UI
       await Promise.race([
         this.market.init(mode, this.dataLoader, this.progression, this.selectedYears.start, this.selectedYears.end,
-          format === 'timeMachine' ? this.timeMachine.currentDest.month : 0),
+          format === 'timeMachine' ? this.timeMachine.currentDest.month : this.startMonth),
         timeoutPromise
       ]);
-      this.trading.init(CONFIG.STARTING_CASH, this.progression.data);
+      const startCash = Math.floor(CONFIG.STARTING_CASH * (RUN_ARCHETYPE.cashMult || 1));
+      this.trading.init(startCash, this.progression.data);
       // Extra years are added at the START as a head start before targets begin
       // (career only; Time Machine is always exactly 8 quarters)
       let extraYearDays = 0;
@@ -181,7 +192,7 @@ class Game {
         else if (this.progression.data.unlocks.timeInMarket2) extraYearDays = 2 * 365;
         else if (this.progression.data.unlocks.timeInMarket1) extraYearDays = 1 * 365;
       }
-      this.quarterly.init(CONFIG.STARTING_CASH, extraYearDays);
+      this.quarterly.init(startCash, extraYearDays);
       setRunAscension(this.ascensionLevel);
     this.sec.init();
     this.tips.init();
@@ -446,6 +457,18 @@ class Game {
         && this.tips.lastDraftQuarter < qNow
         && this.currentDay >= this.quarterly.dayOffset + qNow * CONFIG.QUARTER_DAYS + 3) {
       this.tips.lastDraftQuarter = qNow;
+
+      // The Senator's Nephew archetype: a clean dossier lands every quarter
+      if (RUN_ARCHETYPE.freeDossier) {
+        const tip = this.tips.acceptSource('whistleblower', this.market, null, this.currentDay);
+        if (tip) {
+          this.news.addNews(
+            `FAMILY DOSSIER: ${tip.ticker} moves ${tip.direction.toUpperCase()} within ${tip.expiresDay - tip.issuedDay} days.`,
+            'milestone', this.currentDay
+          );
+        }
+      }
+
       this.openTipDraft();
     }
 
@@ -558,6 +581,10 @@ class Game {
       mode: this.selectedMode,
       selectedYears: this.selectedYears,
       ascensionLevel: this.ascensionLevel,
+      archetypeId: this.archetypeId,
+      mysteryYear: this.mysteryYear,
+      isDailyRun: this.isDailyRun,
+      startMonth: this.startMonth,
       currentDay: this.currentDay,
       totalDays: this.totalDays,
       selectedAsset: this.selectedAsset,
@@ -637,6 +664,11 @@ class Game {
     this.selectedMode = save.mode || 'stocks';
     this.selectedYears = save.selectedYears;
     this.ascensionLevel = save.ascensionLevel || 0;
+    this.archetypeId = save.archetypeId || 'associate';
+    setRunArchetype(this.archetypeId);
+    this.mysteryYear = !!save.mysteryYear;
+    this.isDailyRun = !!save.isDailyRun;
+    this.startMonth = save.startMonth || 0;
     this.isIntraday = false;
     this.currentDay = save.currentDay;
     this.totalDays = save.totalDays;
@@ -837,6 +869,17 @@ class Game {
     // The run is over; the autosave must not survive it
     this.clearRunState();
 
+    // Daily challenge result recorded on the real calendar day (v2)
+    if (this.isDailyRun) {
+      this.progression.data.daily = {
+        date: new Date().toISOString().slice(0, 10),
+        netWorth: Math.floor(this.trading.netWorth),
+        days: this.currentDay,
+        year: this.selectedYears.start,
+      };
+      this.isDailyRun = false;
+    }
+
     // Submit to leaderboard
     this.leaderboard.submitRun(
       this.trading,
@@ -1028,6 +1071,24 @@ class Game {
         if (this.isPlaying()) this.startTicker();
       }
     }, perkCtx);
+  }
+
+  // v2 daily challenge: one attempt per real day, deterministic insertion.
+  // The seed picks the year and month; mystery mode is forced on so every
+  // player faces the same deduction.
+  startDailyRun(mode = 'stocks') {
+    const dateStr = new Date().toISOString().slice(0, 10);
+    if (this.progression.data.daily && this.progression.data.daily.date === dateStr) {
+      this.ui.showAlert('Daily Challenge', `Already played today: ${formatMoney(this.progression.data.daily.netWorth)}. The machine recharges at midnight.`);
+      return;
+    }
+    let h = 0;
+    for (const c of dateStr) h = ((h * 31) + c.charCodeAt(0)) >>> 0;
+    this.selectedYears = { start: 2000 + (h % 24), end: 2000 + (h % 24) + 1 };
+    this.startMonth = (h >> 5) % 12;
+    this.mysteryYear = true;
+    this.isDailyRun = true;
+    this.startRun(mode, 'career');
   }
 
   // v2 crypto: all-or-nothing cold wallet toggle

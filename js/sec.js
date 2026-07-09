@@ -67,7 +67,7 @@ class SECSystem {
       }
     }
 
-    this.attention = Math.max(0, this.attention - decay);
+    this.attention = Math.max(RUN_ARCHETYPE.secFloor || 0, this.attention - decay);
 
     // Check for suspicious returns
     if (tradingEngine.netWorthHistory.length >= 2) {

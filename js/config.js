@@ -951,3 +951,31 @@ function findAssetDef(ticker) {
     || (TRADING_MODES.forex && TRADING_MODES.forex.assets.find(a => a.ticker === ticker))
     || null;
 }
+
+// ============================================================================
+// V2 ARCHETYPES (Phase 5)
+// Run identities that invalidate the memorized strategy in different ways.
+// Unlocked by completing all 8 quarters at least once (ascension 1+).
+// Each states its TOTAL effect; consumers default to neutral.
+// ============================================================================
+const ARCHETYPES = [
+  { id: 'associate', name: 'The Associate', icon: '👔',
+    desc: 'The standard deal: your money, your problem.' },
+  { id: 'caffeinated', name: 'The Caffeinated', icon: '⚡',
+    desc: 'Half the starting cash, half the fees. Speed is a personality.',
+    cashMult: 0.5, feeMult: 0.5 },
+  { id: 'fundManager', name: 'The Fund Manager', icon: '🏦',
+    desc: 'Ten times the capital, four times the targets. Other people’s money, other people’s expectations.',
+    cashMult: 10, targetMult: 4 },
+  { id: 'bear', name: 'The Bear', icon: '🐻',
+    desc: 'Buying is for optimists. Shorts only.',
+    shortsOnly: true },
+  { id: 'nephew', name: "The Senator's Nephew", icon: '🏛️',
+    desc: 'A clean insider dossier lands every quarter. The SEC never fully looks away (attention floor 15).',
+    freeDossier: true, secFloor: 15 },
+];
+
+let RUN_ARCHETYPE = ARCHETYPES[0];
+function setRunArchetype(id) {
+  RUN_ARCHETYPE = ARCHETYPES.find(a => a.id === id) || ARCHETYPES[0];
+}
